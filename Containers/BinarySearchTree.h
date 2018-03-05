@@ -35,12 +35,12 @@ private:
 		size_t genNumber = 0; // Keeps track of tree's state
 	};
 
-public:
-
 	Table tree;
 
 	// Allocator al;
 	Alloc<Node> al;
+
+public:
 
 	BinarySearchTree() = default;
 	
@@ -62,8 +62,8 @@ public:
 	void emplace(Type&& t)
 	{
 		int dir = 0;
-		Node *p, *c; // parent and current node
-		for (c = tree.root; c; p = c) 
+		Node *p = nullptr, *c; // parent and current node
+		for (c = tree.root; c;) 
 		{
 			if (t < *c->data)
 				dir = 0;
@@ -74,15 +74,17 @@ public:
 			else
 				return; // Found Identical node
 
+			p = c;
 			c = c->subTree[dir];
 		}
 		// Fall through
 
 		c = al.alloc();
-		c->data = &t;
+		c->data = new Type;
+		*c->data = *std::move(&t);
 		c->subTree[0] = c->subTree[1] = nullptr;
 
-		if (c)
+		if (p)
 			p->subTree[dir] = c;
 		else
 			tree.root = c;
@@ -90,9 +92,9 @@ public:
 		++tree.count;
 	}
 
-	void insert(const Type& t)
+	void insert(Type t)
 	{
-		emplace(t);
+		emplace(std::move(t));
 	}
 
 	void insert(Type &&t)

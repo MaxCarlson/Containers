@@ -56,7 +56,7 @@ void testBST()
 {
 	BinarySearchTree<int> tree;
 
-	for (int i = 0; i < 100; ++i)
+	for (int i = 2; i < 100; ++i)
 	{
 		tree.insert(i);
 
