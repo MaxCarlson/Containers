@@ -1,5 +1,6 @@
 
 #include "vectorImpl.h"
+#include "BinarySearchTree.h"
 
 #include <vector>
 #include <iostream>
@@ -26,14 +27,16 @@ struct Larger
 	std::vector<uint64_t> apples;
 };
 
-int main()
-{ 
-	using namespace std::chrono;
-	using std::chrono::high_resolution_clock;
-	auto start = high_resolution_clock::now();
 
-	Vector<int> test;
-	//std::vector<int> test;
+inline double timer()
+{
+
+}
+
+void testVector()
+{
+	//Vector<int> test;
+	std::vector<int> test;
 	for (int i = 0; i < 100000000; ++i)
 	{
 		//Larger r;
@@ -41,13 +44,34 @@ int main()
 
 		//auto t = rand();
 		test.emplace_back(rand());
-
+		test.push_back(1);
 		//auto dd = test[i];
 
 		//printCVector<int>(test);
 	}
 	//printCVector<int>(test);
+}
 
+void testBST()
+{
+	BinarySearchTree<int> tree;
+
+	for (int i = 0; i < 100; ++i)
+	{
+		tree.insert(i);
+
+		auto* t = tree.find(i);
+	}
+}
+
+int main()
+{ 
+	using namespace std::chrono;
+	using std::chrono::high_resolution_clock;
+	auto start = high_resolution_clock::now();
+
+	//testVector()
+	testBST();
 
 	auto end = high_resolution_clock::now();
 
