@@ -38,7 +38,8 @@ private:
 	Table tree;
 
 	// Allocator al;
-	Alloc<Node> al;
+	Alloc<Node> nodeAl;
+	Alloc<Type> typeAl;
 
 public:
 
@@ -79,8 +80,9 @@ public:
 		}
 		// Fall through
 
-		c = al.alloc();
-		c->data = new Type;
+		c = nodeAl.alloc();
+		c->data = typeAl.alloc(); 
+
 		*c->data = *std::move(&t);
 		c->subTree[0] = c->subTree[1] = nullptr;
 
@@ -92,7 +94,7 @@ public:
 		++tree.count;
 	}
 
-	void insert(Type t)
+	void insert(const Type& t)
 	{
 		emplace(std::move(t));
 	}
@@ -102,4 +104,27 @@ public:
 		emplace(std::move(t));
 	}
 
+private:
+	void flatten()
+	{
+		Node *p = tree.root, *c;
+
+		while (p)
+		{
+			if (!p->subTree[1]) // If no right child
+			{
+				c = p;
+				p = p->subTree[0]; // Step parent and child down and too the left
+			}
+			else // Rotate left at parent
+			{
+
+			}
+		}
+	}
+
+	void balance()
+	{
+		flatten();
+	}
 };

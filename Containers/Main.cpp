@@ -28,13 +28,25 @@ struct Larger
 };
 
 
-inline double timer()
+inline void timer(bool first)
 {
+	using namespace std::chrono;
 
+	static std::chrono::time_point<std::chrono::steady_clock> start;
+
+	if (first)
+	{
+		start = high_resolution_clock::now();
+		return;
+	}
+
+	std::cout << duration_cast<duration<double>>(high_resolution_clock::now() - start).count();
 }
 
 void testVector()
 {
+	timer(true);
+
 	//Vector<int> test;
 	std::vector<int> test;
 	for (int i = 0; i < 100000000; ++i)
@@ -50,18 +62,28 @@ void testVector()
 		//printCVector<int>(test);
 	}
 	//printCVector<int>(test);
+	timer(false);
 }
 
+#include <set>
+#include <unordered_set>
 void testBST()
 {
-	BinarySearchTree<int> tree;
+	std::set<int> tree;
+	//std::unordered_set<int> tree;
+	//BinarySearchTree<int> tree;
 
-	for (int i = 2; i < 100; ++i)
+	timer(true);
+	for (int i = 0; i < 20000000; ++i)
 	{
-		tree.insert(i);
+		//tree.insert(i); // Worst case for balance
+		//auto t = tree.find(i);
 
-		auto* t = tree.find(i);
+		tree.insert(rand());
+		tree.find(rand()); // half as slow as unordered_set, 50% faster than set
 	}
+
+	timer(false);
 }
 
 int main()
@@ -72,12 +94,6 @@ int main()
 
 	//testVector()
 	testBST();
-
-	auto end = high_resolution_clock::now();
-
-	auto t = duration_cast<duration<double>>(end - start).count();
-
-	std::cout << t;
 
 	return 0;
 }
