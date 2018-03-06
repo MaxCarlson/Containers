@@ -107,18 +107,23 @@ public:
 private:
 	void flatten()
 	{
-		Node *p = tree.root, *c;
+		Node *c = tree.root, *p;
 
-		while (p)
+		while (c)
 		{
-			if (!p->subTree[1]) // If no right child
+			if (!c->subTree[1]) // If no right child
 			{
-				c = p;
-				p = p->subTree[0]; // Step parent and child down and too the left
+				p = c;
+				c = c->subTree[0]; // Step parent and child down and to the left
 			}
 			else // Rotate left at parent
 			{
-
+				auto* r = c->subTree[1];
+				
+				c->subTree[1] = r->subTree[0];   // Childs right node becomes previous rights nodes left node
+				r->subTree[0] = c;			     // previous childs right tree left node becomes child
+				c = r;						
+				p->subTree[0] = r; // parent nodes left subtree becomes previous childs right node
 			}
 		}
 	}
