@@ -69,9 +69,9 @@ void testVector()
 #include <unordered_set>
 void testBST()
 {
-	std::set<int> tree;
+	//std::set<int> tree;
 	//std::unordered_set<int> tree;
-	//BinarySearchTree<int> tree;
+	BinarySearchTree<int> tree;
 
 	timer(true);
 	for (int i = 0; i < 20000000; ++i)

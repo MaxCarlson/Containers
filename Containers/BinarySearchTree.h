@@ -1,5 +1,7 @@
 #pragma once
 #include <stdlib.h>
+#include <intrin.h>
+
 
 template<class Type>
 struct Alloc
@@ -31,7 +33,7 @@ private:
 		Node * root = nullptr;
 		// Add comparator
 		// Add allocator
-		int count = 0;
+		size_t count = 0;
 		size_t genNumber = 0; // Keeps track of tree's state
 	};
 
@@ -104,7 +106,32 @@ public:
 		emplace(std::move(t));
 	}
 
+	struct Iterator {
+		Type *p;
+	};
+
+	Iterator& operator++()
+	{
+
+	}
+
 private:
+
+	Iterator MyBegin;
+	Iterator MyEnd;
+
+	size_t pop_msb(size_t b)
+	{
+		unsigned long idx;
+		_BitScanReverse64(&idx, b);
+		return b ^ (1 << idx);
+	}
+
+	int calculateLeaves()
+	{
+		return pop_msb(tree.count + 1);
+	}
+
 	void flatten()
 	{
 		Node *c = tree.root, *p;
@@ -128,8 +155,32 @@ private:
 		}
 	}
 
+	void compressFlatTree(int count)
+	{
+		while (--count)
+		{
+			Node *red = tree.root->subTree[0];
+			Node *black = red->subTree[0];
+
+			tree.root->subTree[0] = black;
+			red->subTree[0] = black->subTree[1];
+			black->subTree[1] = red;
+			tree.root = black;
+		}
+	}
+
 	void balance()
 	{
 		flatten();
+
+		int leaves = calculateLeaves();
+		int vine = tree.count - leaves;
+		int height = 1 + (leaves > 0);
+
+		while (vine > 0)
+		{
+			compressFlatTree(vine /= 2);
+			++height;
+		}
 	}
 };
