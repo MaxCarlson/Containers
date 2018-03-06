@@ -73,14 +73,46 @@ void testBST()
 	//std::unordered_set<int> tree;
 	BinarySearchTree<int> tree;
 
-	timer(true);
-	for (int i = 0; i < 20000000; ++i)
+	//timer(true);
+	for (int i = 0; i < 200000; ++i)
 	{
-		//tree.insert(i); // Worst case for balance
-		//auto t = tree.find(i);
+		tree.insert(i); // Worst case for balance
+		//tree.insert(rand());
+		//tree.find(rand()); // half as slow as unordered_set, 50% faster than set
+	}
 
-		tree.insert(rand());
-		tree.find(rand()); // half as slow as unordered_set, 50% faster than set
+	timer(true);
+	for (int i = 0; i < 200000; ++i)
+	{
+		auto t = tree.find(i);
+	}
+
+	timer(false);
+}
+
+void testBSTBalance()
+{
+	BinarySearchTree<int> tree;
+
+	for (int i = 0; i < 20000; ++i)
+	{
+		tree.insert(i); 
+	}
+
+	timer(true);
+	for (int i = 0; i < 20000; ++i)
+	{
+		auto t = tree.find(i);
+	}
+
+	timer(false);
+
+	tree.balance();
+
+	timer(true);
+	for (int i = 0; i < 20000; ++i)
+	{
+		auto t = tree.find(i);
 	}
 
 	timer(false);
@@ -93,7 +125,8 @@ int main()
 	auto start = high_resolution_clock::now();
 
 	//testVector()
-	testBST();
+	//testBST();
+	testBSTBalance();
 
 	return 0;
 }

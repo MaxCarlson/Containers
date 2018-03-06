@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <intrin.h>
 
-
 template<class Type>
 struct Alloc
 {
@@ -49,7 +48,7 @@ public:
 	
 	Type * find(const Type &t) // Needs support for rvalues?
 	{
-		for (Node *p = tree.root; p; ) // p != nullptr needed ?
+		for (Node *p = tree.root; p; ) 
 		{
 			if (t < *p->data)
 				p = p->subTree[0];
@@ -96,7 +95,7 @@ public:
 		++tree.count;
 	}
 
-	void insert(const Type& t)
+	void insert(Type t)
 	{
 		emplace(std::move(t));
 	}
@@ -105,9 +104,51 @@ public:
 	{
 		emplace(std::move(t));
 	}
+	
+private:
+	std::pair<Node *, Node *> findNodeAndParent(const Type &t)// TODO: This will not work as we need direction included!! Add it!
+	{
+		Node *p;
+		for (Node *c = tree.root; c; )
+		{
+			if (t < *c->data)
+				c = c->subTree[0];
+			else if (t > *c->data)
+				c = c->subTree[1];
+			else
+				return std::make_pair(p, c);
 
-	struct Iterator {
+			p = c;
+		}
+		return std::make_pair(nullptr, nullptr); // TODO: Return iterator to end?
+	}
+
+public:
+	void erase(const Type &t)
+	{
+		// Parent node of the node we want to delete
+		// and it's child (the node marked for deletion
+		auto [*p, *c] = findNodeAndParent(t);
+
+		if (!c)
+			return;
+
+		if (!c->subTree[1]) // Node has no right subtree
+		{
+			p->subTree[0] = c->subTree[0];
+		}
+
+
+		typeAl.free(c->data);
+		nodeAl.free(c);
+	}
+
+	struct Iterator 
+	{
 		Type *p;
+	private:
+		int height = 0;
+		bool left = true;
 	};
 
 	Iterator& operator++()
@@ -134,11 +175,11 @@ private:
 
 	void flatten()
 	{
-		Node *c = tree.root, *p;
+		Node *c = tree.root, *p = tree.root; // There's an issue with infinite loop here at the moment
 
 		while (c)
 		{
-			if (!c->subTree[1]) // If no right child
+			if (c->subTree[1] == nullptr) // If no right child
 			{
 				p = c;
 				c = c->subTree[0]; // Step parent and child down and to the left
@@ -168,13 +209,13 @@ private:
 			tree.root = black;
 		}
 	}
-
+public:
 	void balance()
 	{
 		flatten();
 
 		int leaves = calculateLeaves();
-		int vine = tree.count - leaves;
+		int vine = static_cast<int>(tree.count) - leaves;
 		int height = 1 + (leaves > 0);
 
 		while (vine > 0)
