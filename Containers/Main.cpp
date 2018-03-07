@@ -81,7 +81,7 @@ void testBST()
 		//tree.find(rand()); // half as slow as unordered_set, 50% faster than set
 
 		if (i % 4 == 0)
-			tree.printTree();
+			tree.find(i);
 	}
 
 	for (int i = 20000; i > -1; --i)

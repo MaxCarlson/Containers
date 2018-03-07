@@ -52,17 +52,19 @@ public:
 	
 	Type * find(const Type &t) // Needs support for rvalues?
 	{
-		for (Node *p = tree.root; p; ) 
+		Node *p = tree.root;
+		while (p)
 		{
-			if (t < *p->data)
-				p = p->subTree[0];
-			else if (t > *p->data)
-				p = p->subTree[1];
-			else
+			if (*p->data == t)
 				return p->data;
+			else
+			{
+				int dir = *p->data < t;
+				p = p->subTree[dir];
+			}
 		}
 
-		return nullptr; // TODO: Return iterator to end?
+		return nullptr;
 	}
 
 	void emplace(Type&& t)
@@ -181,6 +183,7 @@ private:
 			n->data = small->data;
 
 			n->subTree[1] = deleteNode(n->subTree[1], *small->data);
+			// No count-- here because we recurse when deleting the node we shifted to root
 		}
 	}
 
