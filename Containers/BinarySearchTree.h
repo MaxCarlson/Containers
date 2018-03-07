@@ -28,7 +28,7 @@ private:
 	struct Node
 	{
 		Node * subTree[2];
-		Type * data;
+		Type data; 
 	};
 
 	struct Table
@@ -44,22 +44,21 @@ private:
 
 	// Allocator al;
 	Alloc<Node> nodeAl;
-	Alloc<Type> typeAl;
 
 public:
 
 	BinarySearchTree() = default;
 	
-	Type * find(const Type &t) // Needs support for rvalues?
+	Type * find(const Type &t) 
 	{
 		Node *p = tree.root;
 		while (p)
 		{
-			if (*p->data == t)
-				return p->data;
+			if (p->data == t)
+				return &p->data;
 			else
 			{
-				int dir = *p->data < t;
+				int dir = p->data < t;
 				p = p->subTree[dir];
 			}
 		}
@@ -67,36 +66,38 @@ public:
 		return nullptr;
 	}
 
+	Node * createNode(Type &&t)
+	{
+		Node * n = nodeAl.alloc();
+		n->data = std::move(t);
+		n->subTree[0] = n->subTree[1] = nullptr;
+		return n;
+	}
+
 	void emplace(Type&& t)
 	{
-		int dir = 0;
-		Node *p = nullptr, *c; // parent and current node
-		for (c = tree.root; c;) 
-		{
-			if (t < *c->data)
-				dir = 0;
-		
-			else if (t > *c->data)	
-				dir = 1;
-			
-			else
-				return; // Found Identical node
+		if (tree.root == nullptr)
+			tree.root = createNode(std::move(t));
 
-			p = c;
-			c = c->subTree[dir];
-		}
-		// Fall through
-
-		c = nodeAl.alloc();
-		c->data = typeAl.alloc(); 
-
-		*c->data = *std::move(&t);
-		c->subTree[0] = c->subTree[1] = nullptr;
-
-		if (p)
-			p->subTree[dir] = c;
 		else
-			tree.root = c;
+		{
+			int dir = 0;
+			Node *c = tree.root; // parent and current node
+			for (;;)
+			{
+				dir = (c->data < t);
+
+				if (c->data == t) // Identical data, break out of func
+					return;
+
+				else if (c->subTree[dir] == nullptr) // Break when we encounter a leaf node next
+					break;
+
+				c = c->subTree[dir];
+			}
+
+			c->subTree[dir] = createNode(std::move(t));
+		}
 
 		++tree.count;
 	}
@@ -144,11 +145,11 @@ private:
 			return n;
 
 		// Key is farther left in the tree
-		if (t < *n->data)
+		if (t < n->data)
 			n->subTree[0] = deleteNode(n->subTree[0], t);
 
 		// Farther right
-		else if (t > *n->data)
+		else if (t > n->data)
 			n->subTree[1] = deleteNode(n->subTree[1], t);
 
 		// Found Key
@@ -158,7 +159,6 @@ private:
 			if (n->subTree[0] == nullptr)
 			{
 				auto* tmp = n->subTree[1];
-				typeAl.free(n->data);
 				nodeAl.free(n);
 				--tree.count;
 				return tmp;
@@ -167,7 +167,6 @@ private:
 			else if (n->subTree[1] == nullptr)
 			{
 				auto* tmp = n->subTree[0];
-				typeAl.free(n->data);
 				nodeAl.free(n);
 				--tree.count;
 				return tmp;
@@ -179,10 +178,9 @@ private:
 			// right subtree
 			Node * small = minValueNode(n->subTree[1]);
 
-			typeAl.free(n->data);
-			n->data = small->data;
+			n->data = small->data; // Is this excessive copying?
 
-			n->subTree[1] = deleteNode(n->subTree[1], *small->data);
+			n->subTree[1] = deleteNode(n->subTree[1], small->data);
 			// No count-- here because we recurse when deleting the node we shifted to root
 		}
 	}
