@@ -1,6 +1,10 @@
 #pragma once
+#include <iostream>
+#include <iomanip>
 #include <stdlib.h>
 #include <intrin.h>
+#include <utility>
+#include <tuple>
 
 template<class Type>
 struct Alloc
@@ -13,7 +17,7 @@ struct Alloc
 
 	void free(Type * start)
 	{
-		free(start); 
+		std::free(start); 
 	}
 };
 
@@ -104,43 +108,86 @@ public:
 	{
 		emplace(std::move(t));
 	}
-	
-private:
-	std::pair<Node *, Node *> findNodeAndParent(const Type &t)// TODO: This will not work as we need direction included!! Add it!
-	{
-		Node *p;
-		for (Node *c = tree.root; c; )
-		{
-			if (t < *c->data)
-				c = c->subTree[0];
-			else if (t > *c->data)
-				c = c->subTree[1];
-			else
-				return std::make_pair(p, c);
 
-			p = c;
+	void printTree()
+	{
+		postorder(tree.root);
+	}
+private:
+	void postorder(Node *p, int indent = 0)
+	{
+		if (p)
+		{
+			if (p->subTree[0]) postorder(p->subTree[0], indent + 4);
+			if (p->subTree[1]) postorder(p->subTree[1], indent + 4);
+			if (indent)
+			{
+				std::cout << std::setw(indent) << ' ';
+			}
+			std::cout << *p->data << "\n ";
 		}
-		return std::make_pair(nullptr, nullptr); // TODO: Return iterator to end?
+	}
+
+	Node * minValueNode(Node *n)
+	{
+		// Find the left most node from this node
+		while (n->subTree[0])
+			n = n->subTree[0];
+		return n;
+	}
+
+	Node* deleteNode(Node * n, const Type &t) // Issue with stack size when tree is not balanced
+	{
+		if (n == nullptr) 
+			return n;
+
+		// Key is farther left in the tree
+		if (t < *n->data)
+			n->subTree[0] = deleteNode(n->subTree[0], t);
+
+		// Farther right
+		else if (t > *n->data)
+			n->subTree[1] = deleteNode(n->subTree[1], t);
+
+		// Found Key
+		else
+		{
+			// No left child or no children
+			if (n->subTree[0] == nullptr)
+			{
+				auto* tmp = n->subTree[1];
+				typeAl.free(n->data);
+				nodeAl.free(n);
+				--tree.count;
+				return tmp;
+			}
+			// No right child
+			else if (n->subTree[1] == nullptr)
+			{
+				auto* tmp = n->subTree[0];
+				typeAl.free(n->data);
+				nodeAl.free(n);
+				--tree.count;
+				return tmp;
+			}
+
+			// Two children
+
+			// Find the In Order Successor, or the smallest node in this nodes
+			// right subtree
+			Node * small = minValueNode(n->subTree[1]);
+
+			typeAl.free(n->data);
+			n->data = small->data;
+
+			n->subTree[1] = deleteNode(n->subTree[1], *small->data);
+		}
 	}
 
 public:
-	void erase(const Type &t)
+	void erase(const Type &t) // TODO: Add an iterator delete that returns next iterator
 	{
-		// Parent node of the node we want to delete
-		// and it's child (the node marked for deletion
-		auto [*p, *c] = findNodeAndParent(t);
-
-		if (!c)
-			return;
-
-		if (!c->subTree[1]) // Node has no right subtree
-		{
-			p->subTree[0] = c->subTree[0];
-		}
-
-
-		typeAl.free(c->data);
-		nodeAl.free(c);
+		tree.root = deleteNode(tree.root, t);
 	}
 
 	struct Iterator 
