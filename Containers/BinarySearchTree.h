@@ -120,65 +120,44 @@ private:
 
 	bool deleteNode(const Type& t)
 	{
-		int dir;
-		Node *p = nullptr;
-		Node *c = tree.root;
-
-		// Find the parent and the node == t
-		for(;;)
+		if (tree.root)
 		{
-			if (!c)
-				return false;
+			Node head;
+			Node *c = &head;
+			Node *p = nullptr, *found = nullptr;
+			int dir = 1;
 
-			else if (c->data == t)
-				break;
+			c->subTree[1] = tree.root;
 
-			dir = c->data < t;
-			p = c;
-			c = c->subTree[dir];
-		}
-		
-		// Both subtrees have nodes
-		if (c->subTree[0] && c->subTree[1])
-		{
-			p = c;
-
-			Node *successor = c->subTree[1];
-
-			// Find the in order successor
-			while (successor->subTree[0])
+			while (c->subTree[dir])
 			{
-				p = successor;
-				successor = successor->subTree[0];
+				// Set parent
+				p = c;
+
+				// Navigate subtrees
+				c = c->subTree[dir];
+				dir = c->data <= t;
+
+				// Found node to delete
+				// Keep going to find in order successor
+				// parent and child
+				if (c->data == t)
+					found = c;
 			}
 
-			// Copy data from successor into the node we're moving
-			// to the deleted nodes spot
-			c->data = successor->data;
+			if (found)
+			{
+				found->data = c->data;
+				p->subTree[p->subTree[1] == c] = c->subTree[c->subTree[0] == nullptr];
+				nodeAl.free(c);
+				--tree.count;
+			}
 
-			// Connect parent to correct child
-			p->subTree[p->subTree[1] == successor] = successor->subTree[1];
-
-			nodeAl.free(successor);
+			tree.root = head.subTree[1];
+			// TODO: Return next in place iterator for iterator version
+			return found;
 		}
-		else
-		{
-			dir = c->subTree[0] == nullptr;
-
-			// Handle root deletion
-			if (!p)
-				tree.root = c->subTree[dir];
-
-			// Handle 
-			else
-				p->subTree[p->subTree[1] == c] = c->subTree[dir];
-
-			nodeAl.free(c);
-		}
-
-		--tree.count;
-		return true;
-		// TODO: Return next in place iterator for iterator version
+		return false;
 	}
 
 public:
