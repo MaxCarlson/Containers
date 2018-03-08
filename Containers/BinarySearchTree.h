@@ -69,7 +69,7 @@ public:
 	Node * createNode(Type &&t)
 	{
 		Node * n = nodeAl.alloc();
-		n->data = std::move(t);
+		n->data = std::move(t);   // The constructor is being called before the move yes?
 		n->subTree[0] = n->subTree[1] = nullptr;
 		return n;
 	}
@@ -117,78 +117,74 @@ public:
 		postorder(tree.root);
 	}
 private:
-	void postorder(Node *p, int indent = 0)
+
+	bool deleteNode(const Type& t)
 	{
-		if (p)
+		int dir;
+		Node *p = nullptr;
+		Node *c = tree.root;
+
+		// Find the parent and the node == t
+		for(;;)
 		{
-			if (p->subTree[0]) postorder(p->subTree[0], indent + 4);
-			if (p->subTree[1]) postorder(p->subTree[1], indent + 4);
-			if (indent)
-			{
-				std::cout << std::setw(indent) << ' ';
-			}
-			std::cout << *p->data << "\n ";
+			if (!c)
+				return false;
+
+			else if (c->data == t)
+				break;
+
+			dir = c->data < t;
+			p = c;
+			c = c->subTree[dir];
 		}
-	}
+		
+		// Both subtrees have nodes
+		if (c->subTree[0] && c->subTree[1])
+		{
+			p = c;
 
-	Node * minValueNode(Node *n)
-	{
-		// Find the left most node from this node
-		while (n->subTree[0])
-			n = n->subTree[0];
-		return n;
-	}
+			Node *successor = c->subTree[1];
 
-	Node* deleteNode(Node * n, const Type &t) // Issue with stack size when tree is not balanced
-	{
-		if (n == nullptr) 
-			return n;
+			// Find the in order successor
+			while (successor->subTree[0])
+			{
+				p = successor;
+				successor = successor->subTree[0];
+			}
 
-		// Key is farther left in the tree
-		if (t < n->data)
-			n->subTree[0] = deleteNode(n->subTree[0], t);
+			// Copy data from successor into the node we're moving
+			// to the deleted nodes spot
+			c->data = successor->data;
 
-		// Farther right
-		else if (t > n->data)
-			n->subTree[1] = deleteNode(n->subTree[1], t);
+			// Connect parent to correct child
+			p->subTree[p->subTree[1] == successor] = successor->subTree[1];
 
-		// Found Key
+			nodeAl.free(successor);
+		}
 		else
 		{
-			// No left child or no children
-			if (n->subTree[0] == nullptr)
-			{
-				auto* tmp = n->subTree[1];
-				nodeAl.free(n);
-				--tree.count;
-				return tmp;
-			}
-			// No right child
-			else if (n->subTree[1] == nullptr)
-			{
-				auto* tmp = n->subTree[0];
-				nodeAl.free(n);
-				--tree.count;
-				return tmp;
-			}
+			dir = c->subTree[0] == nullptr;
 
-			// Two children
+			// Handle root deletion
+			if (!p)
+				tree.root = c->subTree[dir];
 
-			// Find the In Order Successor, or the smallest node in this nodes
-			// right subtree
-			Node * small = minValueNode(n->subTree[1]);
+			// Handle 
+			else
+				p->subTree[p->subTree[1] == c] = c->subTree[dir];
 
-			n->data = small->data; // Is this excessive copying?
-
-			n->subTree[1] = deleteNode(n->subTree[1], small->data);
-			// No count-- here because we recurse when deleting the node we shifted to root
+			nodeAl.free(c);
 		}
+
+		--tree.count;
+		return true;
+		// TODO: Return next in place iterator for iterator version
 	}
 
 public:
 	void erase(const Type &t) // TODO: Add an iterator delete that returns next iterator
 	{
-		tree.root = deleteNode(tree.root, t);
+		deleteNode(t);
 	}
 
 	struct Iterator 
