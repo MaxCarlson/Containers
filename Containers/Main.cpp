@@ -17,19 +17,19 @@ inline void printCVector(Vector<C> &v)
 	std::cout << "\n";
 }
 
-inline void timer(bool first)
+inline void timer(bool startNow)
 {
 	using namespace std::chrono;
 
 	static std::chrono::time_point<std::chrono::steady_clock> start;
 
-	if (first)
+	if (startNow)
 	{
 		start = high_resolution_clock::now();
 		return;
 	}
 
-	std::cout << duration_cast<duration<double>>(high_resolution_clock::now() - start).count();
+	std::cout << "\n" << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << "\n";
 }
 
 void testVector()
@@ -56,26 +56,40 @@ void testVector()
 
 #include <set>
 #include <unordered_set>
+
 void testBST()
 {
 	//std::set<int> tree;
 	//std::unordered_set<int> tree;
 	BinarySearchTree<int> tree;
 
+	constexpr auto count = 350;
+
 	timer(true);
-	for (int i = 500; i < 700; ++i)
+	for (int i = 0; i < count; ++i)
 	{
 		//tree.insert(i); // Worst case for balance
 		tree.insert(rand());
-		tree.find(rand()); // half as slow as unordered_set, 50% faster than set
 	}
+	/*
+	for (int i = 0; i < count; ++i)
+	{
+		auto f = tree.find(i);
 
+		if (f)
+			tree.insert(*f);
+		else
+			tree.insert(rand());
+	}
+	*/
+	///*
 	int idx = 0;
 	for (auto i : tree)
 	{
 		std::cout << i << " ";
 		++idx;
 	}
+	//*/
 
 	timer(false);
 	int a = 5;
@@ -83,18 +97,6 @@ void testBST()
 
 int main()
 { 
-	using namespace std::chrono;
-	using std::chrono::high_resolution_clock;
-	auto start = high_resolution_clock::now();
-
-	std::vector<int> fff = { 4, 4, 4, 1 };
-
-	auto b = fff.begin();
-
-	std::set<int> ss;
-	auto sb = ss.begin();
-	
-
 	//testVector()
 	testBST();
 

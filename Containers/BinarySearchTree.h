@@ -4,8 +4,8 @@
 //#include <stdlib.h>
 //#include <intrin.h> // Not Working with Intel Compiler?
 #include <utility>
-#include <tuple>
-
+#include <string>
+#include <typeinfo>
 
 template<class Type>
 struct Alloc
@@ -64,7 +64,7 @@ public:
 
 		bool operator==(const Iterator& i) const
 		{
-			return *data == i.data;
+			return data == i.data;
 		}
 
 		const Type & operator*() 
@@ -74,18 +74,19 @@ public:
 
 		Iterator& operator++() // Preincrement
 		{
-			if (!data) // Don't increment on null node
-				; // This is pretty useless right now
+			if (!data) // Don't increment on null node, usually end()
+				; 
 			else if (it->subTree[1]) // Right node is non empty, find smallest member
 			{
 				it = smallestOfSubTree(it->subTree[1]);
-				data = &it->data;
+				data = &it->data; 
 			}
-			else // Climb up tree looking for first non-empty right subtree
+			else // Climb up tree looking for first Node with a non-empty right subtree
 			{
 				Node* n = it;
 
 				bool found = false;
+				/*
 				while (n->parent)
 				{
 					n = n->parent;
@@ -98,13 +99,24 @@ public:
 						break;
 					}
 				}
+				*/
+
+				// While node has a parent and the iterator is equal
+				// to its parents right node, traverse up tree
+				while ((n = n->parent) && it == n->subTree[1]) 
+					it = n;
+
+				if (n)
+				{
+					it = n;
+					data = &it->data;
+					found = true;
+				}
 
 				// Inelegant way to set Iterator to end
 				if (!found)
 					*this = tree->Head;
-				
 			}
-
 			return *this;
 		}
 
@@ -125,7 +137,7 @@ public:
 	static Node* smallestOfSubTree(Node *start)
 	{
 		if (!start)
-			throw std::runtime_error("Invaid pointer passed to navigating Iterator!");
+			throw std::runtime_error(std::string("Invaid pointer passed to navigating Iterator in BST<") + typeid(Type).name() + std::string(">!"));
 
 		while (start->subTree[0])
 			start = start->subTree[0];
