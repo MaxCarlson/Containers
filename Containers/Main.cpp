@@ -73,41 +73,21 @@ void testBST()
 			tree.find(i);
 	}
 
+	int countErase = 0;
 	for (int i = 20000; i > -1; --i)
 	{
-		tree.erase(i);
+		bool f = tree.erase(i);
+
+		countErase += f;
+	}
+
+	for (auto i : tree)
+	{
+		std::cout << i << " ";
 	}
 
 	timer(false);
 	int a = 5;
-}
-
-void testBSTBalance()
-{
-	BinarySearchTree<int> tree;
-
-	for (int i = 0; i < 20000; ++i)
-	{
-		tree.insert(i); 
-	}
-
-	timer(true);
-	for (int i = 0; i < 20000; ++i)
-	{
-		auto t = tree.find(i);
-	}
-
-	timer(false);
-
-	tree.balance();
-
-	timer(true);
-	for (int i = 0; i < 20000; ++i)
-	{
-		auto t = tree.find(i);
-	}
-
-	timer(false);
 }
 
 int main()
@@ -116,9 +96,16 @@ int main()
 	using std::chrono::high_resolution_clock;
 	auto start = high_resolution_clock::now();
 
+	std::vector<int> fff = { 4, 4, 4, 1 };
+
+	auto b = fff.begin();
+
+	std::set<int> ss;
+	auto sb = ss.begin();
+	
+
 	//testVector()
 	testBST();
-	//testBSTBalance();
 
 	return 0;
 }

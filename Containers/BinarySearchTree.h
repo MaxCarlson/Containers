@@ -1,8 +1,8 @@
 #pragma once
 #include <iostream>
-#include <iomanip>
-#include <stdlib.h>
-#include <intrin.h>
+//#include <iomanip>
+//#include <stdlib.h>
+//#include <intrin.h> // Not Working with Intel Compiler?
 #include <utility>
 #include <tuple>
 
@@ -49,7 +49,59 @@ private:
 
 public:
 
-	BinarySearchTree() = default;
+	struct Iterator
+	{
+		Iterator() = default;
+		Iterator(Node *n) : it(n)
+		{
+			data = &n->data;
+		}
+
+		bool operator!=(const Iterator& i)
+		{
+			return this->data != i.data;
+		}
+
+		const Type & operator*() const
+		{
+			return *this->data;
+		}
+
+		Iterator& operator++()
+		{
+
+		}
+
+		Iterator operator++(int)
+		{
+
+		}
+		friend class BinarySearchTree<Type>;
+		Type *data;
+	protected:
+		Node *it;
+	};
+
+
+private:
+	Iterator Head;
+
+public:
+
+	BinarySearchTree()
+	{
+		// Allocate a head node
+		Head = Iterator(nodeAl.alloc());
+	}
+
+	Iterator begin()
+	{
+		return Iterator(leftMost(tree.root));
+	}
+	Iterator end() 
+	{ 
+		return Head;
+	}
 	
 	Type * find(const Type &t) 
 	{
@@ -73,6 +125,7 @@ public:
 		Node * n = nodeAl.alloc();
 		n->data = t;   // The constructor is being called before the move yes? Should this be allocated on the heap?
 		n->subTree[0] = n->subTree[1] = n->parent = nullptr;
+
 		return n;
 	}
 
@@ -121,30 +174,20 @@ public:
 	}
 private:
 
-	void deleteN(const Type& t)
-	{
-		if (tree.root)
-		{
-
-		}
-	}
-
-	bool deleteNode(const Type& t)
+	bool deleteNode(const Type& t) noexcept
 	{
 		if (tree.root)
 		{
 			Node head;
 			Node *c = &head;
-			Node *p = nullptr, *found = nullptr;
+			Node *found = nullptr;
 			int dir = 1;
 
 			c->subTree[1] = tree.root;
+			tree.root->parent = &head;
 
 			while (c->subTree[dir])
 			{
-				// Set parent
-				p = c;
-
 				// Navigate subtrees
 				c = c->subTree[dir];
 				dir = c->data <= t;
@@ -153,52 +196,62 @@ private:
 				// Keep going to find in order successor
 				// parent and child
 				if (c->data == t)
-					found = c; 
+					found = c;
 			}
 
 			if (found)
 			{
+				dir = c->subTree[0] == nullptr;
+
 				found->data = c->data;
-				p->subTree[p->subTree[1] == c] = c->subTree[c->subTree[0] == nullptr];
+
+				c->parent->subTree[c->parent->subTree[1] == c] = c->subTree[dir];
+
+				if (c->subTree[dir])
+					c->subTree[dir]->parent = c->parent;
+				
+
 				nodeAl.free(c);
 				--tree.count;
 			}
 
 			tree.root = head.subTree[1];
-			// TODO: Return next in place iterator for iterator version
+
+			if (tree.root)
+				tree.root->parent = nullptr;
+
+
 			return found;
 		}
 		return false;
 	}
 
-public:
-	void erase(const Type &t) // TODO: Add an iterator delete that returns next iterator
+	// Find the left most node from the subtree
+	// of the input node
+	Node* leftMost(Node *start)
 	{
-		deleteNode(t);
+		if (start == nullptr)
+			return Head.it;
+
+		while (start->subTree[0])
+			start = start->subTree[0];
+
+		return start;
 	}
 
-	struct Iterator 
+public:
+	bool erase(const Type &t) noexcept // TODO: Add an iterator delete that returns next iterator
 	{
-		Type *p;
-	private:
-		int height = 0;
-		bool left = true;
-	};
-
-	Iterator& operator++()
-	{
-
+		return deleteNode(t);
 	}
 
 private:
 
-	Iterator MyBegin;
-	Iterator MyEnd;
-
+	/*
 	size_t pop_msb(size_t b)
 	{
 		unsigned long idx;
-		_BitScanReverse64(&idx, b);
+		//_BitScanReverse64(&idx, b);
 		return b ^ (1 << idx);
 	}
 
@@ -258,4 +311,6 @@ public:
 			++height;
 		}
 	}
+	*/
+
 };
