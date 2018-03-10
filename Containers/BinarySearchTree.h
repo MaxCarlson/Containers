@@ -64,18 +64,18 @@ public:
 
 		bool operator==(const Iterator& i) const
 		{
-			return data == i.data;
+			return *data == i.data;
 		}
 
-		const Type & operator*() const
+		const Type & operator*() 
 		{
 			return *data;
 		}
 
 		Iterator& operator++() // Preincrement
 		{
-			if (this == &tree->Head) // Don't increment on null node
-				;
+			if (!data) // Don't increment on null node
+				; // This is pretty useless right now
 			else if (it->subTree[1]) // Right node is non empty, find smallest member
 			{
 				it = smallestOfSubTree(it->subTree[1]);
@@ -85,6 +85,7 @@ public:
 			{
 				Node* n = it;
 
+				bool found = false;
 				while (n->parent)
 				{
 					n = n->parent;
@@ -93,9 +94,15 @@ public:
 					{
 						it = n;
 						data = &it->data;
+						found = true;
 						break;
 					}
 				}
+
+				// Inelegant way to set Iterator to end
+				if (!found)
+					*this = tree->Head;
+				
 			}
 
 			return *this;
@@ -135,6 +142,7 @@ public:
 	{
 		// Allocate a head node
 		Head = Iterator(nodeAl.alloc(), this);
+		Head.data = nullptr;
 	}
 
 	Iterator begin()

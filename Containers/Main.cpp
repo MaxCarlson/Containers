@@ -63,18 +63,18 @@ void testBST()
 	BinarySearchTree<int> tree;
 
 	timer(true);
-	for (int i = 0; i < 20000; ++i)
+	for (int i = 500; i < 700; ++i)
 	{
 		//tree.insert(i); // Worst case for balance
 		tree.insert(rand());
 		tree.find(rand()); // half as slow as unordered_set, 50% faster than set
-
 	}
 
 	int idx = 0;
 	for (auto i : tree)
 	{
 		std::cout << i << " ";
+		++idx;
 	}
 
 	timer(false);
