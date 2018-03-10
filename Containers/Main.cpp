@@ -65,22 +65,13 @@ void testBST()
 	timer(true);
 	for (int i = 0; i < 20000; ++i)
 	{
-		tree.insert(i); // Worst case for balance
-		//tree.insert(rand());
-		//tree.find(rand()); // half as slow as unordered_set, 50% faster than set
+		//tree.insert(i); // Worst case for balance
+		tree.insert(rand());
+		tree.find(rand()); // half as slow as unordered_set, 50% faster than set
 
-		if (i % 4 == 0)
-			tree.find(i);
 	}
 
-	int countErase = 0;
-	for (int i = 20000; i > -1; --i)
-	{
-		bool f = tree.erase(i);
-
-		countErase += f;
-	}
-
+	int idx = 0;
 	for (auto i : tree)
 	{
 		std::cout << i << " ";

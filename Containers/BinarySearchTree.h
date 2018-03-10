@@ -52,36 +52,79 @@ public:
 	struct Iterator
 	{
 		Iterator() = default;
-		Iterator(Node *n) : it(n)
+		Iterator(Node *n, BinarySearchTree<Type> *t) : it(n), tree(t)
 		{
 			data = &n->data;
 		}
 
-		bool operator!=(const Iterator& i)
+		bool operator!=(const Iterator& i) const
 		{
-			return this->data != i.data;
+			return data != i.data; 
+		}
+
+		bool operator==(const Iterator& i) const
+		{
+			return data == i.data;
 		}
 
 		const Type & operator*() const
 		{
-			return *this->data;
+			return *data;
 		}
 
-		Iterator& operator++()
+		Iterator& operator++() // Preincrement
 		{
+			if (this == &tree->Head) // Don't increment on null node
+				;
+			else if (it->subTree[1]) // Right node is non empty, find smallest member
+			{
+				it = smallestOfSubTree(it->subTree[1]);
+				data = &it->data;
+			}
+			else // Climb up tree looking for first non-empty right subtree
+			{
+				Node* n = it;
 
+				while (n->parent)
+				{
+					n = n->parent;
+
+					if (n->data > it->data)
+					{
+						it = n;
+						data = &it->data;
+						break;
+					}
+				}
+			}
+
+			return *this;
 		}
 
-		Iterator operator++(int)
+		Iterator operator++(int) // Postincrement
 		{
-
+			Iterator i = *this;
+			++*this;
+			return i;
 		}
-		friend class BinarySearchTree<Type>;
-		Type *data;
+
 	protected:
+		friend class BinarySearchTree<Type>;
 		Node *it;
+		Type *data; // Get rid of this and allocate node data sepperatly from nodes?
+		BinarySearchTree<Type> * tree; // How to get rid of this? Need it for head currently
 	};
 
+	static Node* smallestOfSubTree(Node *start)
+	{
+		if (!start)
+			throw std::runtime_error("Invaid pointer passed to navigating Iterator!");
+
+		while (start->subTree[0])
+			start = start->subTree[0];
+
+		return start;
+	}
 
 private:
 	Iterator Head;
@@ -91,12 +134,12 @@ public:
 	BinarySearchTree()
 	{
 		// Allocate a head node
-		Head = Iterator(nodeAl.alloc());
+		Head = Iterator(nodeAl.alloc(), this);
 	}
 
 	Iterator begin()
 	{
-		return Iterator(leftMost(tree.root));
+		return Iterator(leftMost(tree.root), this);
 	}
 	Iterator end() 
 	{ 
@@ -158,7 +201,7 @@ public:
 		++tree.count;
 	}
 
-	void insert(Type t)
+	void insert(const Type& t)
 	{
 		emplace(std::move(t));
 	}
