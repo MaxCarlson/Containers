@@ -1,5 +1,5 @@
 
-#include "vectorImpl.h"
+#include "Vector.h"
 #include "BinarySearchTree.h"
 
 #include <vector>
@@ -16,17 +16,6 @@ inline void printCVector(Vector<C> &v)
 
 	std::cout << "\n";
 }
-
-struct Larger
-{
-	Larger()
-	{
-		auto i = rand();
-		apples.resize(1000, i);
-	}
-	std::vector<uint64_t> apples;
-};
-
 
 inline void timer(bool first)
 {

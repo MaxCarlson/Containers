@@ -6,6 +6,7 @@
 #include <utility>
 #include <tuple>
 
+
 template<class Type>
 struct Alloc
 {
@@ -27,6 +28,7 @@ class BinarySearchTree
 private:
 	struct Node
 	{
+		Node * parent;
 		Node * subTree[2];
 		Type data; 
 	};
@@ -69,8 +71,8 @@ public:
 	Node * createNode(Type &&t)
 	{
 		Node * n = nodeAl.alloc();
-		n->data = std::move(t);   // The constructor is being called before the move yes?
-		n->subTree[0] = n->subTree[1] = nullptr;
+		n->data = t;   // The constructor is being called before the move yes? Should this be allocated on the heap?
+		n->subTree[0] = n->subTree[1] = n->parent = nullptr;
 		return n;
 	}
 
@@ -82,12 +84,12 @@ public:
 		else
 		{
 			int dir = 0;
-			Node *c = tree.root; // parent and current node
+			Node *c = tree.root; 
 			for (;;)
 			{
 				dir = (c->data < t);
 
-				if (c->data == t) // Identical data, break out of func
+				if (c->data == t) // Do not overwrite data here
 					return;
 
 				else if (c->subTree[dir] == nullptr) // Break when we encounter a leaf node next
@@ -97,6 +99,7 @@ public:
 			}
 
 			c->subTree[dir] = createNode(std::move(t));
+			c->subTree[dir]->parent = c;
 		}
 
 		++tree.count;
@@ -117,6 +120,14 @@ public:
 		postorder(tree.root);
 	}
 private:
+
+	void deleteN(const Type& t)
+	{
+		if (tree.root)
+		{
+
+		}
+	}
 
 	bool deleteNode(const Type& t)
 	{
@@ -142,7 +153,7 @@ private:
 				// Keep going to find in order successor
 				// parent and child
 				if (c->data == t)
-					found = c;
+					found = c; 
 			}
 
 			if (found)
