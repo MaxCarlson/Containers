@@ -61,17 +61,18 @@ void testBST()
 {
 	//std::set<int> tree;
 	//std::unordered_set<int> tree;
-	BinarySearchTree<int> tree;
+	BinarySearchTree<uint64_t> tree;
 
 	constexpr auto count = 350;
 
 	timer(true);
+	/*
 	for (int i = 0; i < count; ++i)
 	{
 		//tree.insert(i); // Worst case for balance
 		tree.insert(rand());
 	}
-	/*
+	
 	for (int i = 0; i < count; ++i)
 	{
 		auto f = tree.find(i);
@@ -82,23 +83,19 @@ void testBST()
 			tree.insert(rand());
 	}
 	*/
-	///*
-	int idx = 0;
-	for (auto i : tree)
-	{
-		std::cout << i << " ";
-		++idx;
-	}
-	//*/
 
-	std::cout << "\n\n";
-		
-	for (auto it = tree.rbegin(); it != tree.rend(); --it)
-	{
-		std::cout << *it << " ";
-	}
+	tree.insert(3);
+	tree.insert(1);
+	tree.insert(0);
+	tree.insert(2);
+	tree.insert(4);
 
-	//BinarySearchTree<int>::ReverseIterator
+	tree.pbRight();
+	tree.pbLeft();
+	tree.pbRight();
+	tree.pbRight();
+	tree.pbRight();
+	tree.pbRight();
 
 	timer(false);
 	int a = 5;

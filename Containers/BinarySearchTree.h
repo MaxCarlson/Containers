@@ -350,6 +350,46 @@ private:
 
 		return start;
 	}
+public:
+	void pbRight() { rotateRight(tree.root); }
+	void pbLeft() { rotateLeft(tree.root); }
+
+	
+	// Promote right node of start to root of subtree // These can easily be combined if need be!
+	// Not safe to pass a node with no left subnode
+	void rotateRight(Node *&start)
+	{
+		Node* newParent = start->subTree[0];
+		start->subTree[0] = newParent->subTree[1];
+
+		if (start->subTree[0])
+			start->subTree[0]->parent = start;
+
+		newParent->parent = start->parent;
+
+		newParent->subTree[1] = start;
+		start = newParent;
+
+		start->subTree[1]->parent = start;
+	}
+
+	// Promote left node of start to root of subtree
+	// Not safe to pass a node with no right subnode
+	void rotateLeft(Node *&start)
+	{
+		Node* newParent = start->subTree[1];
+		start->subTree[1] = newParent->subTree[0];
+
+		if (start->subTree[1])
+			start->subTree[1]->parent = start;
+
+		newParent->parent = start->parent;
+
+		newParent->subTree[0] = start;
+		start = newParent;
+
+		start->subTree[0]->parent = start;
+	}
 
 public:
 	bool erase(const Type &t) noexcept // TODO: Add an iterator delete that returns next iterator
