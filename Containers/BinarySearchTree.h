@@ -6,6 +6,7 @@
 #include <utility>
 #include <string>
 #include <typeinfo>
+#include <functional>
 
 template<class Type>
 struct Alloc
@@ -22,7 +23,7 @@ struct Alloc
 	}
 };
 
-template<class Type> // TODO: Add comparator and allocator
+template<class Type, class Compare = std::less<Type>> // TODO: Add comparator and allocator
 class BinarySearchTree
 {
 private:
@@ -39,10 +40,12 @@ private:
 		// Add comparator
 		// Add allocator
 		size_t count = 0;
-		size_t genNumber = 0; // Keeps track of tree's state
 	};
 
 	Table tree;
+
+	Compare comparator;
+
 
 	// Allocator al;
 	Alloc<Node> nodeAl;
@@ -175,6 +178,14 @@ public:
 private:
 	Iterator Head;
 
+	bool compareEqual(const Type& t, const Type &t1) // Need to implement comparetor
+	{
+		if (std::is_same<Compare, std::less<Type>>::value)
+			return std::less_equal<Type>(t, t1);
+		else
+			return std::greater_equal<Type>(t, t1);
+	}
+
 public:
 
 	BinarySearchTree()
@@ -254,9 +265,24 @@ public:
 
 			c->subTree[dir] = createNode(std::move(t));
 			c->subTree[dir]->parent = c;
+
+			/*
+			if (rand() % 23 == 0)
+			{
+				if (c->subTree[1] && rand() % 2 == 0)
+					rotateLeft(c);
+				else if (c->subTree[0])
+					rotateRight(c);
+			}
+			//*/
 		}
 
 		++tree.count;
+	}
+
+	void balanceTree()
+	{
+
 	}
 
 	void insert(const Type& t)
@@ -269,10 +295,6 @@ public:
 		emplace(std::move(t));
 	}
 
-	void printTree()
-	{
-		postorder(tree.root);
-	}
 private:
 
 	bool deleteNode(const Type& t) noexcept
@@ -291,7 +313,8 @@ private:
 			{
 				// Navigate subtrees
 				c = c->subTree[dir];
-				dir = c->data <= t;
+				//dir = c->data <= t;
+				dir = compareEqual(c->data, t);
 
 				// Found node to delete
 				// Keep going to find in order successor
