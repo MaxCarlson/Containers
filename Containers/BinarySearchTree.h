@@ -131,6 +131,9 @@ public:
 					it = n;
 					data = &it->data;
 				}
+				else
+					*this = tree->Head;
+
 			}
 			return *this;
 		}
@@ -147,11 +150,6 @@ public:
 		Node *it;
 		Type *data; // Get rid of this and allocate node data sepperatly from nodes?
 		BinarySearchTree<Type> * tree; // How to get rid of this? Need it for head currently
-	};
-
-	struct ReverseIterator : private Iterator
-	{
-		
 	};
 
 	static Node* minNode(Node *start)
@@ -195,6 +193,7 @@ public:
 		return Head;
 	}
 
+	// This is not technically a reverse iterator, you'll have to decrement it with --it or it-- if you want it to do it's thing
 	Iterator rbegin()
 	{
 		return Iterator(rightMost(tree.root), this);
