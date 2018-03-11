@@ -49,7 +49,7 @@ private:
 
 public:
 
-	struct Iterator
+	struct Iterator // Possibly move this outside BinarySearchTree and use it as a general case for any BST based structures Iterator?
 	{
 		Iterator() = default;
 		Iterator(Node *n, BinarySearchTree<Type> *t) : it(n), tree(t)
@@ -78,34 +78,18 @@ public:
 				; 
 			else if (it->subTree[1]) // Right node is non empty, find smallest member
 			{
-				it = smallestOfSubTree(it->subTree[1]);
+				it = minNode(it->subTree[1]);
 				data = &it->data; 
 			}
 			else // Climb up tree looking for first Node with a non-empty right subtree
 			{
-				Node* n = it;
-
-				bool found = false;
-				/*
-				while (n->parent)
-				{
-					n = n->parent;
-
-					if (n->data > it->data)
-					{
-						it = n;
-						data = &it->data;
-						found = true;
-						break;
-					}
-				}
-				*/
-
+				Node* n;
 				// While node has a parent and the iterator is equal
 				// to its parents right node, traverse up tree
-				while ((n = n->parent) && it == n->subTree[1]) 
+				while ((n = it->parent) && it == n->subTree[1]) 
 					it = n;
 
+				bool found = false;
 				if (n)
 				{
 					it = n;
@@ -115,7 +99,7 @@ public:
 
 				// Inelegant way to set Iterator to end
 				if (!found)
-					*this = tree->Head;
+					*this = tree->Head; // How to replace?
 			}
 			return *this;
 		}
@@ -127,6 +111,37 @@ public:
 			return i;
 		}
 
+		Iterator& operator--()
+		{
+			if (!data)
+				;
+			else if (it->subTree[0]) // Left node is non empty, find largest memeber
+			{
+				it = maxNode(it->subTree[0]);
+				data = &it->data;
+			}
+			else
+			{
+				Node *n;
+				while ((n = it->parent) && it == n->subTree[0])
+					it = n;
+
+				if (n)
+				{
+					it = n;
+					data = &it->data;
+				}
+			}
+			return *this;
+		}
+
+		Iterator operator--(int)
+		{
+			Iterator i = *this;
+			--*this;
+			return i;
+		}
+
 	protected:
 		friend class BinarySearchTree<Type>;
 		Node *it;
@@ -134,14 +149,28 @@ public:
 		BinarySearchTree<Type> * tree; // How to get rid of this? Need it for head currently
 	};
 
-	static Node* smallestOfSubTree(Node *start)
+	struct ReverseIterator : private Iterator
+	{
+		
+	};
+
+	static Node* minNode(Node *start)
 	{
 		if (!start)
-			throw std::runtime_error(std::string("Invaid pointer passed to navigating Iterator in BST<") + typeid(Type).name() + std::string(">!"));
+			throw std::runtime_error(std::string("Invaid pointer passed to navigating Iterator in BST<") + typeid(Type).name() + std::string(">!")); // DELETE
 
 		while (start->subTree[0])
 			start = start->subTree[0];
+		return start;
+	}
 
+	static Node* maxNode(Node *start)
+	{
+		if (!start)
+			throw std::runtime_error(std::string("Invaid pointer passed to navigating Iterator in BST<") + typeid(Type).name() + std::string(">!")); // DELETE
+
+		while (start->subTree[1])
+			start = start->subTree[1];
 		return start;
 	}
 
@@ -163,6 +192,16 @@ public:
 	}
 	Iterator end() 
 	{ 
+		return Head;
+	}
+
+	Iterator rbegin()
+	{
+		return Iterator(rightMost(tree.root), this);
+	}
+
+	Iterator rend()
+	{
 		return Head;
 	}
 	
@@ -302,78 +341,20 @@ private:
 		return start;
 	}
 
+	Node* rightMost(Node *start)
+	{
+		if (start == nullptr)
+			return Head.it;
+
+		while (start->subTree[1])
+			start = start->subTree[1];
+
+		return start;
+	}
+
 public:
 	bool erase(const Type &t) noexcept // TODO: Add an iterator delete that returns next iterator
 	{
 		return deleteNode(t);
 	}
-
-private:
-
-	/*
-	size_t pop_msb(size_t b)
-	{
-		unsigned long idx;
-		//_BitScanReverse64(&idx, b);
-		return b ^ (1 << idx);
-	}
-
-	int calculateLeaves()
-	{
-		return pop_msb(tree.count + 1);
-	}
-
-	void flatten()
-	{
-		Node *c = tree.root, *p = tree.root; // There's an issue with infinite loop here at the moment
-
-		while (c)
-		{
-			if (c->subTree[1] == nullptr) // If no right child
-			{
-				p = c;
-				c = c->subTree[0]; // Step parent and child down and to the left
-			}
-			else // Rotate left at parent
-			{
-				auto* r = c->subTree[1];
-				
-				c->subTree[1] = r->subTree[0];   // Childs right node becomes previous rights nodes left node
-				r->subTree[0] = c;			     // previous childs right tree left node becomes child
-				c = r;						
-				p->subTree[0] = r; // parent nodes left subtree becomes previous childs right node
-			}
-		}
-	}
-
-	void compressFlatTree(int count)
-	{
-		while (--count)
-		{
-			Node *red = tree.root->subTree[0];
-			Node *black = red->subTree[0];
-
-			tree.root->subTree[0] = black;
-			red->subTree[0] = black->subTree[1];
-			black->subTree[1] = red;
-			tree.root = black;
-		}
-	}
-public:
-	void balance()
-	{
-		flatten();
-
-		int leaves = calculateLeaves();
-		int vine = static_cast<int>(tree.count) - leaves;
-		int height = 1 + (leaves > 0);
-
-		while (vine > 0)
-		{
-			compressFlatTree(vine /= 2);
-			++height;
-		}
-	}
-	*/
-
 };

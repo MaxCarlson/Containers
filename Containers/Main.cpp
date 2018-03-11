@@ -59,9 +59,9 @@ void testVector()
 
 void testBST()
 {
-	//std::set<int> tree;
+	std::set<int> tree;
 	//std::unordered_set<int> tree;
-	BinarySearchTree<int> tree;
+	//BinarySearchTree<int> tree;
 
 	constexpr auto count = 350;
 
@@ -91,10 +91,19 @@ void testBST()
 	}
 	//*/
 
+	std::cout << "\n\n";
+		
+	for (auto it = tree.rbegin(); it != tree.rend(); ++it)
+	{
+		std::cout << *it << " ";
+	}
+
+	//BinarySearchTree<int>::ReverseIterator
+
 	timer(false);
 	int a = 5;
 }
-
+#include <map>
 int main()
 { 
 	//testVector()
