@@ -107,11 +107,18 @@ void testRbTree()
 {
 	constexpr auto count = 999;
 
-	RedBlackTree<int> tree;
+	using Type = int;
+
+	std::set<Type> t;
+	RedBlackTree<Type> tree;
+
+	auto al = std::allocator<Type>();
 
 	for (int i = 0; i < count; ++i)
 	{
 		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
+		tree.addNode(std::move(i));
+		t.emplace(i);
 	}
 }
 
