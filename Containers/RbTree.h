@@ -60,8 +60,9 @@ public:
 
 	
 	template<Direction dir>
-	Node *rotateTwice(Node *root)
+	Node *doubleRotation(Node *root)
 	{
+		// Rotate opposite direction on opposite of dir's subtree
 		root->subtree[!dir] = rotate<!dir>(root->subtree[!dir]);
 
 		return rotate<dir>(root);
@@ -70,6 +71,44 @@ public:
 	bool isRed(Node *n)
 	{
 		return (n && n->color == RED);
+	}
+
+	int testTree(Node *root)
+	{
+		if (!root)
+			return 1;
+
+		Node* left = root->subtree[LEFT];
+		Node* right = root->subtree[RIGHT];
+
+		// Red node has a red child
+		if (isRed(root))
+			if (isRed(left) || isRed(right))
+			{
+				throw std::runtime_error("Red Violation!");
+				return 0;
+			}
+
+		int lHeight = testTree(left);
+		int rHeight = testTree(right);
+
+		if ((left && left->data >= root->data) || (right && right->data <= root->data)) // This does not use Compare!!!
+		{
+			throw std::runtime_error("Invalid Binary Tree!");
+			return 0;
+		}
+
+		if (lHeight && rHeight && lHeight != rHeight)
+		{
+			throw std::runtime_error("Black Height mis-match!");
+			return 0;
+		}
+
+		// Only cound black links
+		if (lHeight && rHeight)
+			return isRed(root) ? lHeight : lHeight + 1;
+
+		return 0;
 	}
 };
 
@@ -84,3 +123,7 @@ public:
 // Rotations:
 // A single rotation sets the old root to Red and the new root to black
 // A double rotation
+
+// Double rotation
+// - rotate once in !direction of initial dir on the !dir subtree
+// - rotate once on the root in rotation direction
