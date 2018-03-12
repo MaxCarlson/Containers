@@ -61,9 +61,9 @@ void testBST()
 {
 	//std::set<int> tree;
 	//std::unordered_set<int> tree;
-	BinarySearchTree<uint64_t> tree;
+	BinarySearchTree<int, std::greater<int>> tree;
 
-	constexpr auto count = 9500000;
+	constexpr auto count = 950;
 
 	timer(true);
 	///*
@@ -73,6 +73,9 @@ void testBST()
 		tree.insert(rand());
 		tree.erase(rand());
 	}
+
+	for (const auto& i : tree)
+		std::cout << i << " ";
 	
 	for (int i = 0; i < count; ++i)
 	{

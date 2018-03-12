@@ -23,7 +23,7 @@ struct Alloc
 	}
 };
 
-template<class Type, class Compare = std::less<Type>> // TODO: Add comparator and allocator
+template<class Type, class Compare = std::less<Type>> 
 class BinarySearchTree
 {
 private:
@@ -33,6 +33,8 @@ private:
 		Node * subTree[2];
 		Type data; 
 	};
+
+	using BinTree = BinarySearchTree<Type, Compare>;
 
 	struct Table
 	{
@@ -44,10 +46,8 @@ private:
 
 	Table tree;
 
-	Compare comparator;
+	Compare compare;
 
-
-	// Allocator al;
 	Alloc<Node> nodeAl;
 
 public:
@@ -55,7 +55,7 @@ public:
 	struct Iterator // Possibly move this outside BinarySearchTree and use it as a general case for any BST based structures Iterator?
 	{
 		Iterator() = default;
-		Iterator(Node *n, BinarySearchTree<Type> *t) : it(n), tree(t)
+		Iterator(Node *n, BinTree *t) : it(n), tree(t)
 		{
 			data = &n->data;
 		}
@@ -149,10 +149,10 @@ public:
 		}
 
 	protected:
-		friend class BinarySearchTree<Type>;
+		friend class BinTree;
 		Node *it;
 		Type *data; // Get rid of this and allocate node data sepperatly from nodes?
-		BinarySearchTree<Type> * tree; // How to get rid of this? Need it for head currently
+		BinTree * tree; // How to get rid of this? Need it for head currently
 	};
 
 	static Node* minNode(Node *start)
@@ -177,14 +177,6 @@ public:
 
 private:
 	Iterator Head;
-
-	bool compareEqual(const Type& t, const Type &t1) // Need to implement comparetor
-	{
-		if (std::is_same<Compare, std::less<Type>>::value)
-			return std::less_equal<Type>(t, t1);
-		else
-			return std::greater_equal<Type>(t, t1);
-	}
 
 public:
 
@@ -252,7 +244,8 @@ public:
 			Node *c = tree.root; 
 			for (;;)
 			{
-				dir = (c->data < t);
+				//dir = (c->data < t);
+				dir = compare(c->data, t);
 
 				if (c->data == t) // Do not overwrite data here
 					return;
@@ -314,13 +307,16 @@ private:
 				// Navigate subtrees
 				c = c->subTree[dir];
 				//dir = c->data <= t;
-				dir = compareEqual(c->data, t);
+				dir = compare(c->data, t);
 
 				// Found node to delete
 				// Keep going to find in order successor
 				// parent and child
 				if (c->data == t)
+				{
 					found = c;
+					dir = !dir; // This is here because with comparator template param it's not simple to use <= or >= depending on comparator
+				}
 			}
 
 			if (found)
