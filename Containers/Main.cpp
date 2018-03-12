@@ -1,10 +1,11 @@
 
 #include "Vector.h"
-#include "BinarySearchTree.h"
+#include "BinaryTree.h"
+#include "RbTree.h"
 
 #include <vector>
 #include <iostream>
-
+#include <map>
 #include <random>
 #include <chrono>
 
@@ -61,26 +62,26 @@ void testBST()
 {
 	//std::set<int> tree;
 	//std::unordered_set<int> tree;
-	BinarySearchTree<int, std::greater<int>> tree;
+	BinaryTree<int> tree;
 
-	constexpr auto count = 950;
+	constexpr auto count = 99950;
 
 	timer(true);
 	///*
 	for (int i = 0; i < count; ++i)
 	{
-		//tree.insert(i); // Worst case for balance
-		tree.insert(rand());
-		tree.erase(rand());
+		tree.insert(i); // Worst case for balance
+		//tree.insert(rand());
+		//tree.erase(rand());
+		//tree.erase(i);
 	}
 
-	for (const auto& i : tree)
-		std::cout << i << " ";
-	
 	for (int i = 0; i < count; ++i)
-	{
-		tree.find(rand());
-	}
+		tree.erase(i);
+
+	//for (const auto& i : tree)
+	//	std::cout << i << " ";
+
 	//*/
 
 	/*
@@ -101,11 +102,26 @@ void testBST()
 	timer(false);
 	int a = 5;
 }
-#include <map>
+
+void testRbTree()
+{
+	constexpr auto count = 999;
+
+	RedBlackTree<int> tree;
+
+	for (int i = 0; i < count; ++i)
+	{
+		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
+	}
+}
+
+
 int main()
 { 
 	//testVector()
-	testBST();
+	//testBST();
+	testRbTree();
+	
 
 	return 0;
 }

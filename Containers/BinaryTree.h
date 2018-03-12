@@ -13,8 +13,7 @@ struct Alloc
 {
 	Type * alloc()
 	{
-		Type * t = new Type;
-		return t;
+		return new Type;
 	}
 
 	void free(Type * start)
@@ -24,7 +23,7 @@ struct Alloc
 };
 
 template<class Type, class Compare = std::less<Type>> 
-class BinarySearchTree
+class BinaryTree
 {
 private:
 	struct Node
@@ -34,7 +33,7 @@ private:
 		Type data; 
 	};
 
-	using BinTree = BinarySearchTree<Type, Compare>;
+	using BinTree = BinaryTree<Type, Compare>;
 
 	struct Table
 	{
@@ -67,7 +66,7 @@ public:
 
 		bool operator==(const Iterator& i) const
 		{
-			return data == i.data;
+			return data == i.data; // Compare ptr's not data itself
 		}
 
 		const Type & operator*() 
@@ -155,6 +154,10 @@ public:
 		BinTree * tree; // How to get rid of this? Need it for head currently
 	};
 
+private:
+
+	Iterator Head;
+
 	static Node* minNode(Node *start)
 	{
 		if (!start)
@@ -175,12 +178,9 @@ public:
 		return start;
 	}
 
-private:
-	Iterator Head;
-
 public:
 
-	BinarySearchTree()
+	BinaryTree()
 	{
 		// Allocate a head node
 		Head = Iterator(nodeAl.alloc(), this);
@@ -227,7 +227,7 @@ public:
 	Node * createNode(Type &&t)
 	{
 		Node * n = nodeAl.alloc();
-		n->data = t;   // The constructor is being called before the move yes? Should this be allocated on the heap?
+		n->data = t;   // The constructor is being called before the move? Should this be allocated directly on creation instead of with the node itself??
 		n->subTree[0] = n->subTree[1] = n->parent = nullptr;
 
 		return n;
@@ -258,16 +258,6 @@ public:
 
 			c->subTree[dir] = createNode(std::move(t));
 			c->subTree[dir]->parent = c;
-
-			/*
-			if (rand() % 23 == 0)
-			{
-				if (c->subTree[1] && rand() % 2 == 0)
-					rotateLeft(c);
-				else if (c->subTree[0])
-					rotateRight(c);
-			}
-			//*/
 		}
 
 		++tree.count;
@@ -306,7 +296,6 @@ private:
 			{
 				// Navigate subtrees
 				c = c->subTree[dir];
-				//dir = c->data <= t;
 				dir = compare(c->data, t);
 
 				// Found node to delete
@@ -370,11 +359,11 @@ private:
 		return start;
 	}
 public:
-	void pbRight() { rotateRight(tree.root); }
+	void pbRight() { rotateRight(tree.root); } // Delete once done testing rotations
 	void pbLeft() { rotateLeft(tree.root); }
 
-	
-	// Promote right node of start to root of subtree // These can easily be combined if need be!
+private:
+	// Promote right node of start to root of subtree 
 	// Not safe to pass a node with no left subnode
 	void rotateRight(Node *&start)
 	{
@@ -392,7 +381,7 @@ public:
 		start->subTree[1]->parent = start;
 	}
 
-	// Promote left node of start to root of subtree
+	// Promote left node of start to root of subtree   // These can easily be combined if need be!
 	// Not safe to pass a node with no right subnode
 	void rotateLeft(Node *&start)
 	{
