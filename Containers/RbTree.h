@@ -3,15 +3,11 @@
 #include <memory>
 
 
+
 template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>>
 class RedBlackTree
 {
 	using RbTree = RedBlackTree<Type, Compare, Allocator>;
-
-	Compare compare;
-	Allocator alloc;
-
-//public:
 
 	enum Color { RED, BLACK };
 	enum Direction { LEFT, RIGHT };
@@ -25,12 +21,9 @@ class RedBlackTree
 		Type data;
 	};
 
-	
+	Compare compare;
 
-	long treeSize = 0;
-
-	using NodeAl = std::allocator<Node>;
-	//using NodeAl = Allocator::rebind<Node>; // FIX LATER
+	using NodeAl = std::allocator<Node>;				//using NodeAl = Allocator::rebind<Node>; // FIX LATER
 	using NodeAlTraits = std::allocator_traits<NodeAl>;
 
 	NodeAl nodeAl;
@@ -49,7 +42,7 @@ private:
 
 	Node * Head;
 	Node * root = nullptr;
-
+	long treeSize = 0;
 
 	void createHead()
 	{
@@ -104,7 +97,8 @@ public:
 			c->subtree[dir] = createNode(std::move(t));
 			c->subtree[dir]->parent = c;						// Think about caching leftmost and rightmost here with if statements?
 
-			testRedViolation(c->subtree[dir]);
+			bottomUpInsertion(c->subtree[dir]);
+			// TODO: Add in top down insertion and test benifits
 		}
 
 		root->color = BLACK;
@@ -123,7 +117,7 @@ public:
 		addNode(t);
 	}
 
-	void testRedViolation(Node *child) // TODO: Need to test for null nodes? Probably not once head is implemented as node children and parents for null? Unsure
+	void bottomUpInsertion(Node *child)
 	{
 		if (!child->parent)
 			return;
@@ -133,10 +127,7 @@ public:
 		// We need to fix tree for children with red parents
 		for (Node *c = child; c->parent->color == RED;)
 		{
-			//const int dir = c->parent == c->parent->parent->subtree[RIGHT]; // parent dir is 1 if parent is left child of its parent
-			//const int dir  = c == c->parent->subtree[RIGHT];				   // dir is 1 if child is right child of parent
-
-			const Direction dir = static_cast<Direction>(c->parent == c->parent->parent->subtree[RIGHT]);
+			const Direction dir = static_cast<Direction>(c->parent == c->parent->parent->subtree[RIGHT]); // Change to int once done debugging
 
 			// If sister node is red attempt a re-color
 			Node* uncle = c->parent->parent->subtree[!dir];
@@ -147,8 +138,8 @@ public:
 				c->parent->parent->color = RED;  // Color grandparent red
 				c = c->parent->parent;			 // Set current node to grandparent
 
-				if (!c->parent) // Delete this once Head is added in
-					break;		// As root's parent and all null nodes
+				if (!c->parent) // Delete this once Head is added in 
+					break;		// (BLACK parent of root & pointed to by all null nodes)
 			}
 
 			// Parent has red and black children
