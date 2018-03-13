@@ -171,34 +171,6 @@ public:
 
 public:
 
-	/*
-	_Nodeptr _Pnode = _Wherenode->_Right; // L ROTATE
-	_Wherenode->_Right = _Pnode->_Left;
-
-	if (!_Pnode->_Left->_Isnil)
-	{
-		_Pnode->_Left->_Parent = _Wherenode;
-	}
-
-	_Pnode->_Parent = _Wherenode->_Parent;
-
-	if (_Wherenode == _Root())
-	{
-		_Root() = _Pnode;
-	}
-	else if (_Wherenode == _Wherenode->_Parent->_Left)
-	{
-		_Wherenode->_Parent->_Left = _Pnode;
-	}
-	else
-	{
-		_Wherenode->_Parent->_Right = _Pnode;
-	}
-
-	_Pnode->_Left = _Wherenode;
-	_Wherenode->_Parent = _Pnode;
-	*/
-
 	void rotateDir(Node *root, const int dir)
 	{
 		Node* newRoot = root->subtree[!dir];
@@ -212,28 +184,11 @@ public:
 		if (root == this->root)
 			this->root = newRoot;
 
-		//else
-		//	root->parent->subtree[root != root->parent->subtree[dir]] = newRoot;
-
-		///*
-		else if (root == root->parent->subtree[dir]) // These two can be condensed right? to something like above?
-			root->parent->subtree[dir] = newRoot;
-
 		else
-			root->parent->subtree[!dir] = newRoot;
-		//*/
+			root->parent->subtree[root == root->parent->subtree[dir] ? dir : !dir] = newRoot;
 
 		newRoot->subtree[dir] = root;
 		root->parent = newRoot;
-	}
-	
-	template<Direction dir>
-	Node *doubleRotation(Node *root)
-	{
-		// Rotate opposite direction on opposite of dir's subtree
-		root->subtree[!dir] = rotate<!dir>(root->subtree[!dir]);
-
-		return rotate<dir>(root);
 	}
 
 	bool isRed(Node *n)
@@ -295,70 +250,3 @@ public:
 // Double rotation
 // - rotate once in !direction of initial dir on the !dir subtree
 // - rotate once on the root in rotation direction
-
-
-// Balance code from compiler
-/*
-// insert new node.
-// 
-// if parent of parent has two red children, blacken both
-// set parent of parent to red
-// 
-// else
-// dir = newNode->parent == newNode->parent->color == RED;
-// parent has red and black children
-//
-// if(newNode is the right child)
-//		rotate
-
-for (_Nodeptr _Pnode = _Newnode; _Pnode->_Parent->_Color == this->_Red; )
-	{
-	if (_Pnode->_Parent == _Pnode->_Parent->_Parent->_Left)
-		{	// fixup red-red in left subtree
-		_Wherenode = _Pnode->_Parent->_Parent->_Right;
-		if (_Wherenode->_Color == this->_Red)
-			{	// parent has two red children, blacken both
-			_Pnode->_Parent->_Color = this->_Black;
-			_Wherenode->_Color = this->_Black;
-			_Pnode->_Parent->_Parent->_Color = this->_Red;
-			_Pnode = _Pnode->_Parent->_Parent;
-			}
-		else
-			{	// parent has red and black children
-			if (_Pnode == _Pnode->_Parent->_Right)
-				{	// rotate right child to left
-				_Pnode = _Pnode->_Parent;
-				_Lrotate(_Pnode);
-				}
-
-			_Pnode->_Parent->_Color = this->_Black;	// propagate red up
-			_Pnode->_Parent->_Parent->_Color = this->_Red;
-			_Rrotate(_Pnode->_Parent->_Parent);
-			}
-		}
-	else
-		{	// fixup red-red in right subtree
-		_Wherenode = _Pnode->_Parent->_Parent->_Left;
-		if (_Wherenode->_Color == this->_Red)
-			{	// parent has two red children, blacken both
-			_Pnode->_Parent->_Color = this->_Black;
-			_Wherenode->_Color = this->_Black;
-			_Pnode->_Parent->_Parent->_Color = this->_Red;
-			_Pnode = _Pnode->_Parent->_Parent;
-			}
-		else
-			{	// parent has red and black children
-			if (_Pnode == _Pnode->_Parent->_Left)
-				{	// rotate left child to right
-				_Pnode = _Pnode->_Parent;
-				_Rrotate(_Pnode);
-				}
-
-			_Pnode->_Parent->_Color = this->_Black;	// propagate red up
-			_Pnode->_Parent->_Parent->_Color = this->_Red;
-			_Lrotate(_Pnode->_Parent->_Parent);
-			}
-		}
-	}
-
-*/
