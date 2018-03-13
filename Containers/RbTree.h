@@ -1,9 +1,6 @@
 #pragma once
 #include <functional>
-
-
-
-
+#include <memory>
 
 
 template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>>
@@ -24,35 +21,60 @@ class RedBlackTree
 		Node* parent;
 		Node* subtree[2];
 
-		char color;
+		Color color; // change this to char when done debugging
 		Type data;
 	};
 
 	
 
 	long treeSize = 0;
-	Node * root;
 
+	using NodeAl = std::allocator<Node>;
+	//using NodeAl = Allocator::rebind<Node>; // FIX LATER
+	using NodeAlTraits = std::allocator_traits<NodeAl>;
 
+	NodeAl nodeAl;
+	NodeAlTraits nodeAlTraits;
 
 	// TODO: Add support for <key, type> containers
 
 public:
+
 	RedBlackTree()
 	{
-
+		createHead();
 	}
 
 private: 
 
-	Node * createNode(Type &&t) 
-	{
-		Node * n = alloc.allocate(sizeof(Node), 0); // On allocate the constructor for Type is called right? would it be better to allocate on the heap instead and move it in?
-		alloc.construct(n);
+	Node * Head;
+	Node * root = nullptr;
 
-		n->data = t;
+
+	void createHead()
+	{
+		Node* n = nodeAl.allocate(1);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), n);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), n); // TODO: Try - Catch
+		NodeAlTraits::construct(nodeAl, std::addressof(n->parent), n);
+
+		n->subtree[0] = n->subtree[1] = n->parent = nullptr; // DELETE THIS ONCE DONE TESTING
+		
+		n->color = BLACK;
+		Head = n;
+	}
+
+	Node * createNode(Type &&t) // Argument forwarding needed for more complex types, also, template?
+	{
+		Node* n = nodeAl.allocate(1);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), Head);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), Head); // TODO: Try - Catch
+		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), Head);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->data      ),    t);
+
+		n->subtree[0] = n->subtree[1] = n->parent = nullptr; // DELETE THIS ONCE DONE TESTING
+
 		n->color = RED;
-		n->subtree[LEFT] = n->subtree[RIGHT] = n->parent = nullptr;
 
 		return n;
 	}
@@ -82,25 +104,40 @@ public:
 			c->subtree[dir] = createNode(std::move(t));
 			c->subtree[dir]->parent = c;						// Think about caching leftmost and rightmost here with if statements?
 
-			testRedViolation(c);
+			testRedViolation(c->subtree[dir]);
 		}
 
 		root->color = BLACK;
 		++treeSize;
 	}
 
-	void testRedViolation(Node *child) // TODO: Need to test for null nodes?
+	void emplace(Type &&t)
 	{
+		addNode(t);
+	}
+
+	void emplace(const Type& t)
+	{
+		addNode(t);
+	}
+
+	void testRedViolation(Node *child) // TODO: Need to test for null nodes? Probably not once head is implemented as node children and parents for null? Unsure
+	{
+		if (!child->parent)
+			return;
+
+		Node* root = this->root;
+
 		// We need to fix tree for children with red parents
 		for (Node *c = child; c->parent->color == RED;)
 		{
 			//const int dir = c->parent == c->parent->parent->subtree[RIGHT]; // parent dir is 1 if parent is left child of its parent
 			//const int dir  = c == c->parent->subtree[RIGHT];				   // dir is 1 if child is right child of parent
 
-			const Direction dir = c->parent == c->parent->parent->subtree[RIGHT] ? RIGHT : LEFT;
+			const Direction dir = c->parent == c->parent->parent->subtree[RIGHT] ? RIGHT : LEFT; // Don't branch here once debugging!!!!!!!!!!!!
 
 			// If sister node is red attempt a re-color
-			Node* uncle = c->parent->parent->subtree[dir];
+			Node* uncle = c->parent->parent->subtree[!dir];
 
 			if (uncle && uncle->color == RED)
 			{
@@ -112,17 +149,40 @@ public:
 			// Parent has red and black children
 			else
 			{
-				// If child is on it's parents !dir branch
-				// perform a not dir rotation
+				// If this node is (dir) child
+				// rotate on node to the !(dir)
 				if (c == c->parent->subtree[!dir])
 				{
-
+					int a = 5;
+					c = c->parent;
+					rotateDir(c, dir);
 				}
+
+				c->parent->color = BLACK;
+				c->parent->parent->color = RED;
+				rotateDir(c->parent->parent, !dir);
 			}
 		}
 	}
 
 public:
+
+	void rotateDir(Node *root, int dir)
+	{
+		Node* newParent = root->subtree[!dir];
+		root->subtree[!dir] = newParent->subtree[dir];
+
+		if (root->subtree[!dir])
+			root->subtree[!dir]->parent = root;
+
+		newParent->parent = root->parent;
+
+		newParent->subtree[dir] = root;
+		root = newParent;
+
+		root->subtree[dir]->parent = root;
+	}
+
 	// Pass this directions only
 	template<Direction dir>
 	Node *rotate(Node *root)
