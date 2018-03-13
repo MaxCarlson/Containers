@@ -64,40 +64,19 @@ void testBST()
 	//std::unordered_set<int> tree;
 	BinaryTree<int> tree;
 
-	constexpr auto count = 99950;
-
-	timer(true);
-	///*
-	for (int i = 0; i < count; ++i)
-	{
-		tree.insert(i); // Worst case for balance
-		//tree.insert(rand());
-		//tree.erase(rand());
-		//tree.erase(i);
-	}
-
-	for (int i = 0; i < count; ++i)
-		tree.erase(i);
-
-	//for (const auto& i : tree)
-	//	std::cout << i << " ";
-
-	//*/
-
-	/*
-	tree.insert(3);
-	tree.insert(1);
 	tree.insert(0);
+	tree.insert(1);
 	tree.insert(2);
-	tree.insert(4);
+	//tree.insert(2);
+	//tree.insert(4);
 
-	tree.pbRight();
+	//tree.pbRight();
 	tree.pbLeft();
-	tree.pbRight();
-	tree.pbRight();
-	tree.pbRight();
-	tree.pbRight();
-	*/
+	//tree.pbRight();
+	//tree.pbRight();
+	//tree.pbRight();
+	//tree.pbRight();
+	
 	
 	timer(false);
 	int a = 5;
@@ -126,7 +105,7 @@ void testRbTree()
 int main()
 { 
 	//testVector()
-	//testBST();
+	testBST();
 	testRbTree();
 	
 

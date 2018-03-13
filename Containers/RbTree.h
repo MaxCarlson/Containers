@@ -134,7 +134,7 @@ public:
 			//const int dir = c->parent == c->parent->parent->subtree[RIGHT]; // parent dir is 1 if parent is left child of its parent
 			//const int dir  = c == c->parent->subtree[RIGHT];				   // dir is 1 if child is right child of parent
 
-			const Direction dir = c->parent == c->parent->parent->subtree[RIGHT] ? RIGHT : LEFT; // Don't branch here once debugging!!!!!!!!!!!!
+			const Direction dir = static_cast<Direction>(c->parent == c->parent->parent->subtree[RIGHT]);
 
 			// If sister node is red attempt a re-color
 			Node* uncle = c->parent->parent->subtree[!dir];
@@ -153,7 +153,6 @@ public:
 				// rotate on node to the !(dir)
 				if (c == c->parent->subtree[!dir])
 				{
-					int a = 5;
 					c = c->parent;
 					rotateDir(c, dir);
 				}
@@ -167,39 +166,56 @@ public:
 
 public:
 
-	void rotateDir(Node *root, int dir)
+	/*
+	_Nodeptr _Pnode = _Wherenode->_Right; // L ROTATE
+	_Wherenode->_Right = _Pnode->_Left;
+
+	if (!_Pnode->_Left->_Isnil)
 	{
-		Node* newParent = root->subtree[!dir];
-		root->subtree[!dir] = newParent->subtree[dir];
-
-		if (root->subtree[!dir])
-			root->subtree[!dir]->parent = root;
-
-		newParent->parent = root->parent;
-
-		newParent->subtree[dir] = root;
-		root = newParent;
-
-		root->subtree[dir]->parent = root;
+		_Pnode->_Left->_Parent = _Wherenode;
 	}
 
-	// Pass this directions only
-	template<Direction dir>
-	Node *rotate(Node *root)
+	_Pnode->_Parent = _Wherenode->_Parent;
+
+	if (_Wherenode == _Root())
+	{
+		_Root() = _Pnode;
+	}
+	else if (_Wherenode == _Wherenode->_Parent->_Left)
+	{
+		_Wherenode->_Parent->_Left = _Pnode;
+	}
+	else
+	{
+		_Wherenode->_Parent->_Right = _Pnode;
+	}
+
+	_Pnode->_Left = _Wherenode;
+	_Wherenode->_Parent = _Pnode;
+	*/
+
+	void rotateDir(Node *root, const int dir)
 	{
 		Node* newRoot = root->subtree[!dir];
-
-		// Switch old root and new root
 		root->subtree[!dir] = newRoot->subtree[dir];
+
+		if (newRoot->subtree[dir])
+			newRoot->subtree[dir]->parent = root;
+
+		newRoot->parent = root->parent;
+
+		if (root == this->root)
+			this->root = newRoot;
+
+		else if (root == root->parent->subtree[dir])
+			root->parent->subtree[dir] = newRoot;
+
+		else
+			root->parent->subtree[!dir] = newRoot;
+
 		newRoot->subtree[dir] = root;
-
-		// Set new colors
-		root->color = RED;
-		newRoot->color = BLACK;
-
-		return newRoot;
+		root->parent = newRoot;
 	}
-
 	
 	template<Direction dir>
 	Node *doubleRotation(Node *root)
