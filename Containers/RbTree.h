@@ -109,6 +109,8 @@ public:
 
 		root->color = BLACK;
 		++treeSize;
+
+		testTree(root);
 	}
 
 	void emplace(Type &&t)
@@ -141,9 +143,12 @@ public:
 
 			if (uncle && uncle->color == RED)
 			{
-				c->color = uncle->color = BLACK; // Color parent and it's uncle node black
+				c->parent->color = uncle->color = BLACK; // Color parent and it's uncle node black
 				c->parent->parent->color = RED;  // Color grandparent red
 				c = c->parent->parent;			 // Set current node to grandparent
+
+				if (!c->parent) // Delete this once Head is added in
+					break;		// As root's parent and all null nodes
 			}
 
 			// Parent has red and black children
@@ -207,11 +212,16 @@ public:
 		if (root == this->root)
 			this->root = newRoot;
 
-		else if (root == root->parent->subtree[dir])
+		//else
+		//	root->parent->subtree[root != root->parent->subtree[dir]] = newRoot;
+
+		///*
+		else if (root == root->parent->subtree[dir]) // These two can be condensed right? to something like above?
 			root->parent->subtree[dir] = newRoot;
 
 		else
 			root->parent->subtree[!dir] = newRoot;
+		//*/
 
 		newRoot->subtree[dir] = root;
 		root->parent = newRoot;

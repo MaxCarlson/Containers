@@ -84,7 +84,7 @@ void testBST()
 
 void testRbTree()
 {
-	constexpr auto count = 999;
+	constexpr auto count = 9999;
 
 	using Type = int;
 
@@ -97,7 +97,9 @@ void testRbTree()
 	{
 		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
 		tree.addNode(std::move(i));
-		t.emplace(i);
+		tree.addNode(rand());
+		
+		//t.emplace(i);
 	}
 }
 
