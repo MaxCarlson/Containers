@@ -96,11 +96,15 @@ void testRbTree()
 	for (int i = 0; i < count; ++i)
 	{
 		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
-		tree.addNode(std::move(i));
-		tree.addNode(rand());
+		tree.emplace(std::move(i));
+		tree.emplace(rand());
+
+		auto tt = tree.find(i);
 		
 		//t.emplace(i);
+		t.find(i);
 	}
+
 }
 
 

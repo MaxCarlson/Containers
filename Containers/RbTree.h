@@ -40,7 +40,7 @@ public:
 
 private: 
 
-	Node * Head;
+	Node * Head; // TODO: Make head node into parent of root and all null nodes once done testing
 	Node * root = nullptr;
 	long treeSize = 0;
 
@@ -72,6 +72,19 @@ private:
 		return n;
 	}
 public:
+	void emplace(Type &&t)
+	{
+		addNode(std::move(t));
+	}
+
+	void emplace(const Type& t) // Return iterator to elem?
+	{
+		addNode(t);
+	}
+
+	// TODO: topDownInsetion(Type &&T)
+private:
+
 	void addNode(Type &&t) // Add exception handling?
 	{
 		if (root == nullptr)
@@ -88,7 +101,7 @@ public:
 				if (c->data == t) // Don't overwrite here
 					return;
 				// Break when leaf node is found in comparative direction
-				else if (c->subtree[dir] == nullptr) 
+				else if (c->subtree[dir] == nullptr)
 					break;
 
 				c = c->subtree[dir]; // Navigate down tree
@@ -105,16 +118,6 @@ public:
 		++treeSize;
 
 		testTree(root);
-	}
-
-	void emplace(Type &&t)
-	{
-		addNode(t);
-	}
-
-	void emplace(const Type& t)
-	{
-		addNode(t);
 	}
 
 	void bottomUpInsertion(Node *child)
@@ -161,6 +164,52 @@ public:
 	}
 
 public:
+	
+	void erase(const Type& t) // Return iterators to next element
+	{
+		deleteElement(t);
+	}
+
+private:
+
+	void deleteElement(const Type& t)
+	{
+		
+	}
+
+public:
+
+	Type* find(const Type& t) // Change to iterator return
+	{
+		Node* p = lowerBound(t);
+
+		Type *r = nullptr;
+		if (p)
+			r = &p->data;
+
+		return r;
+	}
+
+private:
+
+	// Find the left most node not less than t
+	Node* lowerBound(const Type& t) const				// Switch to iterators
+	{
+		Node* n = this->root;
+		Node* best = this->Head;
+
+		while (n)
+		{
+			int dir = compare(n->data, t);
+
+			if (!dir)
+				best = n;
+
+			n = n->subtree[dir];
+		}
+
+		return best;
+	}
 
 	void rotateDir(Node *root, const int dir)
 	{
@@ -176,8 +225,8 @@ public:
 			this->root = newRoot;
 
 		else
-			root->parent->subtree[root == root->parent->subtree[dir] ? dir : !dir] = newRoot;
-
+			root->parent->subtree[ (root == root->parent->subtree[dir]) ? dir : !dir] = newRoot; // This branch can be avoided if we pass a third param, since it's calculated in bottomupinsertion
+																							     // Worth it or not?
 		newRoot->subtree[dir] = root;
 		root->parent = newRoot;
 	}
@@ -241,3 +290,25 @@ public:
 // Double rotation
 // - rotate once in !direction of initial dir on the !dir subtree
 // - rotate once on the root in rotation direction
+
+/*
+struct jsw_node *jsw_single(struct jsw_node *root, int dir)
+{
+    struct jsw_node *save = root->link[!dir];
+
+    root->link[!dir] = save->link[dir];
+    save->link[dir] = root;
+
+    root->red = 1;
+    save->red = 0;
+
+    return save;
+}
+
+struct jsw_node *jsw_double(struct jsw_node *root, int dir)
+{
+    root->link[!dir] = jsw_single(root->link[!dir], !dir);
+
+    return jsw_single(root, dir);
+}
+*/
