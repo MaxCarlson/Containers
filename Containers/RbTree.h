@@ -5,7 +5,7 @@
 template<class Alloc, class Type>
 using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_alloc<Type>; // Move this into a traits file for containers?
 
-template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>>
+template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>> // TODO: Sepperate functionality into sepperate classes
 class RedBlackTree
 {
 	using RbTree = RedBlackTree<Type, Compare, Allocator>;
@@ -60,7 +60,7 @@ private:
 
 	Node * createNode(Type &&t) // Argument forwarding needed for more complex types, also, template?
 	{
-		Node* n = nodeAl.allocate(1);
+		Node* n = nodeAl.allocate(1); // Should allocater be instantiated here?
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), Head);
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), Head); // TODO: Try - Catch
 		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), Head);
@@ -173,11 +173,119 @@ public:
 
 private:
 
-	void deleteElement(const Type& t)
+	void destoryNode(Node *n)
 	{
-		
+		nodeAl.destroy(n);
 	}
 
+	void deleteExternal(Node* p, Node *c)
+	{
+
+	}
+
+	void deleteElement(const Type& t)
+	{
+		// Find node to delete
+		auto nodeIt = find(t);
+		// Save successor iterator for return
+		// const_iterator returnVal = ++nodeIt;
+
+		if (!nodeIt)
+			return;
+
+		Node* node = nodeIt; // Will be *nodeIt once iterators are implemented
+		Node* Parent = nodeIt->parent;
+
+		int dir = Parent->subtree[RIGHT] == node;
+
+		Node* eraseNode = node;
+		Node* fixNode;
+
+
+		if (!node->subtree[LEFT])
+			fixNode = node->subtree[LEFT];
+		else if (!node->subtree[RIGHT])
+			fixNode = node->subtree[RIGHT];
+		else
+		{
+			//node = successor
+			fixNode = node->subtree[RIGHT];
+		}
+
+		// Only one subtree
+		if (node == eraseNode)
+		{
+
+		}
+	}
+
+	/*
+	// Top Down deletion
+	void deleteElement(const Type& t)
+	{
+		if (this->root)
+		{
+			Node falseHead;
+			Node *p, *c, *g, *f;
+
+			int dir = RIGHT;
+
+			c = &head;
+			p = g = f = nullptr;
+
+			c->subtree[dir] = this->root;
+
+			// Search for our node to delete while
+			// pushing down a red node
+			while (c->subtree[dir])
+			{
+				int last = dir;
+
+				g = p;
+				p = c;
+				c = c->subtree[dir];
+
+				dir = compare(c->data, t);
+
+				// We've found the node to delete
+				if (c->data == t)
+					f = c;
+
+				if (isRed(c) && isRed(c->subtree[!dir]))
+				{
+					if (isRed(c->subtree[!dir]))
+					{
+						rotateDir(c, dir);
+					}
+
+					else if (!isRed(c->subtree[!dir]))
+					{
+						auto* s = p->subtree[!last];
+
+						if (s)
+						{
+							if (isRed(s->subtree[!last]) && !isRed(s->subtree[last]))
+							{
+								p->color = BLACK;
+								s->color = RED;
+								c->color = RED;
+							}
+							else
+							{
+								int dir2 = g->subtree[RIGHT] == p;
+
+								if (isRed(s->subtree[last]))
+								{
+
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	*/
 public:
 
 	Type* find(const Type& t) // Change to iterator return
