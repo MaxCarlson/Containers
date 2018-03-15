@@ -2,7 +2,8 @@
 #include <functional>
 #include <memory>
 
-
+template<class Alloc, class Type>
+using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_alloc<Type>; // Move this into a traits file for containers?
 
 template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>>
 class RedBlackTree
@@ -23,7 +24,7 @@ class RedBlackTree
 
 	Compare compare;
 
-	using NodeAl = std::allocator<Node>;				//using NodeAl = Allocator::rebind<Node>; // FIX LATER
+	using NodeAl = RebindAllocator<Allocator, Node>;				//using NodeAl = Allocator::rebind<Node>; // FIX LATER
 	using NodeAlTraits = std::allocator_traits<NodeAl>;
 
 	NodeAl nodeAl;
@@ -117,7 +118,7 @@ private:
 		root->color = BLACK;
 		++treeSize;
 
-		testTree(root);
+		//testTree(root);
 	}
 
 	void bottomUpInsertion(Node *child)
@@ -200,7 +201,7 @@ private:
 
 		while (n)
 		{
-			int dir = compare(n->data, t);
+			const int dir = compare(n->data, t);
 
 			if (!dir)
 				best = n;

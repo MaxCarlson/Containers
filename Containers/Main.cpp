@@ -2,7 +2,7 @@
 #include "Vector.h"
 #include "BinaryTree.h"
 #include "RbTree.h"
-
+#include "TemplateTesting.h"
 #include <vector>
 #include <iostream>
 #include <map>
@@ -84,35 +84,47 @@ void testBST()
 
 void testRbTree()
 {
-	constexpr auto count = 9999;
+	constexpr auto count = 99999;
 
 	using Type = int;
 
-	std::set<Type> t;
+	//std::set<Type> t;
 	RedBlackTree<Type> tree;
+	//BinaryTree<Type> tree;
 
-	auto al = std::allocator<Type>();
+	//auto al = std::allocator<Type>();
+
+	timer(true);
 
 	for (int i = 0; i < count; ++i)
 	{
 		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
 		tree.emplace(std::move(i));
-		tree.emplace(rand());
+	//	tree.emplace(rand());
 
 		auto tt = tree.find(i);
 		
 		//t.emplace(i);
-		t.find(i);
+		//t.find(i);
 	}
 
+	for (int i = 0; i < count; ++i)
+		tree.find(i);
+
+
+	timer(false);
+	int a = 5;
 }
 
 
 int main()
 { 
+	test.test();
+
 	//testVector()
-	testBST();
+	//testBST();
 	testRbTree();
+
 
 
 	return 0;
