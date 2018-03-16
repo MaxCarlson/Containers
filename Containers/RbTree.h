@@ -72,9 +72,9 @@ private:
 		{
 			if (!data) // Don't increment on null node, usually end()
 				;
-			else if (it->subTree[1]) // Right node is non empty, find smallest member
+			else if (it->subtree[1]) // Right node is non empty, find smallest member
 			{
-				it = minNode(it->subTree[1]);
+				it = minNode(it->subtree[1]);
 				data = &it->data;
 			}
 			else // Climb up tree looking for first Node with a non-empty right subtree
@@ -82,7 +82,7 @@ private:
 				Node* n;
 				// While node has a parent and the iterator is equal
 				// to its parents right node, traverse up tree
-				while ((n = it->parent) && it == n->subTree[1])
+				while ((n = it->parent) && it == n->subtree[1])
 					it = n;
 
 				bool found = false;
@@ -95,7 +95,7 @@ private:
 
 				// Inelegant way to set Iterator to end
 				if (!found)
-					*this = tree->Head; // How to replace?
+					*this = Iterator(tree->Head, tree); // How to replace?
 			}
 			return *this;
 		}
@@ -111,15 +111,15 @@ private:
 		{
 			if (!data)
 				;
-			else if (it->subTree[0]) // Left node is non empty, find largest memeber
+			else if (it->subtree[0]) // Left node is non empty, find largest memeber
 			{
-				it = maxNode(it->subTree[0]);
+				it = maxNode(it->subtree[0]);
 				data = &it->data;
 			}
 			else
 			{
 				Node *n;
-				while ((n = it->parent) && it == n->subTree[0])
+				while ((n = it->parent) && it == n->subtree[0])
 					it = n;
 
 				if (n)
@@ -150,7 +150,8 @@ private:
 
 public:
 
-	Iterator begin() { return Iterator(); }
+	Iterator begin() { return Iterator(lMost(), this); } // Replace lMost() with a cached left value instead of looking it up!!
+	Iterator end() { return Iterator(Head, this); }
 
 private:
 
@@ -161,7 +162,7 @@ private:
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), n); // TODO: Try - Catch
 		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), n);
 
-		//n->subtree[0] = n->subtree[1] = n->parent = nullptr; // DELETE THIS ONCE DONE TESTING
+		n->subtree[0] = n->subtree[1] = n->parent = nullptr; // DELETE THIS ONCE DONE TESTING
 		
 		n->color = BLACK;
 		Head = n;
@@ -227,7 +228,7 @@ private:
 		root->color = BLACK;
 		++treeSize;
 
-		//testTree(root);
+		testTree(root);
 	}
 
 	void bottomUpInsertion(Node *child)
@@ -277,33 +278,43 @@ public:
 	
 	void erase(const Type& t) // Return iterators to next element
 	{
-		deleteElement(t);
+		auto td = find(t);
+
+		erase(td);
+	}
+
+	void freeNode(Node* n)
+	{
+		NodeAlTraits::destroy(nodeAl, std::addressof(n->subtree[LEFT]));
+		NodeAlTraits::destroy(nodeAl, std::addressof(n->subtree[RIGHT]));
+		NodeAlTraits::destroy(nodeAl, std::addressof(n->parent));
+		NodeAlTraits::deallocate(nodeAl, n, 1);
+	}
+
+	Iterator erase(const Iterator& it)
+	{
+		Iterator successor = it;
+		++successor;
+
+		Node* eraseNode = deleteElement(it);
+
+		NodeAlTraits::destroy(nodeAl, std::addressof(eraseNode));
+		freeNode(eraseNode);
+
+		testTree(this->root);
+
+		return Iterator(successor.it, this);
 	}
 
 private:
 
-	void destoryNode(Node *n)
+	Node* deleteElement(Iterator it) // change to const iterator
 	{
-		nodeAl.destroy(n);
-	}
-
-	void deleteExternal(Node* p, Node *c)
-	{
-
-	}
-
-	void deleteElement(const Type& t)
-	{
-		// Find node to delete
-		auto nodeIt = find(t);
 		// Save successor iterator for return
-		// const_iterator returnVal = ++nodeIt;
+		Node* eraseNode = it.it;
+		++it;
 
-		if (!nodeIt)
-			return;
-
-		Node* pnode = nodeIt; // Will be *nodeIt once iterators are implemented
-		Node* eraseNode = pnode;
+		Node* pnode = eraseNode; // Will be *nodeIt once iterators are implemented
 		Node* fixParent;
 		Node* fixNode;
 
@@ -315,7 +326,7 @@ private:
 
 		else
 		{
-			//node = successor
+			pnode = it.it;
 			fixNode = pnode->subtree[RIGHT];
 		}
 
@@ -367,60 +378,61 @@ private:
 
 			pnode->parent = eraseNode->parent;
 			std::swap(pnode->color, eraseNode->color);
+		}
 
-			if (eraseNode->color == BLACK) // Have to recolor tree when erasing non-red parent || child
+
+		if (eraseNode->color == BLACK && fixNode) // Have to recolor tree when erasing non-red parent || child
+		{
+			for (; fixNode != this->root && fixNode->color == BLACK; fixParent = fixNode->parent)
 			{
-				for (; fixNode != this->root && fixNode->color == BLACK; fixParent = fixNode->parent)
+				int tdir = fixNode == fixParent->subtree[RIGHT];
+
+				// Fixup tdir subtree
+				pnode = fixParent->subtree[!tdir]; // tdir is LEFT or 0 for first case!!
+
+				if (pnode->color == RED) // rotate red up from !tdir subtree
 				{
-					int tdir = fixNode == fixParent->subtree[RIGHT];
+					pnode->color = BLACK;
+					fixParent->color = RED;
+					rotateDir(fixParent, tdir);
+					pnode = fixParent->subtree[!tdir];
+				}
 
-					// Fixup tdir subtree
-					pnode = fixParent->[!tdir]; // tdir is LEFT or 0 for first case!!
+				if (!pnode)
+					fixNode = fixParent;
 
-					if (pnode->color == RED) // rotate red up from !tdir subtree
-					{
-						pnode->color = BLACK;
-						fixParent->color = RED;
-						rotateDir(fixParent, tdir);
+				else if (pnode->subtree[tdir]->color == BLACK
+					&& pnode->subtree[!tdir]->color == BLACK) // Redden right subtree that has two black children
+				{
+					pnode->color = RED;
+					fixNode = fixParent;
+				}
+				else
+				{ // Rearrange !tdir subtree
+					if (pnode->subtree[!tdir]->color == BLACK)
+					{   // Rotate red up from tdir subtree with a !tdir rotation
+						pnode->subtree[tdir]->color = BLACK;
+						pnode->color = RED;
+						rotateDir(pnode, !tdir);
 						pnode = fixParent->subtree[!tdir];
 					}
 
-					if (!pnode)
-						fixNode = fixParent;
-
-					else if (pnode->subtree[ tdir]->color == BLACK
-						  && pnode->subtree[!tdir]->color == BLACK) // Redden right subtree that has two black children
-					{
-						pnode->color = RED;
-						fixNode = fixParent;
-					}
-					else
-					{ // Rearrange !tdir subtree
-						if (pnode->subtree[!tdir]->color == BLACK)
-						{   // Rotate red up from tdir subtree with a !tdir rotation
-							pnode->subtree[tdir]->color = BLACK;
-							pnode->color = RED;
-							rotateDir(pnode, !tdir);
-							pnode = fixParent->subtree[!tdir];
-						}
-
-						pnode->color = fixParent->color;
-						fixParent->color = BLACK;
-						pnode->subtree[!tdir]->color = BLACK;
-						rotateDir(fixParent, tdir);
-						break;
-					}
+					pnode->color = fixParent->color;
+					fixParent->color = BLACK;
+					pnode->subtree[!tdir]->color = BLACK;
+					rotateDir(fixParent, tdir);
+					break;
 				}
-
-				fixNode->color = BLACK;
 			}
 
-			if (treeSize > 0)
-				--treeSize;
-
-
-			return eraseNode;
+			if(fixNode)
+				fixNode->color = BLACK;
 		}
+
+		if (treeSize > 0)
+			--treeSize;
+
+		return eraseNode;
 	}
 
 	/*
@@ -492,15 +504,11 @@ private:
 	*/
 public:
 
-	Type* find(const Type& t) // Change to iterator return
+	Iterator find(const Type& t) // Change to const_iterator return
 	{
 		Node* p = lowerBound(t);
 
-		Type *r = nullptr;
-		if (p)
-			r = &p->data;
-
-		return r;
+		return Iterator(p, this);
 	}
 
 private:
@@ -522,6 +530,14 @@ private:
 		}
 
 		return best;
+	}
+
+	static Node* minNode(Node* p) 
+	{
+		while (p->subtree[LEFT])
+			p = p->subtree[LEFT];
+
+		return p;
 	}
 
 	Node* lMost() const

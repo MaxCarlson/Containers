@@ -84,7 +84,7 @@ void testBST()
 
 void testRbTree()
 {
-	constexpr auto count = 99999;
+	constexpr auto count = 999;
 
 	using Type = int;
 
@@ -103,10 +103,15 @@ void testRbTree()
 	//	tree.emplace(rand());
 
 		auto tt = tree.find(i);
+
+		//tree.erase(i);
 		
 		//t.emplace(i);
 		//t.find(i);
 	}
+
+	for (auto it = tree.begin(); it != tree.end(); ++it)
+		it = tree.erase(it);
 
 	for (int i = 0; i < count; ++i)
 		tree.find(i);
