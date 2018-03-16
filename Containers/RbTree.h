@@ -380,8 +380,15 @@ private:
 			std::swap(pnode->color, eraseNode->color);
 		}
 
+		if (!fixNode) // Single end swap
+		{
+			int tdir = pnode == fixParent->subtree[RIGHT];
 
-		if (eraseNode->color == BLACK && fixNode) // Have to recolor tree when erasing non-red parent || child
+			fixNode = eraseNode;
+			fixNode->parent = fixParent;
+		}
+
+		if (eraseNode->color == BLACK) // Have to recolor tree when erasing non-red parent || child
 		{
 			for (; fixNode != this->root && fixNode->color == BLACK; fixParent = fixNode->parent)
 			{
@@ -401,8 +408,8 @@ private:
 				if (!pnode)
 					fixNode = fixParent;
 
-				else if (pnode->subtree[tdir]->color == BLACK
-					&& pnode->subtree[!tdir]->color == BLACK) // Redden right subtree that has two black children
+				else if ((!pnode->subtree[ tdir] || pnode->subtree[ tdir]->color == BLACK)
+					  && (!pnode->subtree[!tdir] || pnode->subtree[!tdir]->color == BLACK)) // Redden right subtree that has two black children
 				{
 					pnode->color = RED;
 					fixNode = fixParent;
@@ -585,7 +592,7 @@ private:
 
 	int testTree(Node *root)
 	{
-		if (!root)
+		if (!root || root == Head)
 			return 1;
 
 		Node* left = root->subtree[LEFT];
