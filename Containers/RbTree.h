@@ -45,14 +45,123 @@ private:
 	Node * root = nullptr;
 	long treeSize = 0;
 
+	struct Iterator // Possibly move this outside BinarySearchTree and use it as a general case for any BST based structures Iterator?
+	{
+		Iterator() = default;
+		Iterator(Node *n, RbTree *t) : it(n), tree(t)
+		{
+			data = &n->data;
+		}
+
+		bool operator!=(const Iterator& i) const
+		{
+			return data != i.data;
+		}
+
+		bool operator==(const Iterator& i) const
+		{
+			return data == i.data; // Compare ptr's not data itself
+		}
+
+		const Type & operator*()
+		{
+			return *data;
+		}
+
+		Iterator& operator++() // Preincrement
+		{
+			if (!data) // Don't increment on null node, usually end()
+				;
+			else if (it->subTree[1]) // Right node is non empty, find smallest member
+			{
+				it = minNode(it->subTree[1]);
+				data = &it->data;
+			}
+			else // Climb up tree looking for first Node with a non-empty right subtree
+			{
+				Node* n;
+				// While node has a parent and the iterator is equal
+				// to its parents right node, traverse up tree
+				while ((n = it->parent) && it == n->subTree[1])
+					it = n;
+
+				bool found = false;
+				if (n)
+				{
+					it = n;
+					data = &it->data;
+					found = true;
+				}
+
+				// Inelegant way to set Iterator to end
+				if (!found)
+					*this = tree->Head; // How to replace?
+			}
+			return *this;
+		}
+
+		Iterator operator++(int) // Postincrement
+		{
+			Iterator i = *this;
+			++*this;
+			return i;
+		}
+
+		Iterator& operator--()
+		{
+			if (!data)
+				;
+			else if (it->subTree[0]) // Left node is non empty, find largest memeber
+			{
+				it = maxNode(it->subTree[0]);
+				data = &it->data;
+			}
+			else
+			{
+				Node *n;
+				while ((n = it->parent) && it == n->subTree[0])
+					it = n;
+
+				if (n)
+				{
+					it = n;
+					data = &it->data;
+				}
+				else
+					*this = tree->Head;
+
+			}
+			return *this;
+		}
+
+		Iterator operator--(int)
+		{
+			Iterator i = *this;
+			--*this;
+			return i;
+		}
+
+	protected:
+		friend class RbTree;
+		Node *it;
+		Type *data; // Get rid of this and allocate node data sepperatly from nodes?
+		RbTree * tree; // How to get rid of this? Need it for head currently
+	};
+
+public:
+
+	Iterator begin() { return Iterator(); }
+
+private:
+
 	void createHead()
 	{
 		Node* n = nodeAl.allocate(1);
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), n);
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), n); // TODO: Try - Catch
-		NodeAlTraits::construct(nodeAl, std::addressof(n->parent), n);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), n);
 
-		n->subtree[0] = n->subtree[1] = n->parent = nullptr; // DELETE THIS ONCE DONE TESTING
+		//n->subtree[0] = n->subtree[1] = n->parent = nullptr; // DELETE THIS ONCE DONE TESTING
 		
 		n->color = BLACK;
 		Head = n;
@@ -193,29 +302,124 @@ private:
 		if (!nodeIt)
 			return;
 
-		Node* node = nodeIt; // Will be *nodeIt once iterators are implemented
-		Node* Parent = nodeIt->parent;
-
-		int dir = Parent->subtree[RIGHT] == node;
-
-		Node* eraseNode = node;
+		Node* pnode = nodeIt; // Will be *nodeIt once iterators are implemented
+		Node* eraseNode = pnode;
+		Node* fixParent;
 		Node* fixNode;
 
+		if (!pnode->subtree[LEFT])
+			fixNode = pnode->subtree[LEFT];
 
-		if (!node->subtree[LEFT])
-			fixNode = node->subtree[LEFT];
-		else if (!node->subtree[RIGHT])
-			fixNode = node->subtree[RIGHT];
+		else if (!pnode->subtree[RIGHT])
+			fixNode = pnode->subtree[RIGHT];
+
 		else
 		{
 			//node = successor
-			fixNode = node->subtree[RIGHT];
+			fixNode = pnode->subtree[RIGHT];
 		}
 
 		// Only one subtree
-		if (node == eraseNode)
+		if (pnode == eraseNode)
 		{
+			fixParent = eraseNode->parent;
 
+			if (fixNode)
+				fixNode->parent = fixParent;
+
+			if (this->root == eraseNode)
+				this->root = fixNode;
+			else
+			{
+				int tdir = fixParent->subtree[RIGHT] == eraseNode;
+				fixParent->subtree[tdir] = fixNode;
+			}
+
+			// Add left most and right most caching here
+		}
+		else
+		{
+			eraseNode->subtree[LEFT]->parent = pnode;
+			pnode->subtree[LEFT] = eraseNode->subtree[LEFT];
+
+			if (pnode == eraseNode->subtree[LEFT])
+				fixParent = pnode;
+
+			else
+			{
+				fixParent = pnode->parent;
+				if (fixNode)
+					fixNode->parent = fixParent;
+
+				fixParent->subtree[LEFT] = fixNode;
+				pnode->subtree[RIGHT] = eraseNode->subtree[RIGHT];
+				eraseNode->subtree[RIGHT]->parent = pnode;
+			}
+
+			if (this->root == eraseNode)
+				this->root = pnode;
+
+			else
+			{
+				int tdir = eraseNode->parent->subtree[RIGHT] == eraseNode;
+				eraseNode->parent->subtree[tdir] = pnode;
+			}
+
+			pnode->parent = eraseNode->parent;
+			std::swap(pnode->color, eraseNode->color);
+
+			if (eraseNode->color == BLACK) // Have to recolor tree when erasing non-red parent || child
+			{
+				for (; fixNode != this->root && fixNode->color == BLACK; fixParent = fixNode->parent)
+				{
+					int tdir = fixNode == fixParent->subtree[RIGHT];
+
+					// Fixup tdir subtree
+					pnode = fixParent->[!tdir]; // tdir is LEFT or 0 for first case!!
+
+					if (pnode->color == RED) // rotate red up from !tdir subtree
+					{
+						pnode->color = BLACK;
+						fixParent->color = RED;
+						rotateDir(fixParent, tdir);
+						pnode = fixParent->subtree[!tdir];
+					}
+
+					if (!pnode)
+						fixNode = fixParent;
+
+					else if (pnode->subtree[ tdir]->color == BLACK
+						  && pnode->subtree[!tdir]->color == BLACK) // Redden right subtree that has two black children
+					{
+						pnode->color = RED;
+						fixNode = fixParent;
+					}
+					else
+					{ // Rearrange !tdir subtree
+						if (pnode->subtree[!tdir]->color == BLACK)
+						{   // Rotate red up from tdir subtree with a !tdir rotation
+							pnode->subtree[tdir]->color = BLACK;
+							pnode->color = RED;
+							rotateDir(pnode, !tdir);
+							pnode = fixParent->subtree[!tdir];
+						}
+
+						pnode->color = fixParent->color;
+						fixParent->color = BLACK;
+						pnode->subtree[!tdir]->color = BLACK;
+						rotateDir(fixParent, tdir);
+						break;
+					}
+				}
+
+				fixNode->color = BLACK;
+			}
+
+			if (treeSize > 0)
+				--treeSize;
+
+
+			return eraseNode;
 		}
 	}
 
@@ -318,6 +522,24 @@ private:
 		}
 
 		return best;
+	}
+
+	Node* lMost() const
+	{
+		Node* p = this->root;
+
+		while (p->subtree[LEFT])
+			p = p->subtree[LEFT];
+
+		return p;
+	}
+
+	Node* rMost() const
+	{
+		Node* p = this->root;
+		while (p->subtree[RIGHT])
+			p = p->subtree[RIGHT];
+		return p;
 	}
 
 	void rotateDir(Node *root, const int dir)
