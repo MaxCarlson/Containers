@@ -390,13 +390,14 @@ private:
 			std::swap(pnode->color, eraseNode->color);
 		}
 
+
+
 		if (!fixNode && (treeSize - 1)) // Single end swap
 		{
 			//fixNode = Head;
 			fixNode = eraseNode;
 			fixNode->parent = fixParent;
 		}
-
 
 		if (eraseNode->color == BLACK) // Have to recolor tree when erasing non-red parent || child
 		{

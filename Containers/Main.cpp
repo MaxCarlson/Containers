@@ -110,26 +110,14 @@ void testRbTree()
 		//t.find(i);
 	}
 
-	tree.erase(tree.root->data);
-
-	int cnt = 0;
-	std::vector<Type> vals(count, 0);
-	for (auto it = tree.begin(); it != tree.end();)
-	{
-		auto ff = *it;
-		it = tree.erase(it);
-		
-		if (*it < count - 1 && *it > -1)
-			vals[*it] = *it;
-		else
-			int a = 4;
-
-		++cnt;
-	}
 
 	for (int i = 0; i < count; ++i)
-		tree.find(i);
-
+	{
+		if (i == 2)
+			int aa = 4;
+		Type r = rand() % count;
+		tree.erase(r);
+	}
 
 	timer(false);
 	int a = 5;
