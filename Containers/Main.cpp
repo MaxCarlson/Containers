@@ -84,9 +84,9 @@ void testBST()
 
 void testRbTree()
 {
-	constexpr auto count = 999;
+	constexpr auto count = 9999;
 
-	using Type = int;
+	using Type = uint64_t;
 
 	//std::set<Type> t;
 	RedBlackTree<Type> tree;
@@ -110,8 +110,22 @@ void testRbTree()
 		//t.find(i);
 	}
 
-	for (auto it = tree.begin(); it != tree.end(); ++it)
+	tree.erase(tree.root->data);
+
+	int cnt = 0;
+	std::vector<Type> vals(count, 0);
+	for (auto it = tree.begin(); it != tree.end();)
+	{
+		auto ff = *it;
 		it = tree.erase(it);
+		
+		if (*it < count - 1 && *it > -1)
+			vals[*it] = *it;
+		else
+			int a = 4;
+
+		++cnt;
+	}
 
 	for (int i = 0; i < count; ++i)
 		tree.find(i);
@@ -129,8 +143,6 @@ int main()
 	//testVector()
 	//testBST();
 	testRbTree();
-
-
 
 	return 0;
 }

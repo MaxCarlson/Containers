@@ -30,7 +30,7 @@ class RedBlackTree
 	NodeAl nodeAl;
 	NodeAlTraits nodeAlTraits;
 
-	// TODO: Add support for <key, type> containers
+	// TODO: Add support for <key, type> containers, possibly with a bool template param?
 
 public:
 
@@ -40,11 +40,11 @@ public:
 	}
 
 private: 
-
+public:
 	Node * Head; // TODO: Make head node into parent of root and all null nodes once done testing
 	Node * root = nullptr;
 	long treeSize = 0;
-
+private:
 	struct Iterator // Possibly move this outside BinarySearchTree and use it as a general case for any BST based structures Iterator?
 	{
 		Iterator() = default;
@@ -199,7 +199,10 @@ private:
 	void addNode(Type &&t) // Add exception handling?
 	{
 		if (root == nullptr)
+		{
 			root = createNode(std::move(t));
+			Head->parent = root;
+		}
 		else
 		{
 			int dir;
@@ -228,7 +231,7 @@ private:
 		root->color = BLACK;
 		++treeSize;
 
-		testTree(root);
+		//testTree(root);
 	}
 
 	void bottomUpInsertion(Node *child)
@@ -301,12 +304,17 @@ public:
 		NodeAlTraits::destroy(nodeAl, std::addressof(eraseNode));
 		freeNode(eraseNode);
 
-		testTree(this->root);
+	//	testTree(this->root);
 
 		return Iterator(successor.it, this);
 	}
 
 private:
+
+	Node * deleteEle(Iterator it)
+	{
+
+	}
 
 	Node* deleteElement(Iterator it) // change to const iterator
 	{
@@ -319,10 +327,10 @@ private:
 		Node* fixNode;
 
 		if (!pnode->subtree[LEFT])
-			fixNode = pnode->subtree[LEFT];
+			fixNode = pnode->subtree[RIGHT];
 
 		else if (!pnode->subtree[RIGHT])
-			fixNode = pnode->subtree[RIGHT];
+			fixNode = pnode->subtree[LEFT];
 
 		else
 		{
@@ -339,7 +347,9 @@ private:
 				fixNode->parent = fixParent;
 
 			if (this->root == eraseNode)
-				this->root = fixNode;
+			{
+				this->root = fixNode;			
+			}
 			else
 			{
 				int tdir = fixParent->subtree[RIGHT] == eraseNode;
@@ -380,13 +390,13 @@ private:
 			std::swap(pnode->color, eraseNode->color);
 		}
 
-		if (!fixNode) // Single end swap
+		if (!fixNode && (treeSize - 1)) // Single end swap
 		{
-			int tdir = pnode == fixParent->subtree[RIGHT];
-
+			//fixNode = Head;
 			fixNode = eraseNode;
 			fixNode->parent = fixParent;
 		}
+
 
 		if (eraseNode->color == BLACK) // Have to recolor tree when erasing non-red parent || child
 		{
@@ -395,7 +405,7 @@ private:
 				int tdir = fixNode == fixParent->subtree[RIGHT];
 
 				// Fixup tdir subtree
-				pnode = fixParent->subtree[!tdir]; // tdir is LEFT or 0 for first case!!
+				pnode = fixParent->subtree[!tdir]; 
 
 				if (pnode->color == RED) // rotate red up from !tdir subtree
 				{
@@ -409,14 +419,14 @@ private:
 					fixNode = fixParent;
 
 				else if ((!pnode->subtree[ tdir] || pnode->subtree[ tdir]->color == BLACK)
-					  && (!pnode->subtree[!tdir] || pnode->subtree[!tdir]->color == BLACK)) // Redden right subtree that has two black children
+					  && (!pnode->subtree[!tdir] || pnode->subtree[!tdir]->color == BLACK)) // Redden right subtree that has two black(or null) children
 				{
 					pnode->color = RED;
 					fixNode = fixParent;
 				}
 				else
 				{ // Rearrange !tdir subtree
-					if (pnode->subtree[!tdir]->color == BLACK)
+					if ((!pnode->subtree[!tdir] || pnode->subtree[!tdir]->color == BLACK))
 					{   // Rotate red up from tdir subtree with a !tdir rotation
 						pnode->subtree[tdir]->color = BLACK;
 						pnode->color = RED;
