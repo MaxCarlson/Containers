@@ -84,7 +84,7 @@ void testBST()
 
 void testRbTree()
 {
-	constexpr auto count = 999;
+	constexpr auto count = 9999;
 
 	using Type = uint64_t;
 
@@ -116,7 +116,7 @@ void testRbTree()
 
 	for (int i = 0; i < count; ++i)
 	{
-		if (i == 2)
+		if (i == 749)
 			int aa = 4;
 		Type r = rand() % count;
 		t.erase(r);

@@ -284,7 +284,8 @@ public:
 	{
 		auto td = find(t);
 
-		erase(td);
+		if(td != end())
+			erase(td);
 	}
 
 	void freeNode(Node* n)
