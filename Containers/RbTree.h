@@ -44,6 +44,7 @@ public:
 	Node * Head; // TODO: Make head node into parent of root and all null nodes once done testing
 	Node * root = nullptr;
 	long treeSize = 0;
+
 private:
 	struct Iterator // Possibly move this outside BinarySearchTree and use it as a general case for any BST based structures Iterator?
 	{
@@ -304,17 +305,12 @@ public:
 		NodeAlTraits::destroy(nodeAl, std::addressof(eraseNode));
 		freeNode(eraseNode);
 
-	//	testTree(this->root);
+		testTree(this->root);
 
 		return Iterator(successor.it, this);
 	}
 
 private:
-
-	Node * deleteEle(Iterator it)
-	{
-
-	}
 
 	Node* deleteElement(Iterator it) // change to const iterator
 	{
@@ -352,18 +348,19 @@ private:
 			}
 			else
 			{
-				int tdir = fixParent->subtree[RIGHT] == eraseNode;
+				const int tdir = fixParent->subtree[RIGHT] == eraseNode;
 				fixParent->subtree[tdir] = fixNode;
 			}
 
 			// Add left most and right most caching here
 		}
+
 		else
 		{
 			eraseNode->subtree[LEFT]->parent = pnode;
 			pnode->subtree[LEFT] = eraseNode->subtree[LEFT];
 
-			if (pnode == eraseNode->subtree[LEFT])
+			if (pnode == eraseNode->subtree[RIGHT]) // Successor is next to erased node
 				fixParent = pnode;
 
 			else
@@ -390,20 +387,11 @@ private:
 			std::swap(pnode->color, eraseNode->color);
 		}
 
-
-
-		if (!fixNode && (treeSize - 1)) // Single end swap
-		{
-			//fixNode = Head;
-			fixNode = eraseNode;
-			fixNode->parent = fixParent;
-		}
-
 		if (eraseNode->color == BLACK) // Have to recolor tree when erasing non-red parent || child
 		{
-			for (; fixNode != this->root && fixNode->color == BLACK; fixParent = fixNode->parent)
+			for (; fixNode != this->root && (!fixNode || fixNode->color == BLACK); fixParent = fixNode->parent)
 			{
-				int tdir = fixNode == fixParent->subtree[RIGHT];
+				const int tdir = fixNode == fixParent->subtree[RIGHT];
 
 				// Fixup tdir subtree
 				pnode = fixParent->subtree[!tdir]; 

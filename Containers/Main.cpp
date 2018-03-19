@@ -84,11 +84,11 @@ void testBST()
 
 void testRbTree()
 {
-	constexpr auto count = 9999;
+	constexpr auto count = 999;
 
 	using Type = uint64_t;
 
-	//std::set<Type> t;
+	std::set<Type> t;
 	RedBlackTree<Type> tree;
 	//BinaryTree<Type> tree;
 
@@ -100,6 +100,7 @@ void testRbTree()
 	{
 		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
 		tree.emplace(std::move(i));
+		t.emplace(i);
 	//	tree.emplace(rand());
 
 		auto tt = tree.find(i);
@@ -110,12 +111,15 @@ void testRbTree()
 		//t.find(i);
 	}
 
+	//for (auto it = tree.begin(); it != tree.end();)
+	//	it = tree.erase(it);
 
 	for (int i = 0; i < count; ++i)
 	{
 		if (i == 2)
 			int aa = 4;
 		Type r = rand() % count;
+		t.erase(r);
 		tree.erase(r);
 	}
 
