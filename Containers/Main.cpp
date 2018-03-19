@@ -112,7 +112,10 @@ void testRbTree()
 	}
 
 	for (auto it = tree.cbegin(); it != tree.cend(); ++it)
+	{
 		std::cout << *it << " ";
+		*it = 4;
+	}
 
 	//for (auto it = tree.begin(); it != tree.end();)
 	//	it = tree.erase(it);

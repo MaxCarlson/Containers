@@ -8,8 +8,8 @@ using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_a
 template<class Tree>
 class TreeIterator
 {
-	using NodePtr = typename Tree::Node*;
-	using pointer = const NodePtr;
+	using NodePtr = typename Tree::NodePtr;
+	using pointer = typename Tree::pointer;
 	using reference = typename Tree::reference;
 
 public:
@@ -118,13 +118,14 @@ private:
 template<class Tree>
 class ConstTreeIterator : public TreeIterator<Tree>
 {
-	using NodePtr = typename Tree::Node*;
-	using pointer = typename Tree::Node::data const;
+	using NodePtr = typename Tree::NodePtr;
+	using pointer = typename Tree::pointer const;
 	using const_reference = typename Tree::reference const;
 
 public:
 
-	ConstTreeIterator() : TreeIterator<Tree>(NodePtr node, Tree *tree) {}
+	ConstTreeIterator() : TreeIterator<Tree>() {}
+	ConstTreeIterator(NodePtr node, Tree *tree) : TreeIterator<Tree>(node, tree) {}
 
 	pointer operator->() const
 	{
@@ -142,8 +143,6 @@ class RedBlackTree
 {
 	using RbTree = RedBlackTree<Type, Compare, Allocator>;
 
-	using reference = Type&;	
-
 	enum Color { RED, BLACK };
 	enum Direction { LEFT, RIGHT };
 
@@ -155,6 +154,11 @@ class RedBlackTree
 		Color color; // change this to char when done debugging
 		Type data;
 	};
+
+	using NodePtr   = Node*;
+	using reference = Type&;
+	using pointer   = Type*;
+
 
 	Compare compare;
 
