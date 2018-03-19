@@ -111,10 +111,15 @@ void testRbTree()
 		//t.find(i);
 	}
 
+	for (auto it = t.begin(); it != t.end(); ++it)
+	{
+		//*it = 4; 
+	}
+
 	for (auto it = tree.cbegin(); it != tree.cend(); ++it)
 	{
 		std::cout << *it << " ";
-		*it = 4;
+		//*it = 5;
 	}
 
 	//for (auto it = tree.begin(); it != tree.end();)
