@@ -8,10 +8,10 @@ using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_a
 template<class Tree>
 class TreeIterator
 {
+	using NodePtr    = typename Tree::NodePtr;
 	using value_type = typename Tree::value_type;
-	using NodePtr = typename Tree::NodePtr;
-	using pointer = typename Tree::pointer;
-	using reference = const value_type&;
+	using pointer    = typename Tree::pointer;
+	using reference  = typename Tree::value_type const&;
 
 public:
 	TreeIterator() = default;
@@ -142,42 +142,61 @@ public:
 	}
 };
 
+template<class Type>
+struct Node
+{
+	Node* parent;
+	Node* subtree[2];
+
+	char color; 
+	Type data;
+};
+
+// Wrapper for types needed by tree and iterators
+template<class Type, class Node, class Alloc>
+struct TreeTypes
+{
+	using Alloc = RebindAllocator<Alloc, Type>;
+	using Alloc_Traits = std::allocator_traits<Alloc>;
+
+	using NodeAl = RebindAllocator<Alloc, Node>; 
+	using NodeAlTraits = std::allocator_traits<NodeAl>;
+
+	using NodePtr		  = typename NodeAlTraits::pointer;
+	using difference_type = typename NodeAlTraits::difference_type;
+	using value_type	  = typename NodeAlTraits::value_type;
+	using pointer		  = typename NodeAlTraits::pointer;
+	using const_pointer   = typename NodeAlTraits::const_pointer;
+	using reference		  = Type&;
+	using const_reference = const Type&;
+};
+
 template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>> // TODO: Sepperate functionality into sepperate classes
 class RedBlackTree
 {
-	using RbTree = RedBlackTree<Type, Compare, Allocator>;
+	using Node = Node<Type>;
+	using MyBase = RedBlackTree<Type, Compare, Allocator>;
+	using BaseTypes = TreeTypes<Type, Node, Allocator>;
 
 	enum Color { RED, BLACK };
 	enum Direction { LEFT, RIGHT };
 
-	struct Node
-	{
-		Node* parent;
-		Node* subtree[2];
+	using NodePtr    = typename BaseTypes::NodePtr;
+	using reference  = typename BaseTypes::reference;
+	using pointer    = typename BaseTypes::pointer;
+	using value_type = typename BaseTypes::value_type;
 
-		Color color; // change this to char when done debugging
-		Type data;
-	};
+	using NodeAl = typename BaseTypes::NodeAl;				
+	using NodeAlTraits = typename BaseTypes::NodeAlTraits;
 
-	using NodePtr    = Node*;
-	using reference  = Type&;
-	using pointer    = Type*;
-	using value_type = Type;
-
-
-	Compare compare;
-
-	using NodeAl = RebindAllocator<Allocator, Node>;				
-	using NodeAlTraits = std::allocator_traits<NodeAl>;
-
-	NodeAl nodeAl;
-	NodeAlTraits nodeAlTraits;
+	NodeAl nodeAl; // Should this only be init on node construct/destruct?
 
 	// TODO: Add support for <key, type> containers
+	Compare compare;
 
-	using Iterator = TreeIterator<RbTree>;
+	using Iterator = TreeIterator<MyBase>;
 	using reverse_iterator = std::reverse_iterator<Iterator>;
-	using Const_Iterator = ConstTreeIterator<RbTree>;
+	using Const_Iterator = ConstTreeIterator<MyBase>;
 	friend class Iterator;
 
 public:
@@ -236,7 +255,7 @@ public:
 
 	void emplace(const Type& t) // Return iterator to elem?
 	{
-		addNode(t);
+		addNode(std::move(t)); // Figure out correct way to do these emplaces, with arg forwarding etc
 	}
 
 	// TODO: topDownInsetion(Type &&T)

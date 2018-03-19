@@ -98,7 +98,7 @@ void testRbTree()
 	for (int i = 0; i < count; ++i)
 	{
 		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
-		tree.emplace(std::move(i));
+		tree.emplace(i);
 		//t.emplace(i);
 	//	tree.emplace(rand());
 
@@ -111,7 +111,10 @@ void testRbTree()
 	}
 
 	for (auto it = tree.cbegin(); it != tree.cend();)
+	{
 		it = tree.erase(it);
+		++it;
+	}
 
 	
 	for (int i = 0; i < count * 2; ++i)
