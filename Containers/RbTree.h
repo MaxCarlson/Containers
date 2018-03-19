@@ -5,10 +5,144 @@
 template<class Alloc, class Type>
 using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_alloc<Type>; // Move this into a traits file for containers?
 
+template<class Tree>
+class TreeIterator
+{
+	using NodePtr = typename Tree::Node*;
+	using pointer = const NodePtr;
+	using reference = typename Tree::reference;
+
+public:
+	TreeIterator() = default;
+	TreeIterator(NodePtr node, Tree *tree) : node(node), tree(tree)
+	{
+	}
+
+	pointer operator->() 
+	{
+		return std::pointer_traits<pointer>::pointer_to(**this);
+	}
+
+	reference operator*() 
+	{
+		return node->data;
+	}
+
+	bool operator==(const TreeIterator& i) const
+	{
+		return node == i.node; // Compare ptr's not data itself
+	}
+
+	bool operator!=(const TreeIterator& i) const
+	{
+		return !(this->node == i.node);
+	}
+
+	TreeIterator& operator++() // Preincrement
+	{
+		if (this->node == tree->Head) // Don't increment on null node, usually end()
+			;
+		else if (node->subtree[1]) // Right node is non empty, find smallest member
+		{
+			node = Tree::minNode(node->subtree[1]);
+		}
+		else // Climb up tree looking for first Node with a non-empty right subtree
+		{
+			NodePtr n;
+			// While node has a parent and the iterator is equal
+			// to its parents right node, traverse up tree
+			while ((n = node->parent) && node == n->subtree[1])
+				node = n;
+
+			bool found = false;
+			if (n)
+			{
+				node = n;
+				found = true;
+			}
+
+			// Inelegant way to set Iterator to end
+			if (!found)
+				*this = TreeIterator(tree->Head, tree); // How to replace?
+		}
+		return *this;
+	}
+
+	TreeIterator operator++(int) // Postincrement
+	{
+		TreeIterator i = *this;
+		++*this;
+		return i;
+	}
+
+	TreeIterator& operator--()
+	{
+		if (!data)
+			;
+		else if (node->subtree[0]) // Left node is non empty, find largest memeber
+		{
+			node = Tree::maxNode(node->subtree[0]);
+			data = &node->data;
+		}
+		else
+		{
+			NodePtr n;
+			while ((n = node->parent) && node == n->subtree[0])
+				node = n;
+
+			if (n)
+			{
+				node = n;
+				data = &node->data;
+			}
+			else
+				*this = tree->Head;
+
+		}
+		return *this;
+	}
+
+	TreeIterator operator--(int)
+	{
+		Iterator i = *this;
+		--*this;
+		return i;
+	}
+
+
+	NodePtr node = nullptr;
+private:
+	Tree * tree;
+};
+
+template<class Tree>
+class ConstTreeIterator : public TreeIterator<Tree>
+{
+	using NodePtr = typename Tree::Node*;
+	using pointer = typename Tree::Node::data const;
+	using const_reference = typename Tree::reference const;
+
+public:
+
+	ConstTreeIterator() : TreeIterator<Tree>(NodePtr node, Tree *tree) {}
+
+	pointer operator->() const
+	{
+		return std::pointer_traits<pointer>::pointer_to(**this);
+	}
+
+	const_reference operator*() const
+	{
+		return node->data;
+	}
+};
+
 template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>> // TODO: Sepperate functionality into sepperate classes
 class RedBlackTree
 {
 	using RbTree = RedBlackTree<Type, Compare, Allocator>;
+
+	using reference = Type&;	
 
 	enum Color { RED, BLACK };
 	enum Direction { LEFT, RIGHT };
@@ -24,13 +158,18 @@ class RedBlackTree
 
 	Compare compare;
 
-	using NodeAl = RebindAllocator<Allocator, Node>;				//using NodeAl = Allocator::rebind<Node>; // FIX LATER
+	using NodeAl = RebindAllocator<Allocator, Node>;				
 	using NodeAlTraits = std::allocator_traits<NodeAl>;
 
 	NodeAl nodeAl;
 	NodeAlTraits nodeAlTraits;
 
 	// TODO: Add support for <key, type> containers, possibly with a bool template param?
+
+	using Iterator = TreeIterator<RbTree>;
+	using reverse_iterator = std::reverse_iterator<Iterator>;
+	using Const_Iterator = ConstTreeIterator<RbTree>;
+	friend class Iterator;
 
 public:
 
@@ -40,144 +179,41 @@ public:
 	}
 
 private: 
-public:
 	Node * Head; // TODO: Make head node into parent of root and all null nodes once done testing
 	Node * root = nullptr;
 	long treeSize = 0;
 
-private:
-	struct Iterator // Possibly move this outside BinarySearchTree and use it as a general case for any BST based structures Iterator?
-	{
-		Iterator() = default;
-		Iterator(Node *n, RbTree *t) : it(n), tree(t)
-		{
-			data = &n->data;
-		}
-
-		bool operator!=(const Iterator& i) const
-		{
-			return data != i.data;
-		}
-
-		bool operator==(const Iterator& i) const
-		{
-			return data == i.data; // Compare ptr's not data itself
-		}
-
-		const Type & operator*()
-		{
-			return *data;
-		}
-
-		Iterator& operator++() // Preincrement
-		{
-			if (!data) // Don't increment on null node, usually end()
-				;
-			else if (it->subtree[1]) // Right node is non empty, find smallest member
-			{
-				it = minNode(it->subtree[1]);
-				data = &it->data;
-			}
-			else // Climb up tree looking for first Node with a non-empty right subtree
-			{
-				Node* n;
-				// While node has a parent and the iterator is equal
-				// to its parents right node, traverse up tree
-				while ((n = it->parent) && it == n->subtree[1])
-					it = n;
-
-				bool found = false;
-				if (n)
-				{
-					it = n;
-					data = &it->data;
-					found = true;
-				}
-
-				// Inelegant way to set Iterator to end
-				if (!found)
-					*this = Iterator(tree->Head, tree); // How to replace?
-			}
-			return *this;
-		}
-
-		Iterator operator++(int) // Postincrement
-		{
-			Iterator i = *this;
-			++*this;
-			return i;
-		}
-
-		Iterator& operator--()
-		{
-			if (!data)
-				;
-			else if (it->subtree[0]) // Left node is non empty, find largest memeber
-			{
-				it = maxNode(it->subtree[0]);
-				data = &it->data;
-			}
-			else
-			{
-				Node *n;
-				while ((n = it->parent) && it == n->subtree[0])
-					it = n;
-
-				if (n)
-				{
-					it = n;
-					data = &it->data;
-				}
-				else
-					*this = tree->Head;
-
-			}
-			return *this;
-		}
-
-		Iterator operator--(int)
-		{
-			Iterator i = *this;
-			--*this;
-			return i;
-		}
-
-	protected:
-		friend class RbTree;
-		Node *it;
-		Type *data; // Get rid of this and allocate node data sepperatly from nodes?
-		RbTree * tree; // How to get rid of this? Need it for head currently
-	};
-
 public:
 
-	Iterator begin() { return Iterator(lMost(), this); } // Replace lMost() with a cached left value instead of looking it up!!
-	Iterator end() { return Iterator(Head, this); }
+	Iterator begin() noexcept { return Iterator(lMost(), this); } // Replace lMost() with a cached left value instead of looking it up!!
+	Iterator end() noexcept { return Iterator(Head, this); }
+
+	Const_Iterator cbegin() noexcept { return Const_Iterator(lMost(), this); }
+	Const_Iterator cend() noexcept { return Const_Iterator(Head, this); }
+
+	reverse_iterator rbegin() noexcept { return reverse_iterator(rMost(), this); }
+	reverse_iterator rend() noexcept { return reverse_iterator(lMost(), this); }
 
 private:
 
 	void createHead()
 	{
 		Node* n = nodeAl.allocate(1);
-		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), n);
-		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), n); // TODO: Try - Catch
-		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), n);
-
-		n->subtree[0] = n->subtree[1] = n->parent = nullptr; // DELETE THIS ONCE DONE TESTING
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), nullptr);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), nullptr); // TODO: Try - Catch
+		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), nullptr);
 		
 		n->color = BLACK;
-		Head = n;
+		Head = n; // Heads right needs to be rmost, left needs to be lmost
 	}
 
 	Node * createNode(Type &&t) // Argument forwarding needed for more complex types, also, template?
 	{
 		Node* n = nodeAl.allocate(1); // Should allocater be instantiated here?
-		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), Head);
-		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), Head); // TODO: Try - Catch
-		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), Head);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), nullptr); // Are these needed?
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), nullptr); // TODO: Try - Catch
+		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), nullptr);
 		NodeAlTraits::construct(nodeAl, std::addressof(n->data      ),    t);
-
-		n->subtree[0] = n->subtree[1] = n->parent = nullptr; // DELETE THIS ONCE DONE TESTING
 
 		n->color = RED;
 
@@ -308,7 +344,7 @@ public:
 
 		testTree(this->root);
 
-		return Iterator(successor.it, this);
+		return Iterator(successor.node, this);
 	}
 
 private:
@@ -316,10 +352,10 @@ private:
 	Node* deleteElement(Iterator it) // change to const iterator
 	{
 		// Save successor iterator for return
-		Node* eraseNode = it.it;
+		Node* eraseNode = it.node;
 		++it;
 
-		Node* pnode = eraseNode; // Will be *nodeIt once iterators are implemented
+		Node* pnode = eraseNode; 
 		Node* fixParent;
 		Node* fixNode;
 
@@ -331,7 +367,7 @@ private:
 
 		else
 		{
-			pnode = it.it;
+			pnode = it.node;
 			fixNode = pnode->subtree[RIGHT];
 		}
 

@@ -30,7 +30,7 @@ inline void timer(bool startNow)
 		return;
 	}
 
-	std::cout << "\n" << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << "\n";
+	std::cout << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << "\n";
 }
 
 void testVector()
@@ -94,7 +94,7 @@ void testRbTree()
 
 	//auto al = std::allocator<Type>();
 
-	timer(true);
+	//timer(true);
 
 	for (int i = 0; i < count; ++i)
 	{
@@ -111,22 +111,35 @@ void testRbTree()
 		//t.find(i);
 	}
 
+	for (auto it = tree.cbegin(); it != tree.cend(); ++it)
+		std::cout << *it << " ";
+
 	//for (auto it = tree.begin(); it != tree.end();)
 	//	it = tree.erase(it);
 
-	for (int i = 0; i < count; ++i)
+	timer(true);
+	for (int i = 0; i < count * 2; ++i)
 	{
-		if (i == 749)
-			int aa = 4;
 		Type r = rand() % count;
 		t.erase(r);
 		tree.erase(r);
+
+		if (i % 100 == 0)
+		{
+			timer(false);
+			std::cout << 100.0 / double(count) * double(i) << " ";
+			timer(true);
+		}
 	}
 
-	timer(false);
+	//timer(false);
 	int a = 5;
 }
 
+// Things to implement
+// Hash table
+// Skip List
+// Deque?
 
 int main()
 { 
