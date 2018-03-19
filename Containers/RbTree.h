@@ -30,8 +30,8 @@ public:
 	}
 
 	bool operator==(const TreeIterator& i) const
-	{
-		return node == i.node; // Compare ptr's not data itself
+	{   // Compare ptr's not data itself
+		return node == i.node; 
 	}
 
 	bool operator!=(const TreeIterator& i) const
@@ -117,17 +117,19 @@ private:
 };
 
 template<class Tree>
-class ConstTreeIterator : public TreeIterator<Tree>
+class ConstTreeIterator : public TreeIterator<Tree> // TODO: At the moment this is basically identical to TreeIterator, make other values const once support is added for pairs, etc
 {
-	using value_type = typename Tree::value_type;
-	using NodePtr = typename Tree::NodePtr;
+	using MyBase = TreeIterator<Tree>;
+	using value_type = typename Tree::value_type; 
+	using NodePtr = typename Tree::NodePtr;			// Inaccessible Types ??? Compiler warning
 	using pointer = typename Tree::pointer const;
 	using reference = const value_type&;
 
 public:
 
-	ConstTreeIterator() : TreeIterator<Tree>() {}
-	ConstTreeIterator(NodePtr node, Tree *tree) : TreeIterator<Tree>(node, tree) {}
+	ConstTreeIterator() : MyBase() {}
+	ConstTreeIterator(const MyBase& b) : MyBase(b) {}
+	ConstTreeIterator(NodePtr node, Tree *tree) : MyBase(node, tree) {}
 
 	pointer operator->() const
 	{
@@ -157,9 +159,9 @@ class RedBlackTree
 		Type data;
 	};
 
-	using NodePtr   = Node*;
-	using reference = Type&;
-	using pointer   = Type*;
+	using NodePtr    = Node*;
+	using reference  = Type&;
+	using pointer    = Type*;
 	using value_type = Type;
 
 
@@ -171,7 +173,7 @@ class RedBlackTree
 	NodeAl nodeAl;
 	NodeAlTraits nodeAlTraits;
 
-	// TODO: Add support for <key, type> containers, possibly with a bool template param?
+	// TODO: Add support for <key, type> containers
 
 	using Iterator = TreeIterator<RbTree>;
 	using reverse_iterator = std::reverse_iterator<Iterator>;
@@ -186,8 +188,8 @@ public:
 	}
 
 private: 
-	Node * Head; // TODO: Make head node into parent of root and all null nodes once done testing
-	Node * root = nullptr;
+	NodePtr Head; 
+	NodePtr root = nullptr;
 	long treeSize = 0;
 
 public:
@@ -195,17 +197,17 @@ public:
 	Iterator begin() noexcept { return Iterator(lMost(), this); } // Replace lMost() with a cached left value instead of looking it up!!
 	Iterator end() noexcept { return Iterator(Head, this); }
 
-	Const_Iterator cbegin() noexcept { return Const_Iterator(lMost(), this); }
-	Const_Iterator cend() noexcept { return Const_Iterator(Head, this); }
+	Const_Iterator cbegin() noexcept { return begin(); }
+	Const_Iterator cend() noexcept { return end(); }
 
-	reverse_iterator rbegin() noexcept { return reverse_iterator(rMost(), this); }
+	reverse_iterator rbegin() noexcept { return reverse_iterator(rMost(), this); } // TODO: Non-functioning
 	reverse_iterator rend() noexcept { return reverse_iterator(lMost(), this); }
-
+	
 private:
 
 	void createHead()
 	{
-		Node* n = nodeAl.allocate(1);
+		NodePtr n = nodeAl.allocate(1);
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), nullptr);
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), nullptr); // TODO: Try - Catch
 		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), nullptr);
@@ -214,9 +216,9 @@ private:
 		Head = n; // Heads right needs to be rmost, left needs to be lmost
 	}
 
-	Node * createNode(Type &&t) // Argument forwarding needed for more complex types, also, template?
+	NodePtr createNode(Type &&t) // Argument forwarding needed for more complex types, also, template?
 	{
-		Node* n = nodeAl.allocate(1); // Should allocater be instantiated here?
+		NodePtr n = nodeAl.allocate(1); // Should allocater be instantiated here?
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), nullptr); // Are these needed?
 		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), nullptr); // TODO: Try - Catch
 		NodeAlTraits::construct(nodeAl, std::addressof(n->parent    ), nullptr);
@@ -250,7 +252,7 @@ private:
 		else
 		{
 			int dir;
-			Node* c = root;
+			NodePtr c = root;
 
 			for (;;)
 			{
@@ -274,24 +276,21 @@ private:
 
 		root->color = BLACK;
 		++treeSize;
-
 		//testTree(root);
 	}
 
-	void bottomUpInsertion(Node *child)
+	void bottomUpInsertion(NodePtr child)
 	{
 		if (!child->parent)
 			return;
 
-		Node* root = this->root;
-
 		// We need to fix tree for children with red parents
-		for (Node *c = child; c->parent->color == RED;)
+		for (NodePtr c = child; c->parent->color == RED;)
 		{
-			const Direction dir = static_cast<Direction>(c->parent == c->parent->parent->subtree[RIGHT]); // Change to int once done debugging
+			const int dir = (c->parent == c->parent->parent->subtree[RIGHT]); // Change to int once done debugging
 
 			// If sister node is red attempt a re-color
-			Node* uncle = c->parent->parent->subtree[!dir];
+			NodePtr uncle = c->parent->parent->subtree[!dir];
 
 			if (uncle && uncle->color == RED)
 			{
@@ -321,50 +320,49 @@ private:
 		}
 	}
 
-public:
-	
-	void erase(const Type& t) // Return iterators to next element
-	{
-		auto td = find(t);
-
-		if(td != end())
-			erase(td);
-	}
-
-	void freeNode(Node* n)
+	void freeNode(NodePtr n)
 	{
 		NodeAlTraits::destroy(nodeAl, std::addressof(n->subtree[LEFT]));
 		NodeAlTraits::destroy(nodeAl, std::addressof(n->subtree[RIGHT]));
 		NodeAlTraits::destroy(nodeAl, std::addressof(n->parent));
-		NodeAlTraits::deallocate(nodeAl, n, 1);
+		NodeAlTraits::deallocate(nodeAl, n, 1); // TODO: Deallocation should be done when obj destructor is called like STL containers?
 	}
 
-	Iterator erase(const Iterator& it)
+public:
+
+	void erase(const Type& t) // Return iterators to next element
 	{
-		Iterator successor = it;
+		Const_Iterator td = find(t);
+
+		if (td != end())
+			erase(td);
+	}
+
+	Iterator erase(Const_Iterator it)
+	{
+		Const_Iterator successor = it;
 		++successor;
 
-		Node* eraseNode = deleteElement(it);
+		NodePtr eraseNode = deleteElement(it);
 
 		NodeAlTraits::destroy(nodeAl, std::addressof(eraseNode));
 		freeNode(eraseNode);
 
-		testTree(this->root);
-
+		//testTree(this->root);
 		return Iterator(successor.node, this);
 	}
 
 private:
 
-	Node* deleteElement(Iterator it) // change to const iterator
+	NodePtr deleteElement(Const_Iterator it) // change to const iterator
 	{
 		// Save successor iterator for return
-		Node* eraseNode = it.node;
+		NodePtr eraseNode = it.node;
 		++it;
 
-		Node* pnode = eraseNode; 
-		Node* fixParent;
-		Node* fixNode;
+		NodePtr pnode = eraseNode; 
+		NodePtr fixParent;
+		NodePtr fixNode;
 
 		if (!pnode->subtree[LEFT])
 			fixNode = pnode->subtree[RIGHT];
@@ -492,7 +490,7 @@ private:
 		if (this->root)
 		{
 			Node falseHead;
-			Node *p, *c, *g, *f;
+			NodePtr p, *c, *g, *f;
 
 			int dir = RIGHT;
 
@@ -556,18 +554,23 @@ public:
 
 	Iterator find(const Type& t) // Change to const_iterator return
 	{
-		Node* p = lowerBound(t);
+		NodePtr p = lowerBound(t);
 
 		return Iterator(p, this);
+	}
+
+	Const_Iterator find(const Type &t) const
+	{
+		return Const_Iterator(find(t));
 	}
 
 private:
 
 	// Find the left most node not less than t
-	Node* lowerBound(const Type& t) const				// Switch to iterators
+	NodePtr lowerBound(const Type& t) const
 	{
-		Node* n = this->root;
-		Node* best = this->Head;
+		NodePtr n = this->root;
+		NodePtr best = this->Head;
 
 		while (n)
 		{
@@ -582,7 +585,7 @@ private:
 		return best;
 	}
 
-	static Node* minNode(Node* p) 
+	static NodePtr minNode(NodePtr p) 
 	{
 		while (p->subtree[LEFT])
 			p = p->subtree[LEFT];
@@ -590,27 +593,34 @@ private:
 		return p;
 	}
 
-	Node* lMost() const
+	static NodePtr maxNode(NodePtr p)
 	{
-		Node* p = this->root;
-
-		while (p->subtree[LEFT])
-			p = p->subtree[LEFT];
-
-		return p;
-	}
-
-	Node* rMost() const
-	{
-		Node* p = this->root;
 		while (p->subtree[RIGHT])
 			p = p->subtree[RIGHT];
 		return p;
 	}
 
-	void rotateDir(Node *root, const int dir)
+	NodePtr lMost() const  // TODO: Make these return cached values
 	{
-		Node* newRoot = root->subtree[!dir];
+		NodePtr p = this->root;
+
+		while (p->subtree[LEFT])
+			p = p->subtree[LEFT];
+
+		return p;
+	}
+
+	NodePtr rMost() const
+	{
+		NodePtr p = this->root;
+		while (p->subtree[RIGHT])
+			p = p->subtree[RIGHT];
+		return p;
+	}
+
+	void rotateDir(NodePtr root, const int dir)
+	{
+		NodePtr newRoot = root->subtree[!dir];
 		root->subtree[!dir] = newRoot->subtree[dir];
 
 		if (newRoot->subtree[dir])
@@ -622,24 +632,24 @@ private:
 			this->root = newRoot;
 
 		else
-			root->parent->subtree[ (root == root->parent->subtree[dir]) ? dir : !dir] = newRoot; // This branch can be avoided if we pass a third param, since it's calculated in bottomupinsertion
+			root->parent->subtree[(root == root->parent->subtree[dir]) ? dir : !dir] = newRoot; // This branch can be avoided if we pass a third param, since it's calculated in bottomupinsertion
 																							     // Worth it or not?
 		newRoot->subtree[dir] = root;
 		root->parent = newRoot;
 	}
 
-	bool isRed(Node *n)
+	bool isRed(NodePtr n)
 	{
 		return (n && n->color == RED);
 	}
 
-	int testTree(Node *root)
+	int testTree(NodePtr root)
 	{
 		if (!root || root == Head)
 			return 1;
 
-		Node* left = root->subtree[LEFT];
-		Node* right = root->subtree[RIGHT];
+		NodePtr left = root->subtree[LEFT];
+		NodePtr right = root->subtree[RIGHT];
 
 		// Red node has a red child
 		if (isRed(root))
@@ -671,41 +681,3 @@ private:
 		return 0;
 	}
 };
-
-// Notes: 
-// Root is black
-// Node that's colored Red cannot have a child Colored Red			  ~ red violation if not true
-// Number of black nodes along any path in the tree must be identical ~ black height of the tree ~ black violation if not  true
-
-// Height cannot be shorter than log(N + 1) and cannot be taller than 2 * Log(N + 1)
-
-
-// Rotations:
-// A single rotation sets the old root to Red and the new root to black
-// A double rotation
-
-// Double rotation
-// - rotate once in !direction of initial dir on the !dir subtree
-// - rotate once on the root in rotation direction
-
-/*
-struct jsw_node *jsw_single(struct jsw_node *root, int dir)
-{
-    struct jsw_node *save = root->link[!dir];
-
-    root->link[!dir] = save->link[dir];
-    save->link[dir] = root;
-
-    root->red = 1;
-    save->red = 0;
-
-    return save;
-}
-
-struct jsw_node *jsw_double(struct jsw_node *root, int dir)
-{
-    root->link[!dir] = jsw_single(root->link[!dir], !dir);
-
-    return jsw_single(root, dir);
-}
-*/

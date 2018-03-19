@@ -84,23 +84,22 @@ void testBST()
 
 void testRbTree()
 {
-	constexpr auto count = 9999;
-
+	constexpr auto count = 59999;
 	using Type = uint64_t;
 
-	std::set<Type> t;
+	//std::set<Type> tree;
 	RedBlackTree<Type> tree;
 	//BinaryTree<Type> tree;
 
 	//auto al = std::allocator<Type>();
 
-	//timer(true);
+	timer(true);
 
 	for (int i = 0; i < count; ++i)
 	{
 		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
 		tree.emplace(std::move(i));
-		t.emplace(i);
+		//t.emplace(i);
 	//	tree.emplace(rand());
 
 		auto tt = tree.find(i);
@@ -111,36 +110,18 @@ void testRbTree()
 		//t.find(i);
 	}
 
-	for (auto it = t.begin(); it != t.end(); ++it)
-	{
-		//*it = 4; 
-	}
+	for (auto it = tree.cbegin(); it != tree.cend();)
+		it = tree.erase(it);
 
-	for (auto it = tree.cbegin(); it != tree.cend(); ++it)
-	{
-		std::cout << *it << " ";
-		//*it = 5;
-	}
-
-	//for (auto it = tree.begin(); it != tree.end();)
-	//	it = tree.erase(it);
-
-	timer(true);
+	
 	for (int i = 0; i < count * 2; ++i)
 	{
 		Type r = rand() % count;
-		t.erase(r);
+		//t.erase(r);
 		tree.erase(r);
-
-		if (i % 100 == 0)
-		{
-			timer(false);
-			std::cout << 100.0 / double(count) * double(i) << " ";
-			timer(true);
-		}
 	}
 
-	//timer(false);
+	timer(false);
 	int a = 5;
 }
 
