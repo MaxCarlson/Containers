@@ -110,6 +110,9 @@ void testRbTree()
 		//t.find(i);
 	}
 
+	for (auto it = tree.rbegin(); it != tree.rend(); ++it)
+		std::cout << *it << " ";
+
 	for (auto it = tree.cbegin(); it != tree.cend();)
 	{
 		it = tree.erase(it);

@@ -8,10 +8,13 @@ using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_a
 template<class Tree>
 class TreeIterator
 {
-	using NodePtr    = typename Tree::NodePtr;
-	using value_type = typename Tree::value_type;
-	using pointer    = typename Tree::pointer;
-	using reference  = typename Tree::value_type const&;
+public:
+	using iterator_category = std::bidirectional_iterator_tag;
+	using NodePtr		    = typename Tree::NodePtr;
+	using difference_type   = typename Tree::difference_type;
+	using value_type        = typename Tree::value_type;
+	using pointer		    = typename Tree::pointer;
+	using reference		    = typename Tree::const_reference;
 
 public:
 	TreeIterator() = default;
@@ -78,12 +81,11 @@ public:
 
 	TreeIterator& operator--()
 	{
-		if (!data)
+		if (this->node == tree->Head)
 			;
 		else if (node->subtree[0]) // Left node is non empty, find largest memeber
 		{
 			node = Tree::maxNode(node->subtree[0]);
-			data = &node->data;
 		}
 		else
 		{
@@ -94,10 +96,9 @@ public:
 			if (n)
 			{
 				node = n;
-				data = &node->data;
 			}
 			else
-				*this = tree->Head;
+				*this = TreeIterator(tree->Head, tree);
 
 		}
 		return *this;
@@ -181,10 +182,13 @@ class RedBlackTree
 	enum Color { RED, BLACK };
 	enum Direction { LEFT, RIGHT };
 
-	using NodePtr    = typename BaseTypes::NodePtr;
-	using reference  = typename BaseTypes::reference;
-	using pointer    = typename BaseTypes::pointer;
-	using value_type = typename BaseTypes::value_type;
+	using NodePtr         = typename BaseTypes::NodePtr;
+	using difference_type = typename BaseTypes::difference_type;
+	using value_type	  = typename BaseTypes::value_type;
+	using pointer		  = typename BaseTypes::pointer;
+	using const_pointer   = typename BaseTypes::const_pointer;
+	using reference       = typename BaseTypes::reference;
+	using const_reference = typename BaseTypes::const_reference;
 
 	using NodeAl = typename BaseTypes::NodeAl;				
 	using NodeAlTraits = typename BaseTypes::NodeAlTraits;
@@ -199,13 +203,6 @@ class RedBlackTree
 	using Const_Iterator = ConstTreeIterator<MyBase>;
 	friend class Iterator;
 
-public:
-
-	RedBlackTree()
-	{
-		createHead();
-	}
-
 private: 
 	NodePtr Head; 
 	NodePtr root = nullptr;
@@ -213,14 +210,19 @@ private:
 
 public:
 
+	RedBlackTree()
+	{
+		createHead();
+	}
+
 	Iterator begin() noexcept { return Iterator(lMost(), this); } // Replace lMost() with a cached left value instead of looking it up!!
 	Iterator end() noexcept { return Iterator(Head, this); }
 
 	Const_Iterator cbegin() noexcept { return begin(); }
 	Const_Iterator cend() noexcept { return end(); }
 
-	reverse_iterator rbegin() noexcept { return reverse_iterator(rMost(), this); } // TODO: Non-functioning
-	reverse_iterator rend() noexcept { return reverse_iterator(lMost(), this); }
+	reverse_iterator rbegin() noexcept { return std::make_reverse_iterator(Iterator(rMost(), this)); } // TODO: Non-functioning
+	reverse_iterator rend() noexcept { return  std::make_reverse_iterator(begin()); } // End
 	
 private:
 
