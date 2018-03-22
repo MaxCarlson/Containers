@@ -238,6 +238,7 @@ private:
 		Head = n; // Heads right needs to be rmost, left needs to be lmost
 	}
 
+	/*
 	NodePtr createNode(Type &&t) // Argument forwarding needed for more complex types, also, template?
 	{
 		NodePtr n = nodeAl.allocate(1); // Should allocater be instantiated here?
@@ -250,6 +251,7 @@ private:
 
 		return n;
 	}
+	*/
 public:
 
 	NodePtr allocateNode()
@@ -263,7 +265,7 @@ public:
 	}
 
 	template<class... Val>
-	NodePtr createNode(Val... val)
+	NodePtr createNode(Val&&... val)
 	{
 		NodePtr n = allocateNode();
 
@@ -280,9 +282,7 @@ public:
 	{
 		NodePtr n = createNode(std::forward<Val>(val)...);
 
-		addNode(n);
-
-		return Iterator(n, this);
+		return addNode(n);
 	}
 
 	/*
@@ -294,12 +294,11 @@ public:
 	// TODO: topDownInsetion(Type &&T)
 private:
 
-	void addNode(NodePtr n) // TODO: Add exception handling?
+	Iterator addNode(NodePtr n) // TODO: Add exception handling?
 	{
 		if (root == nullptr)
 		{
-			root = n;
-			Head->parent = root;
+			Head->parent = root = n;
 		}
 		else
 		{
@@ -313,7 +312,7 @@ private:
 				if (c->data == n->data) // Don't overwrite here TODO: Add in bool template param for taking params of same value
 				{						// TODO: Get rid of operator == neccesity?
 					freeNode(n);
-					return;
+					return Iterator(Head, this);
 				}
 				// Break when leaf node is found in comparative direction
 				else if (c->subtree[dir] == nullptr)
@@ -332,6 +331,7 @@ private:
 		root->color = BLACK;
 		++treeSize;
 		//testTree(root);
+		return Iterator(n, this);
 	}
 
 	void bottomUpInsertion(NodePtr child)

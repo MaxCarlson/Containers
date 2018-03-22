@@ -104,6 +104,8 @@ struct CompareForward
 
 void testForwarding()
 {
+	std::map<int, int> m;
+	std::set<TestForward, CompareForward> stdTree;
 	RedBlackTree<TestForward, CompareForward> tree;
 
 	for (int i = 0; i < 1000; ++i)
@@ -112,7 +114,10 @@ void testForwarding()
 		auto i2 = rand();
 		auto i3 = rand();
 
-		tree.emplace( i1, i2, i3 );
+		tree.emplace(TestForward { i1, i2, i3 });
+		stdTree.emplace(TestForward{ i1, i2, i3 });
+
+		//m.emplace(rand(), rand());
 	}
 }
 
