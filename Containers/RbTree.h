@@ -8,7 +8,6 @@ using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_a
 template<class Tree>
 class TreeIterator
 {
-public:
 	using iterator_category = std::bidirectional_iterator_tag;
 	using NodePtr		    = typename Tree::NodePtr;
 	using difference_type   = typename Tree::difference_type;
@@ -18,7 +17,7 @@ public:
 
 public:
 	TreeIterator() = default;
-	TreeIterator(NodePtr node, Tree *tree) : node(node), tree(tree)
+	TreeIterator(NodePtr node, const Tree *tree) : node(node), tree(tree)
 	{
 	}
 
@@ -44,7 +43,7 @@ public:
 
 	TreeIterator& operator++() // Preincrement
 	{
-		if (this->node == tree->Head) // Don't increment on null node, usually end()
+		if (this->node == tree->Head) // Don't increment on null/Head node
 			;
 		else if (node->subtree[1]) // Right node is non empty, find smallest member
 		{
@@ -114,23 +113,23 @@ public:
 
 	NodePtr node = nullptr;
 private:
-	Tree * tree;
+	const Tree * tree;
 };
 
 template<class Tree>
 class ConstTreeIterator : public TreeIterator<Tree> // TODO: At the moment this is basically identical to TreeIterator, make other values const once support is added for pairs, etc
 {
-	using MyBase = TreeIterator<Tree>;
+	using MyBase     = TreeIterator<Tree>;
 	using value_type = typename Tree::value_type; 
-	using NodePtr = typename Tree::NodePtr;			// Inaccessible Types ??? Compiler warning
-	using pointer = typename Tree::pointer const;
-	using reference = const value_type&;
+	using NodePtr	 = typename Tree::NodePtr;			// Inaccessible Types ??? Compiler warning
+	using pointer    = typename Tree::const_pointer;
+	using reference  = typename Tree::const_reference;
 
 public:
 
 	ConstTreeIterator() : MyBase() {}
 	ConstTreeIterator(const MyBase& b) : MyBase(b) {}
-	ConstTreeIterator(NodePtr node, Tree *tree) : MyBase(node, tree) {}
+	ConstTreeIterator(NodePtr node, const Tree *tree) : MyBase(node, tree) {}
 
 	pointer operator->() const
 	{
@@ -147,7 +146,7 @@ template<class Type>
 struct Node
 {
 	Node* parent;
-	Node* subtree[2];
+	Node* subtree[2]; // Would it be faster with NodePtr Left && Right? skip array indexing but needs more if-else statements + lots more code
 
 	char color; 
 	Type data;
@@ -172,7 +171,7 @@ struct TreeTypes
 	using const_reference = const Type&;
 };
 
-template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>> // TODO: Sepperate functionality into sepperate classes
+template<class Type, class Compare = std::less<Type>, class Allocator = std::allocator<Type>> 
 class RedBlackTree
 {
 	using Node = Node<Type>;
@@ -190,7 +189,7 @@ class RedBlackTree
 	using reference       = typename BaseTypes::reference;
 	using const_reference = typename BaseTypes::const_reference;
 
-	using NodeAl = typename BaseTypes::NodeAl;				
+	using NodeAl       = typename BaseTypes::NodeAl;				
 	using NodeAlTraits = typename BaseTypes::NodeAlTraits;
 
 	NodeAl nodeAl; // Should this only be init on node construct/destruct?
@@ -198,9 +197,9 @@ class RedBlackTree
 	// TODO: Add support for <key, type> containers
 	Compare compare;
 
-	using Iterator = TreeIterator<MyBase>;
+	using Iterator		   = TreeIterator<MyBase>;
 	using reverse_iterator = std::reverse_iterator<Iterator>;
-	using Const_Iterator = ConstTreeIterator<MyBase>;
+	using Const_Iterator   = ConstTreeIterator<MyBase>;
 	friend class Iterator;
 
 private: 
@@ -217,12 +216,14 @@ public:
 
 	Iterator begin() noexcept { return Iterator(lMost(), this); } // Replace lMost() with a cached left value instead of looking it up!!
 	Iterator end() noexcept { return Iterator(Head, this); }
+	Const_Iterator begin() const noexcept { return Const_Iterator(lMost(), this); } // Replace lMost()
+	Const_Iterator end() const noexcept { return Const_Iterator(Head, this); }
 
-	Const_Iterator cbegin() noexcept { return begin(); }
-	Const_Iterator cend() noexcept { return end(); }
+	Const_Iterator cbegin() const noexcept { return begin(); }
+	Const_Iterator cend() const noexcept { return end(); }
 
-	reverse_iterator rbegin() noexcept { return std::make_reverse_iterator(Iterator(rMost(), this)); } // TODO: Non-functioning
-	reverse_iterator rend() noexcept { return  std::make_reverse_iterator(begin()); } // End
+	reverse_iterator rbegin() noexcept { return std::make_reverse_iterator(Iterator(rMost(), this)); } // TODO: Cache rMost() in Head->subtree[RIGHT] (actually just passing head with subtree attached to rMost)
+	reverse_iterator rend() noexcept { return std::make_reverse_iterator(begin()); } 
 	
 private:
 
@@ -250,24 +251,54 @@ private:
 		return n;
 	}
 public:
-	void emplace(Type &&t)
+
+	NodePtr allocateNode()
+	{
+		NodePtr n = nodeAl.allocate(1); // Should allocater be instantiated here?
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[0]), nullptr); // Are these needed?
+		NodeAlTraits::construct(nodeAl, std::addressof(n->subtree[1]), nullptr); // TODO: throw on allocation failue?
+		NodeAlTraits::construct(nodeAl, std::addressof(n->parent), nullptr);
+
+		return n;
+	}
+
+	template<class... Val>
+	NodePtr createNode(Val... val)
+	{
+		NodePtr n = allocateNode();
+
+		n->color = RED;
+		NodeAlTraits::construct(nodeAl, std::addressof(n->data), std::forward<Val>(val)...);
+
+		// TODO: throw / catch on failed construction
+
+		return n;
+	}
+
+	template<class... Val>
+	Iterator emplace(Val&&... val)
+	{
+		NodePtr n = createNode(std::forward<Val>(val)...);
+
+		addNode(n);
+
+		return Iterator(n, this);
+	}
+
+	/*
+	void emplace(Type &&t) // Return iterator?
 	{
 		addNode(std::move(t));
 	}
-
-	void emplace(const Type& t) // Return iterator to elem?
-	{
-		addNode(std::move(t)); // Figure out correct way to do these emplaces, with arg forwarding etc
-	}
-
+	*/
 	// TODO: topDownInsetion(Type &&T)
 private:
 
-	void addNode(Type &&t) // Add exception handling?
+	void addNode(NodePtr n) // TODO: Add exception handling?
 	{
 		if (root == nullptr)
 		{
-			root = createNode(std::move(t));
+			root = n;
 			Head->parent = root;
 		}
 		else
@@ -277,10 +308,13 @@ private:
 
 			for (;;)
 			{
-				dir = compare(c->data, t);
+				dir = compare(c->data, n->data);
 
-				if (c->data == t) // Don't overwrite here
+				if (c->data == n->data) // Don't overwrite here TODO: Add in bool template param for taking params of same value
+				{						// TODO: Get rid of operator == neccesity?
+					freeNode(n);
 					return;
+				}
 				// Break when leaf node is found in comparative direction
 				else if (c->subtree[dir] == nullptr)
 					break;
@@ -288,10 +322,10 @@ private:
 				c = c->subtree[dir]; // Navigate down tree
 			}
 
-			c->subtree[dir] = createNode(std::move(t));
+			c->subtree[dir] = n;
 			c->subtree[dir]->parent = c;						// Think about caching leftmost and rightmost here with if statements?
 
-			bottomUpInsertion(c->subtree[dir]);
+			bottomUpInsertion(n);
 			// TODO: Add in top down insertion and test benifits
 		}
 
@@ -303,7 +337,8 @@ private:
 	void bottomUpInsertion(NodePtr child)
 	{
 		if (!child->parent)
-			return;
+			throw std::runtime_error("Insertion node has no parent"); // Delete this once done testing
+
 
 		// We need to fix tree for children with red parents
 		for (NodePtr c = child; c->parent->color == RED;)

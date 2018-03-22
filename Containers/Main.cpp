@@ -82,12 +82,46 @@ void testBST()
 	int a = 5;
 }
 
+struct TestForward
+{
+	int a;
+	int b;
+	int c;
+
+	bool operator==(const TestForward &t)
+	{
+		return a == t.a;
+	}
+};
+
+struct CompareForward
+{
+	bool operator()(const TestForward & t, const TestForward &d)
+	{
+		return t.a < d.a;
+	}
+};
+
+void testForwarding()
+{
+	RedBlackTree<TestForward, CompareForward> tree;
+
+	for (int i = 0; i < 1000; ++i)
+	{
+		auto i1 = rand();
+		auto i2 = rand();
+		auto i3 = rand();
+
+		tree.emplace( i1, i2, i3 );
+	}
+}
+
 void testRbTree()
 {
 	constexpr auto count = 59999;
-	using Type = uint64_t;
+	using Type = int;
 
-	//std::set<Type> tree;
+	std::set<Type> t;
 	RedBlackTree<Type> tree;
 	//BinaryTree<Type> tree;
 
@@ -99,7 +133,7 @@ void testRbTree()
 	{
 		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
 		tree.emplace(i);
-		//t.emplace(i);
+		t.emplace(i);
 	//	tree.emplace(rand());
 
 		auto tt = tree.find(i);
@@ -110,8 +144,10 @@ void testRbTree()
 		//t.find(i);
 	}
 
-	for (auto it = tree.rbegin(); it != tree.rend(); ++it)
-		std::cout << *it << " ";
+	const auto itt = tree.begin();
+
+	for (auto it = tree.rbegin(); it != tree.rend(); ++it)  ;
+		//std::cout << *it << " ";
 
 	for (auto it = tree.cbegin(); it != tree.cend();)
 	{
@@ -131,6 +167,16 @@ void testRbTree()
 	int a = 5;
 }
 
+#include <map>
+#include "Map.h"
+void testMap()
+{
+
+	Map<size_t, int> m;
+	std::map<size_t, int> stdMap;
+	
+}
+
 // Things to implement
 // Hash table
 // Skip List
@@ -143,6 +189,8 @@ int main()
 	//testVector()
 	//testBST();
 	testRbTree();
+	testForwarding();
+	//testMap();
 
 	return 0;
 }
