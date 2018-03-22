@@ -33,55 +33,6 @@ inline void timer(bool startNow)
 	std::cout << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << "\n";
 }
 
-void testVector()
-{
-	timer(true);
-
-	//Vector<int> test;
-	std::vector<int> test;
-	for (int i = 0; i < 100000000; ++i)
-	{
-		//Larger r;
-		//test.push_back(r);
-
-		//auto t = rand();
-		test.emplace_back(rand());
-		test.push_back(1);
-		//auto dd = test[i];
-
-		//printCVector<int>(test);
-	}
-	//printCVector<int>(test);
-	timer(false);
-}
-
-#include <set>
-#include <unordered_set>
-
-void testBST()
-{
-	//std::set<int> tree;
-	//std::unordered_set<int> tree;
-	BinaryTree<int> tree;
-
-	tree.insert(0);
-	tree.insert(1);
-	tree.insert(2);
-	//tree.insert(2);
-	//tree.insert(4);
-
-	//tree.pbRight();
-	tree.pbLeft();
-	//tree.pbRight();
-	//tree.pbRight();
-	//tree.pbRight();
-	//tree.pbRight();
-	
-	
-	timer(false);
-	int a = 5;
-}
-
 struct TestForward
 {
 	int a;
@@ -101,85 +52,22 @@ struct CompareForward
 		return t.a < d.a;
 	}
 };
-
-void testForwarding()
-{
-	std::map<int, int> m;
-	std::set<TestForward, CompareForward> stdTree;
-	RedBlackTree<TestForward, CompareForward> tree;
-
-	for (int i = 0; i < 1000; ++i)
-	{
-		auto i1 = rand();
-		auto i2 = rand();
-		auto i3 = rand();
-
-		tree.emplace(TestForward { i1, i2, i3 });
-		stdTree.emplace(TestForward{ i1, i2, i3 });
-
-		//m.emplace(rand(), rand());
-	}
-}
-
-void testRbTree()
-{
-	constexpr auto count = 59999;
-	using Type = int;
-
-	std::set<Type> t;
-	RedBlackTree<Type> tree;
-	//BinaryTree<Type> tree;
-
-	//auto al = std::allocator<Type>();
-
-	timer(true);
-
-	for (int i = 0; i < count; ++i)
-	{
-		//tree.rotate<RedBlackTree<int>::Direction::RIGHT>(nullptr);
-		tree.emplace(i);
-		t.emplace(i);
-	//	tree.emplace(rand());
-
-		auto tt = tree.find(i);
-
-		//tree.erase(i);
-		
-		//t.emplace(i);
-		//t.find(i);
-	}
-
-	const auto itt = tree.begin();
-
-	for (auto it = tree.rbegin(); it != tree.rend(); ++it)  ;
-		//std::cout << *it << " ";
-
-	for (auto it = tree.cbegin(); it != tree.cend();)
-	{
-		it = tree.erase(it);
-		++it;
-	}
-
-	
-	for (int i = 0; i < count * 2; ++i)
-	{
-		Type r = rand() % count;
-		//t.erase(r);
-		tree.erase(r);
-	}
-
-	timer(false);
-	int a = 5;
-}
-
-#include <map>
 #include "Map.h"
 void testMap()
 {
+	constexpr int num = 100;
+	using Key = int;
+	using Value = int;
 
-	Map<size_t, int> m;
-	std::map<size_t, int> stdMap;
-	
+	//std::map<Key, Value> stdmap;
+	Map<Key, Value> map;
+
+	for (int i = 0; i < num; ++i)
+	{
+		map.emplace(i, i);
+	}
+
+	int a = 5;
 }
 
 // Things to implement
@@ -189,13 +77,7 @@ void testMap()
 
 int main()
 { 
-	test.test();
-
-	//testVector()
-	//testBST();
-	testRbTree();
-	testForwarding();
-	//testMap();
+	testMap();
 
 	return 0;
 }
