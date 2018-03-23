@@ -61,7 +61,7 @@ void testMap()
 	using Key = int;
 	using Value = int;
 
-	//std::map<Key, Value> stdmap;
+	std::map<Key, Value> stdmap;
 	Set<Key> set;
 	Map<Key, Value, RedBlackTree> map;
 
@@ -70,6 +70,13 @@ void testMap()
 		int x = rand();
 		set.emplace(x);
 		map.emplace(x, rand());
+	}
+
+	for (auto it = set.begin(); it != set.end(); )
+	{
+		
+		auto ff = it->parent;
+		it = set.erase(it);
 	}
 
 	for (int i = 0; i < num; ++i)
