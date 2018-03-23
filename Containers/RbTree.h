@@ -217,6 +217,8 @@ private:
 	NodePtr root = nullptr;
 	long treeSize = 0;
 
+	// If we're working with key/value pair extract the value of the key
+	// from the pair and compare the two
 	value_compare compare;
 
 public:
@@ -378,12 +380,11 @@ private:
 
 public:
 
-	void erase(const key_type& t) // Return iterators to next element
+	Iterator erase(const key_type& t) // Return iterators to next element
 	{
 		Const_Iterator td = find(t);
 
-		if (td != end())
-			erase(td);
+		return td != end() ? erase(td) : end();
 	}
 
 	Iterator erase(Const_Iterator it)
@@ -533,7 +534,7 @@ private:
 
 public:
 
-	Iterator find(const key_type& t) // Change to const_iterator return
+	Iterator find(const key_type& t) 
 	{
 		NodePtr p = lowerBound(t);
 

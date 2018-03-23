@@ -16,13 +16,6 @@ template<class Key, class Type,
 
 	struct value_compare
 	{
-		/*
-		value_compare(key_compare comp)
-			: comp(comp)
-		{
-		}
-		*/
-		
 		bool operator()(const node_type& left, const node_type& right)
 		{
 			return comp(left.first, right.first);
@@ -32,11 +25,11 @@ template<class Key, class Type,
 	};
 };
 
-template<class Key, class Type, 
-	class Compare = std::less<Key>, 
-	class Allocator = std::allocator<std::pair<const Key, Type>>, 
-	class MyBase = RedBlackTree<MapTraits<Key, Type, Compare, Allocator>>> // This is awkward having this as last param in template
-class Map : public MyBase														 // Also awkward having to fill in already known types and pair vs non-pair ~ TODO: Fix
+template<class Key, class Type,
+	class Compare = std::less<Key>,
+	class Allocator = std::allocator<std::pair<const Key, Type>>,
+	template<class> class MyBase = RedBlackTree> 
+	class Map : public MyBase<MapTraits<Key, Type, Compare, Allocator>>
 {
-	
+
 };
