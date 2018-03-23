@@ -8,6 +8,7 @@
 #include <map>
 #include <random>
 #include <chrono>
+#include <set>
 
 template<class C>
 inline void printCVector(Vector<C> &v)
@@ -53,6 +54,7 @@ struct CompareForward
 	}
 };
 #include "Map.h"
+#include "Set.h"
 void testMap()
 {
 	constexpr int num = 100;
@@ -60,11 +62,20 @@ void testMap()
 	using Value = int;
 
 	//std::map<Key, Value> stdmap;
-	Map<Key, Value> map;
+	Set<Key> set;
+	Map<Key, Value, RedBlackTree> map;
 
 	for (int i = 0; i < num; ++i)
 	{
-		map.emplace(i, i);
+		int x = rand();
+		set.emplace(x);
+		map.emplace(x, rand());
+	}
+
+	for (int i = 0; i < num; ++i)
+	{
+		set.erase(i);
+		map.erase(i);
 	}
 
 	int a = 5;

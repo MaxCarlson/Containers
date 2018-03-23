@@ -23,13 +23,21 @@ template<class Key, class Type,
 
 		key_compare comp;
 	};
+
+	struct get_key
+	{
+		const key_type& operator()(const node_type& n) const
+		{
+			return n.first;
+		}
+	};
 };
 
 template<class Key, class Type,
+	template<class> class MyBase = RedBlackTree,
 	class Compare = std::less<Key>,
-	class Allocator = std::allocator<std::pair<const Key, Type>>,
-	template<class> class MyBase = RedBlackTree> 
+	class Allocator = std::allocator<std::pair<const Key, Type>>> 
 	class Map : public MyBase<MapTraits<Key, Type, Compare, Allocator>>
 {
-
+	//using MyBase = MyBase<MapTraits<Key, Type, Compare, Allocator>>;
 };

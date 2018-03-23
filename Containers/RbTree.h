@@ -199,6 +199,7 @@ class RedBlackTree
 
 	using key_compare = typename Traits::key_compare;
 	using value_compare = typename Traits::value_compare;
+	using get_key = typename Traits::get_key;
 
 	using NodeAl = typename BaseTypes::NodeAl;
 	using NodeAlTraits = typename BaseTypes::NodeAlTraits;
@@ -218,8 +219,14 @@ private:
 	long treeSize = 0;
 
 	// If we're working with key/value pair extract the value of the key
-	// from the pair and compare the two
+	// from the pairs and compare the two
 	value_compare compare;
+
+	// Get a key from a node data type
+	get_key getKey;
+
+	// Compare keys directly
+	key_compare keyCompare;
 
 public:
 
@@ -556,7 +563,7 @@ private:
 
 		while (n)
 		{
-			const int dir = compare(n->data, t);
+			const int dir = keyCompare(getKey(n->data), t);
 
 			if (!dir)
 				best = n;
