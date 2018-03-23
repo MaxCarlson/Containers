@@ -72,11 +72,11 @@ void testMap()
 		map.emplace(x, rand());
 	}
 
-	for (auto it = set.begin(); it != set.end(); )
+	for (auto it = map.begin(); it != map.end(); )
 	{
-		
-		std::cout << *it << " ";
-		it = set.erase(it);
+		it->second = 5;
+		std::cout << it->first << " ";
+		it = map.erase(it);
 	}
 
 	for (int i = 0; i < num; ++i)
@@ -89,9 +89,14 @@ void testMap()
 }
 
 // Things to implement
-// Hash table
+// B-Tree
+// AVL-Tree
+// Splay-Tree
+// Trie
+// Hash tables
 // Skip List
-// Deque?
+// Deque
+// bloom-filter
 
 int main()
 { 

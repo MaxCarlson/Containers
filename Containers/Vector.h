@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 
 // TODO: Allocator
 // TODO: Iterators
@@ -32,8 +33,6 @@ public:
 		{
 			n[i] = myStart[i];
 		}
-
-		//if(std::is_trivially_copyable<C>
 
 		delete[] myStart;
 

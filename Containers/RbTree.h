@@ -28,7 +28,7 @@ public:
 
 	pointer operator->() 
 	{
-		return (std::pointer_traits<pointer>::pointer_to(**this));
+		return std::pointer_traits<pointer>::pointer_to(**this);
 	}
 
 	bool operator==(const TreeIterator& i) const
@@ -105,14 +105,14 @@ public:
 
 	TreeIterator operator--(int)
 	{
-		Iterator i = *this;
+		TreeIterator i = *this;
 		--*this;
 		return i;
 	}
 protected:
 	NodePtr node = nullptr; 
 	const Tree * tree;
-	friend class Tree;
+	friend Tree;
 };
 
 template<class Tree>
@@ -133,7 +133,7 @@ public:
 
 	reference operator*() const
 	{
-		return node->data;
+		return this->node->data;
 	}
 
 	pointer operator->() const
@@ -208,9 +208,7 @@ class RedBlackTree
 	friend class ConstTreeIterator<MyBase>;
 	friend class TreeIterator<MyBase>;
 
-	using Iterator =  std::conditional<std::is_same<key_type, value_type>::value, 
-		ConstTreeIterator<MyBase>, 
-		TreeIterator<MyBase>>::type;
+	using Iterator = std::conditional_t<std::is_same<key_type, value_type>::value, ConstTreeIterator<MyBase>, TreeIterator<MyBase>>;
 
 	using reverse_iterator = std::reverse_iterator<Iterator>;
 	using Const_Iterator   = ConstTreeIterator<MyBase>;
