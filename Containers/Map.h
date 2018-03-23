@@ -12,7 +12,7 @@ template<class Key, class Type,
 	using key_compare = Compare;
 	using allocator_type = Allocator;
 
-	using node_type = std::pair<key_type, value_type>;
+	using node_type = std::pair<const key_type, value_type>;
 
 	struct value_compare
 	{

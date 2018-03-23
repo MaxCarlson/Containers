@@ -12,8 +12,8 @@ class TreeIterator
 	using NodePtr		    = typename Tree::NodePtr;
 	using difference_type   = typename Tree::difference_type;
 	using value_type        = typename Tree::value_type;
-	using pointer		    = typename Tree::const_pointer;
-	using reference		    = typename const value_type&;
+	using pointer		    = typename Tree::pointer;
+	using reference		    = typename value_type&;
 
 public:
 	TreeIterator() = default;
@@ -21,12 +21,12 @@ public:
 	{
 	}
 
-	reference operator*() const
+	reference operator*() 
 	{
-		return (node->data);
+		return node->data;
 	}
 
-	pointer operator->() const
+	pointer operator->() 
 	{
 		return (std::pointer_traits<pointer>::pointer_to(**this));
 	}
@@ -171,9 +171,9 @@ struct TreeTypes
 
 	using NodePtr		  = typename NodeAlTraits::pointer;
 	using difference_type = typename NodeAlTraits::difference_type;
-	using value_type	  = typename NodeAlTraits::value_type;       //<<<<<<<<<<<<<<<<<<<<<<<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	using pointer		  = typename NodeAlTraits::pointer;
-	using const_pointer   = typename NodeAlTraits::const_pointer;
+	using value_type	  = typename AllocTraits::value_type;       //<<<<<<<<<<<<<<<<<<<<<<<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	using pointer		  = typename AllocTraits::pointer;
+	using const_pointer   = typename AllocTraits::const_pointer;
 	using reference		  = value_type&;
 	using const_reference = const value_type&;
 };
@@ -181,8 +181,8 @@ struct TreeTypes
 template<class Traits>
 class RedBlackTree
 {
-	using BaseTypes = TreeTypes<Traits>;
 	using MyBase = RedBlackTree<Traits>;
+	using BaseTypes = TreeTypes<Traits>;
 
 	enum Color { RED, BLACK };
 	enum Direction { LEFT, RIGHT };
@@ -394,7 +394,7 @@ public:
 		return td != end() ? erase(td) : end();
 	}
 
-	Iterator erase(Const_Iterator it)
+	Iterator erase(const Const_Iterator& it)
 	{
 		Const_Iterator successor = it;
 		++successor;
@@ -529,7 +529,7 @@ private:
 				}
 			}
 
-			if (fixNode)
+			if(fixNode)
 				fixNode->color = BLACK;
 		}
 
