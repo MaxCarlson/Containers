@@ -111,10 +111,9 @@ public:
 	}
 
 	NodePtr node = nullptr;
-private:
-	friend class Tree;
-
 	const Tree * tree;
+
+	friend class Tree;
 };
 
 template<class Tree>
@@ -172,7 +171,7 @@ struct TreeTypes
 
 	using NodePtr		  = typename NodeAlTraits::pointer;
 	using difference_type = typename NodeAlTraits::difference_type;
-	using value_type	  = typename AllocTraits::value_type;       //<<<<<<<<<<<<<<<<<<<<<<<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	using value_type	  = typename AllocTraits::value_type;       
 	using pointer		  = typename AllocTraits::pointer;
 	using const_pointer   = typename AllocTraits::const_pointer;
 	using reference		  = value_type&;
@@ -207,10 +206,16 @@ class RedBlackTree
 
 	NodeAl nodeAl; // Should this only be init on node construct/destruct?
 
-	using Iterator		   = TreeIterator<MyBase>;
+	friend class ConstTreeIterator<MyBase>;
+	friend class TreeIterator<MyBase>;
+
+	using Iterator =  std::conditional<std::is_same<key_type, value_type>::value, 
+		ConstTreeIterator<MyBase>, 
+		TreeIterator<MyBase>>::type;
+
 	using reverse_iterator = std::reverse_iterator<Iterator>;
 	using Const_Iterator   = ConstTreeIterator<MyBase>;
-	friend class Iterator;
+
 
 	using ItBool = std::pair<Iterator, bool>;
 

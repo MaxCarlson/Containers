@@ -72,10 +72,11 @@ void testMap()
 		map.emplace(x, rand());
 	}
 
-	for (auto it = map.cbegin(); it != map.cend(); )
+	for (auto it = set.begin(); it != set.end(); )
 	{
-		std::cout << it->first << " ";
-		it = map.erase(it);
+		
+		std::cout << *it << " ";
+	//	it = map.erase(it);
 	}
 
 	for (int i = 0; i < num; ++i)
