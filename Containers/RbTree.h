@@ -110,10 +110,10 @@ public:
 		return i;
 	}
 
+	NodePtr node = nullptr;
 private:
 	friend class Tree;
 
-	NodePtr node = nullptr;
 	const Tree * tree;
 };
 
@@ -125,6 +125,7 @@ class ConstTreeIterator : public TreeIterator<Tree> // TODO: At the moment this 
 	using NodePtr	 = typename Tree::NodePtr;			// Inaccessible Types ??? Compiler warning
 	using pointer    = typename Tree::const_pointer;
 	using reference  = typename Tree::const_reference;
+	friend class MyBase;
 
 public:
 
@@ -132,14 +133,14 @@ public:
 	ConstTreeIterator(const MyBase& b) : MyBase(b) {}
 	ConstTreeIterator(NodePtr node, const Tree *tree) : MyBase(node, tree) {}
 
-	pointer operator->() const
-	{
-		return std::pointer_traits<pointer>::pointer_to(**this);
-	}
-
 	reference operator*() const
 	{
 		return node->data;
+	}
+
+	pointer operator->() const
+	{
+		return std::pointer_traits<pointer>::pointer_to(**this);
 	}
 };
 

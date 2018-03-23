@@ -11,7 +11,7 @@ template<class Key,
 	using key_compare = Compare;
 	using allocator_type = Allocator;
 
-	using node_type = key_type;
+	using node_type = key_type; // probably make const key_type ?
 
 	struct value_compare
 	{
