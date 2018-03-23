@@ -1,7 +1,6 @@
 #pragma once
 #include "RbTree.h"
 
-
 template<class Key, class Type,
 	class Compare,
 	class Allocator>

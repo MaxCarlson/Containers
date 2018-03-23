@@ -109,10 +109,9 @@ public:
 		--*this;
 		return i;
 	}
-
-	NodePtr node = nullptr;
+protected:
+	NodePtr node = nullptr; 
 	const Tree * tree;
-
 	friend class Tree;
 };
 
@@ -215,7 +214,6 @@ class RedBlackTree
 
 	using reverse_iterator = std::reverse_iterator<Iterator>;
 	using Const_Iterator   = ConstTreeIterator<MyBase>;
-
 
 	using ItBool = std::pair<Iterator, bool>;
 

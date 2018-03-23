@@ -76,7 +76,7 @@ void testMap()
 	{
 		
 		std::cout << *it << " ";
-	//	it = map.erase(it);
+		it = set.erase(it);
 	}
 
 	for (int i = 0; i < num; ++i)
