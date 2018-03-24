@@ -38,40 +38,28 @@ inline void timer(bool startNow)
 	std::cout << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << "\n";
 }
 
-struct TestForward
-{
-	int a;
-	int b;
-	int c;
-
-	bool operator==(const TestForward &t)
-	{
-		return a == t.a;
-	}
-};
-
-struct CompareForward
-{
-	bool operator()(const TestForward & t, const TestForward &d)
-	{
-		return t.a < d.a;
-	}
-};
-
 void testMap()
 {
-	constexpr int num = 9000000;
+	constexpr auto num = 15000000;
 	using Key = int;
 	using Value = int;
 
-	Map<Key, Value, RedBlackTree> map;
-	//std::map<Key, Value> map;
+	Set<Key, RedBlackTree> map;
+	//std::set<Key> map;
+
+	timer(true);
+
+	//for (int times = 0; times < num; ++times){
 
 	for (int i = 0; i < num; ++i)
 	{
-		map.emplace(rand(), rand());
+		const int x = rand();
+
+		//smap.emplace(x);
+		map.emplace(x);
 	}
 
+	timer(false);
 	timer(true);
 
 	for (auto it = map.begin(); it != map.end();)
@@ -79,7 +67,11 @@ void testMap()
 		it = map.erase(it);
 	}
 
-	timer((false));
+	timer(false);
+	
+	//}
+
+
 
 	int a = 5;
 }

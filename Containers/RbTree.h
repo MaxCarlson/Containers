@@ -303,13 +303,15 @@ private:
 		if (root == nullptr)
 		{
 			Head->parent = root = n;
+			lMost() = n;
+			rMost() = n;
 		}
 		else
 		{
 			int dir;
 			NodePtr child = root, prev = nullptr;
 
-			/*
+			
 			for (;;)
 			{
 				dir = compare(child->data, n->data);
@@ -326,11 +328,10 @@ private:
 				child = child->subtree[dir]; // Navigate down tree
 			}
 
-			child->subtree[dir] = n;
-			child->subtree[dir]->parent = child;
+			bottomUpInsertion(child, n, dir);
 
-			*/
 
+			/*
 			while (child)
 			{
 				dir = compare(child->data, n->data);
@@ -339,58 +340,56 @@ private:
 				child = child->subtree[dir];
 			}
 
-			prev->subtree[dir] = n;
-			prev->subtree[dir]->parent = prev;
+			
+			Iterator where(prev, this);
 
-			for (NodePtr c = n; c->parent->color == RED;)
+			bool done = false;
+			if (dir)
+				;
+			else if (where == begin())
 			{
-				const int dir = (c->parent == c->parent->parent->subtree[RIGHT]); // Change to int once done debugging
-																				  // If sister node is red attempt a re-color
-				NodePtr uncle = c->parent->parent->subtree[!dir];
-
-
-				if (uncle && uncle->color == RED)
-				{
-					c->parent->color = uncle->color = BLACK; // Color parent and it's uncle node black
-					c->parent->parent->color = RED;  // Color grandparent red
-					c = c->parent->parent;			 // Set current node to grandparent
-
-					if (!c->parent) // Delete this once Head is added in 
-						break;		// (BLACK parent of root & pointed to by all null nodes)
-				}
-
-				// Parent has red and black children
-				else
-				{
-					// If this node is (dir) child
-					// rotate on node to the !(dir)
-					if (c == c->parent->subtree[!dir])
-					{
-						c = c->parent;
-						rotateDir(c, dir);
-					}
-
-					c->parent->color = BLACK;
-					c->parent->parent->color = RED;
-					rotateDir(c->parent->parent, !dir);
-				}
+				bottomUpInsertion(prev, n, LEFT);
+				done = true;
 			}
+			else
+				--where;
+
+			if (!done && compare(where.node->data, n->data))
+				bottomUpInsertion(prev, n, dir);
+
+			else if(!done)
+			{
+				freeNode(n);
+				return where;
+			}
+			*/
 		}
 
 		root->color = BLACK;
 		++treeSize;
 
+		//testTree(root);
+
 		return Iterator { n, this };
 	}
 
-	void bottomUpInsertion(NodePtr child)
-	{													  // We need to fix tree for children with red parents
-		for (NodePtr c = child; c->parent->color == RED;)
+	void bottomUpInsertion(NodePtr parent, NodePtr newNode, const int dir)
+	{				
+		parent->subtree[dir] = newNode;
+		newNode->parent = parent;
+
+		if (dir == LEFT && parent == lMost())
+			lMost() = newNode;
+		
+		else if (dir == RIGHT && parent == rMost())
+			rMost() = newNode;
+		
+		// We need to fix tree for children with red parents
+		for (NodePtr c = newNode; c->parent->color == RED;)
 		{
 			const int dir = (c->parent == c->parent->parent->subtree[RIGHT]); // Change to int once done debugging
 																			  // If sister node is red attempt a re-color
 			NodePtr uncle = c->parent->parent->subtree[!dir];
-
 
 			if (uncle && uncle->color == RED)
 			{
@@ -401,7 +400,6 @@ private:
 				if (!c->parent) // Delete this once Head is added in 
 					break;		// (BLACK parent of root & pointed to by all null nodes)
 			}
-
 			// Parent has red and black children
 			else
 			{
@@ -494,6 +492,11 @@ private:
 			}
 
 			// Add left most and right most caching here
+			if (lMost() == eraseNode)
+				lMost() = fixNode ? this->minNode(fixNode) : fixParent;
+
+			if (rMost() == eraseNode)
+				rMost() = fixNode ? this->maxNode(fixNode) : fixParent;
 		}
 
 		else
@@ -632,22 +635,14 @@ private:
 		return p;
 	}
 
-	NodePtr lMost() const  // TODO: Make these return cached values
+	NodePtr& lMost() const  // TODO: Make these return cached values
 	{
-		NodePtr p = this->root;
-
-		while (p->subtree[LEFT])
-			p = p->subtree[LEFT];
-
-		return p;
+		return Head->subtree[LEFT];
 	}
 
-	NodePtr rMost() const
+	NodePtr& rMost() const
 	{
-		NodePtr p = this->root;
-		while (p->subtree[RIGHT])
-			p = p->subtree[RIGHT];
-		return p;
+		return Head->subtree[RIGHT];
 	}
 
 	void rotateDir(NodePtr root, const int dir)
