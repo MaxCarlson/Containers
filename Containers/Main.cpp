@@ -3,6 +3,10 @@
 #include "BinaryTree.h"
 #include "RbTree.h"
 #include "TemplateTesting.h"
+#include "Map.h"
+#include "Set.h"
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <iostream>
 #include <map>
@@ -53,39 +57,36 @@ struct CompareForward
 		return t.a < d.a;
 	}
 };
-#include "Map.h"
-#include "Set.h"
+
 void testMap()
 {
-	constexpr int num = 100;
+	constexpr int num = 9000000;
 	using Key = int;
 	using Value = int;
 
-	std::map<Key, Value> stdmap;
-	Set<Key> set;
 	Map<Key, Value, RedBlackTree> map;
+	//std::map<Key, Value> map;
 
 	for (int i = 0; i < num; ++i)
 	{
-		int x = rand();
-		set.emplace(x);
-		map.emplace(x, rand());
+		map.emplace(rand(), rand());
 	}
 
-	for (auto it = map.begin(); it != map.end(); )
+	timer(true);
+
+	for (auto it = map.begin(); it != map.end();)
 	{
-		it->second = 5;
-		std::cout << it->first << " ";
 		it = map.erase(it);
 	}
 
-	for (int i = 0; i < num; ++i)
-	{
-		set.erase(i);
-		map.erase(i);
-	}
+	timer((false));
 
 	int a = 5;
+}
+
+void testHash()
+{
+	std::unordered_set<int> stdset;
 }
 
 // Things to implement

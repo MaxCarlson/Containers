@@ -2,6 +2,8 @@
 #include <functional>
 #include <memory>
 
+// TODO: Add support for multiple identical keys
+
 template<class Alloc, class Type>
 using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_alloc<Type>; // Move this into a traits file for containers?
 
@@ -157,19 +159,19 @@ struct Node
 template<class Traits>
 struct TreeTypes
 {
-	using Alloc = typename Traits::allocator_type;
-	using key_type = typename Traits::key_type;
+	using Alloc       = typename Traits::allocator_type;
+	using key_type	  = typename Traits::key_type;
 	using key_compare = typename Traits::key_compare;
+	using node_type   = typename Traits::node_type;
 
-	using node_type = typename Traits::node_type;
 	using Node = Node<node_type>;
 
-	using NodeAl = RebindAllocator<Alloc, Node>;
+	using NodeAl	   = RebindAllocator<Alloc, Node>;
 	using NodeAlTraits = std::allocator_traits<NodeAl>;
 	using AllocTraits  = std::allocator_traits<Alloc>;
 
 	using NodePtr		  = typename NodeAlTraits::pointer;
-	using difference_type = typename NodeAlTraits::difference_type;
+	using difference_type = typename AllocTraits::difference_type;
 	using value_type	  = typename AllocTraits::value_type;       
 	using pointer		  = typename AllocTraits::pointer;
 	using const_pointer   = typename AllocTraits::const_pointer;
@@ -305,51 +307,90 @@ private:
 		else
 		{
 			int dir;
-			NodePtr c = root;
+			NodePtr child = root, prev = nullptr;
 
+			/*
 			for (;;)
 			{
-				dir = compare(c->data, n->data);
+				dir = compare(child->data, n->data);
 
-				if (c->data == n->data) // Don't overwrite here TODO: Add in bool template param for taking params of same value
+				if (child->data == n->data) // Don't overwrite here TODO: Add in bool template param for taking params of same value
 				{						// TODO: Get rid of operator == neccesity?
 					freeNode(n);
 					return Iterator(Head, this);
 				}
 				// Break when leaf node is found in comparative direction
-				else if (c->subtree[dir] == nullptr)
+				else if (child->subtree[dir] == nullptr)
 					break;
 
-				c = c->subtree[dir]; // Navigate down tree
+				child = child->subtree[dir]; // Navigate down tree
 			}
 
-			c->subtree[dir] = n;
-			c->subtree[dir]->parent = c;
+			child->subtree[dir] = n;
+			child->subtree[dir]->parent = child;
 
-			bottomUpInsertion(n);
-			// TODO: Add in top down insertion and test benifits
+			*/
+
+			while (child)
+			{
+				dir = compare(child->data, n->data);
+
+				prev = child;
+				child = child->subtree[dir];
+			}
+
+			prev->subtree[dir] = n;
+			prev->subtree[dir]->parent = prev;
+
+			for (NodePtr c = n; c->parent->color == RED;)
+			{
+				const int dir = (c->parent == c->parent->parent->subtree[RIGHT]); // Change to int once done debugging
+																				  // If sister node is red attempt a re-color
+				NodePtr uncle = c->parent->parent->subtree[!dir];
+
+
+				if (uncle && uncle->color == RED)
+				{
+					c->parent->color = uncle->color = BLACK; // Color parent and it's uncle node black
+					c->parent->parent->color = RED;  // Color grandparent red
+					c = c->parent->parent;			 // Set current node to grandparent
+
+					if (!c->parent) // Delete this once Head is added in 
+						break;		// (BLACK parent of root & pointed to by all null nodes)
+				}
+
+				// Parent has red and black children
+				else
+				{
+					// If this node is (dir) child
+					// rotate on node to the !(dir)
+					if (c == c->parent->subtree[!dir])
+					{
+						c = c->parent;
+						rotateDir(c, dir);
+					}
+
+					c->parent->color = BLACK;
+					c->parent->parent->color = RED;
+					rotateDir(c->parent->parent, !dir);
+				}
+			}
 		}
 
 		root->color = BLACK;
 		++treeSize;
 
-		//testTree(root);
 		return Iterator { n, this };
 	}
 
 	void bottomUpInsertion(NodePtr child)
-	{
-		if (!child->parent)
-			throw std::runtime_error("Insertion node has no parent"); // Delete this once done testing
-
-
-																	  // We need to fix tree for children with red parents
+	{													  // We need to fix tree for children with red parents
 		for (NodePtr c = child; c->parent->color == RED;)
 		{
 			const int dir = (c->parent == c->parent->parent->subtree[RIGHT]); // Change to int once done debugging
-
 																			  // If sister node is red attempt a re-color
 			NodePtr uncle = c->parent->parent->subtree[!dir];
+
 
 			if (uncle && uncle->color == RED)
 			{
