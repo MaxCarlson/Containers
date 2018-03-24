@@ -13,6 +13,9 @@
 #include <random>
 #include <chrono>
 #include <set>
+#include <random>
+
+std::default_random_engine defRand;
 
 template<class C>
 inline void printCVector(Vector<C> &v)
@@ -40,23 +43,24 @@ inline void timer(bool startNow)
 
 void testMap()
 {
-	constexpr auto num = 15000000;
+	constexpr auto num = 5050000;
 	using Key = int;
 	using Value = int;
+	std::uniform_int_distribution<int> distri(0, num);
 
-	Set<Key, RedBlackTree> map;
-	//std::set<Key> map;
+	//Map<Key, Value, RedBlackTree> map;
+	std::map<Key, Value> map;
 
 	timer(true);
 
 	//for (int times = 0; times < num; ++times){
-
-	for (int i = 0; i < num; ++i)
+	
+	for (auto i = 0; i < num; ++i)
 	{
-		const int x = rand();
+		const int x = distri(defRand);
 
 		//smap.emplace(x);
-		map.emplace(x);
+		map.emplace(x, i);
 	}
 
 	timer(false);
@@ -70,8 +74,6 @@ void testMap()
 	timer(false);
 	
 	//}
-
-
 
 	int a = 5;
 }

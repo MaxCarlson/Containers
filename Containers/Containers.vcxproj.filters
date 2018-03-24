@@ -41,5 +41,8 @@
     <ClInclude Include="UnorderedSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OpenAddressLT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

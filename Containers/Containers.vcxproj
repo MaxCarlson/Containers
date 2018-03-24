@@ -123,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BinaryTree.h" />
+    <ClInclude Include="OpenAddressLT.h" />
     <ClInclude Include="UnorderedSet.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="RbTree.h" />
