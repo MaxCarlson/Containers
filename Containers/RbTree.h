@@ -1,13 +1,11 @@
 #pragma once
 #include <functional>
 #include <memory>
+#include "helpers.h"
 
 // TODO: Switch to nodes using an is-null flag so we can deallocate memory
 // when tree is destroyed instead of during every erase call(when we may need the mem again!)
 // TODO: Much slower when used in map mode then std::map, figure out why set mode doesn't have the same issue
-
-template<class Alloc, class Type>
-using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_alloc<Type>; // Move this into a traits file for containers?
 
 template<class Tree>
 class TreeIterator

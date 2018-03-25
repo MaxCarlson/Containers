@@ -3,6 +3,7 @@
 #include "BinaryTree.h"
 #include "RbTree.h"
 #include "TemplateTesting.h"
+#include "UnorderedSet.h"
 #include "Map.h"
 #include "Set.h"
 #include <unordered_map>
@@ -80,7 +81,12 @@ void testMap()
 
 void testHash()
 {
-	std::unordered_set<int> stdset;
+	using tKey = int;
+
+	std::unordered_set<tKey> stdset;
+	UnorderedSet<tKey> set;
+
+	set.allocateStorage(100);
 }
 
 // Things to implement
@@ -95,8 +101,8 @@ void testHash()
 
 int main()
 { 
-	testMap();
-
+	//testMap();
+	testHash();
 
 	return 0;
 }
