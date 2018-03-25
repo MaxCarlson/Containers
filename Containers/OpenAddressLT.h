@@ -49,11 +49,6 @@ struct HashTypes
 			return hash(get(v));
 		}
 
-		size_t operator()(const key_type& k) const
-		{
-			return hash(k);
-		}
-
 		hasher hash;
 		get_key get;
 	};
@@ -106,6 +101,37 @@ protected:
 	Table *table;
 };
 
+template<class Table>
+struct WrappingIterator 
+{
+	using NodePtr = typename Table::NodePtr;
+	using pointer = typename Table::pointer;
+	using reference = typename Table::reference;
+
+	WrappingIterator(NodePtr ptr, Table* table) : ptr(ptr), table(table) {}
+
+	reference operator*()
+	{
+		return ptr->data;
+	}
+
+	pointer operator->()
+	{
+		return std::pointer_traits<pointer>::pointer_to(**this);
+	}
+
+	WrappingIterator& operator++()
+	{
+		if (++ptr == table->MyEnd)
+			ptr = table->MyBegin;
+
+		return *this;
+	}
+
+	Table *table;
+	NodePtr ptr;
+};
+
 // Open address linear probing table
 
 template<class Traits>
@@ -133,30 +159,89 @@ class OpenAddressLT
 	using const_pointer   = typename BaseTypes::const_pointer;
 	using reference       = typename BaseTypes::reference;
 	using const_reference = typename BaseTypes::const_reference;
-	
+
+	using wrapIterator = WrappingIterator<MyBase>;
+	friend wrapIterator;
+public:	
 	using iterator = HashIterator<MyBase>;
 
 	friend iterator;
 
+private:
 	NodeAl nodeAl;
 
-	iterator MyBegin;
-	iterator MyEnd;
+	NodePtr MyBegin;
+	NodePtr MyEnd;
+
+	size_t MySize = 0;
+	size_t MyCapacity = 0;
+
+	get_hash getHash;
 
 public:
 	void allocateStorage(size_t s)
 	{
 		if (s)
 		{
-			NodePtr b = nodeAl.allocate(s);
-			MyBegin = iterator(b, this);
-			MyEnd = iterator(b + static_cast<difference_type>(s), this);
+			MyBegin = nodeAl.allocate(s);
+			MyEnd = MyBegin + static_cast<difference_type>(s);
 
-			for (NodePtr p = b; p != MyEnd.ptr; ++p)
+			for (NodePtr p = MyBegin; p != MyEnd; ++p)
 			{
 				NodeAlTraits::construct(nodeAl, std::addressof(p->state), detail::empty);
 			}
+
+			MyCapacity = s;
 		}	
+	}
+
+	template<class... Val>
+	void constructNode(Val&& ...val)
+	{
+
+	}
+
+	bool emptyOrDeleted(NodePtr p)
+	{
+		return !(p->state & detail::filled) 
+			 | (p->state & detail::deleted);
+	}
+
+	void setStateFilled(NodePtr p)
+	{
+		p->state = detail::filled;
+	}
+
+	template<class Val>
+	NodePtr tryEmplace(Val&& val)
+	{	// Get a pointer to where we're going to put element
+		const size_t thash = getHash(val);
+
+		size_t bucket = thash % MyCapacity;
+
+		NodePtr b = MyBegin + static_cast<difference_type>(bucket); // bucket - 1?
+
+		if (emptyOrDeleted(b))
+			setStateFilled(b);
+		else
+			for (wrapIterator w(b, this); w.ptr != b; ++w)
+				if (emptyOrDeleted(w.ptr))
+				{
+					b = w.ptr;
+					setStateFilled(b);
+					break;
+				}		
+
+		return b;
+	}
+
+	template<class... Val>
+	iterator emplace(Val&& ...val)
+	{
+		NodePtr p = tryEmplace(std::forward<Val>(val)...);
+
+
+		return iterator(p, this);
 	}
 
 };

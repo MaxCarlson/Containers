@@ -81,12 +81,20 @@ void testMap()
 
 void testHash()
 {
+	constexpr auto num = 100;
 	using tKey = int;
 
 	std::unordered_set<tKey> stdset;
 	UnorderedSet<tKey> set;
 
-	set.allocateStorage(100);
+	set.allocateStorage(num);
+
+	for (int i = 0; i < num; ++i)
+	{
+		set.emplace(i);
+	}
+
+	int a = 5;
 }
 
 // Things to implement
