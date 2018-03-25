@@ -87,12 +87,13 @@ void testHash()
 	std::unordered_set<tKey> stdset;
 	UnorderedSet<tKey> set;
 
-	set.allocateStorage(num);
-
 	for (int i = 0; i < num; ++i)
 	{
-		set.emplace(i);
+		auto it = set.emplace(i);
+
+		auto itf = set.find(i);
 	}
+
 
 	int a = 5;
 }
