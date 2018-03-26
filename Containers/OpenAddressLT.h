@@ -304,8 +304,6 @@ private:
 	void constructNode(NodePtr p, Val&& ...val) // TODO: Exception handling
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
-
-		++MySize;
 	}
 
 	bool isFilled(NodePtr p) const noexcept
@@ -377,6 +375,9 @@ private:
 			++totalCollisions; //Testing param
 		}
 
+		if (inserted)
+			constructNode(b, std::forward<Val>(val)...);
+
 		return PairIb { iterator{b, this}, inserted };
 	}
 
@@ -393,7 +394,7 @@ private:
 		PairIb ib = emplaceWithHash(thash, MyBegin, std::forward<Val>(val)...);
 
 		if (ib.second) // If this is a true insertion and not a found element iterator
-			constructNode(ib.first.ptr, std::forward<Val>(val)...);
+			++MySize;
 
 		return ib;
 	}
