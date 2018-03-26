@@ -35,11 +35,11 @@ template<class Key,
 
 
 template<class Key,
-	template<class> class MyBase = OpenAddressLT,
+	template<class, bool> class MyBase = OpenAddressLT,
 	class Hash = std::hash<Key>,
 	class KeyEqual = std::equal_to<Key>,
 	class Allocator = std::allocator<Key>>
-	class UnorderedSet : public MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>>
+	class UnorderedSet : public MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>
 {
 
 };

@@ -53,16 +53,16 @@ void testMap()
 
 void testHash()
 {
-	constexpr auto num = 100000;
+	constexpr long long num = 1500000;
 	using Key = int;
-	std::uniform_int_distribution<Key> distri(0, num * 10000);
+	std::uniform_int_distribution<Key> distri(0, num * 1000);
 
 	//std::unordered_set<Key> set;
 	UnorderedSet<Key> set;
 
 	timer<Key>(true);
 
-	for (int i = 0; i < num; ++i)
+	for (auto i = 0; i < num; ++i)
 	{
 		auto r = distri(defRand);
 		auto it = set.emplace(r);

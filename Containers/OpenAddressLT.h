@@ -13,7 +13,7 @@ namespace detail
 template<class value_type>
 struct HashNode
 {
-	char state;
+	unsigned char state;
 
 	value_type data;
 };
@@ -134,10 +134,10 @@ struct WrappingIterator
 
 // Open address linear probing table
 
-template<class Traits>
+template<class Traits, bool Multi>
 class OpenAddressLT
 {
-	using MyBase = OpenAddressLT<Traits>;
+	using MyBase = OpenAddressLT<Traits, Multi>;
 	using BaseTypes = HashTypes<Traits>;
 
 	using Alloc		   = typename BaseTypes::Alloc;
@@ -194,9 +194,9 @@ private:
 
 	// Delete these when done testing
 	// collisions and places needed to be moved over
-	long totalEmplace = 0;
-	long totalCollisions = 0;
-	long totalDistOnCol = 0;
+	long long totalEmplace = 0;
+	long long totalCollisions = 0;
+	long long totalDistOnCol = 0;
 
 	void allocateStorage(size_t s)
 	{
@@ -237,6 +237,10 @@ private:
 			NodeAlTraits::construct(nodeAl, std::addressof(it->state), detail::empty);
 		}
 
+		for (NodePtr it = first; it != last; ++it) // TODO: A likely area for optimizations
+			if (it->state < 0 || it->state > detail::deleted)
+				int a = 5;
+
 		for (NodePtr it = first; it != last; ++it)
 		{
 			if (isFilled(it)) // TODO: Cache Hashes?
@@ -271,10 +275,10 @@ private:
 
 	void increaseCapacity() // TODO: Use a power of 2 bitmask throughout 
 	{
-		timer<MyBase>(true);
+		//timer<MyBase>(true);
 
 		const size_t oldSize = MyCapacity;
-		const size_t newSize = MyCapacity ? MyCapacity * 2 * 2: 16;
+		const size_t newSize = MyCapacity ? MyCapacity * 2: 16;
 		Node* b = nodeAl.allocate(newSize);
 		Node* e = b + static_cast<difference_type>(newSize);
 
@@ -284,8 +288,9 @@ private:
 
 		deallocate(b, e, oldSize); // TODO: Non-bulk deallocation?
 
-		timer<MyBase>(false);
-		printCollisionInfo(oldSize);
+		//timer<MyBase>(false);
+
+		//printCollisionInfo(oldSize);
 	}
 
 	template<class... Val>
@@ -303,8 +308,8 @@ private:
 
 	bool emptyOrDeleted(NodePtr p) const noexcept
 	{
-		return ! (p->state & detail::filled) 
-			   | (p->state & detail::deleted);
+		return (p->state ^ detail::filled)
+			 | (p->state & detail::deleted);
 	}
 
 	void setStateFilled(NodePtr p)
@@ -348,6 +353,12 @@ private:
 			int i = 1;
 			for (w; w.ptr != b; ++w)
 			{
+				if (!Multi && testEqual(getKey(w.ptr->data), getKey(std::forward<Val>(val)...)))
+				{
+					b = nullptr; // TODO: What is the thing to return if key already exists? Currently just returning iterator to end
+					break;
+				}
+
 				if (emptyOrDeleted(w.ptr))
 				{
 					b = w.ptr;
@@ -431,6 +442,8 @@ public:
 
 		if (p)
 			constructNode(p, std::forward<Val>(val)...);
+		else
+			p = MyEnd;
 
 		return iterator(p, this);
 	}
