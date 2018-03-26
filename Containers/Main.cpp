@@ -68,6 +68,10 @@ void testHash()
 	for (auto i = 0; i < num; ++i)
 	{
 		auto r = distri(defRand);
+
+		if (r == 274252815)
+			int a = 5;
+
 		auto it = set.emplace(r);
 
 		auto itf = set.find(r);
@@ -78,12 +82,14 @@ void testHash()
 
 		int a = 5;
 	}
-
+	
+	int numNotFound = 0;
 	for (const auto i : inserted)
 		if (set.find(i) == set.end()) // Not good! This triggers bp
-			int a = 5;
+			++numNotFound;
 
 	timer<Key>(false);
+	std::cout << "Num not found: " << numNotFound;
 
 	int a = 5;
 }

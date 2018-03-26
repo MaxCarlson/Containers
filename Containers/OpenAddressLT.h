@@ -208,7 +208,7 @@ private:
 
 
 	// Delete these when done testing
-	// collisions and places needed to be moved over
+	// 
 	long long totalEmplace = 0;
 	long long totalCollisions = 0;
 	long long totalDistOnCol = 0;
@@ -254,7 +254,7 @@ private:
 
 		for (NodePtr it = first; it != last; ++it)
 		{
-			if (isFilled(it)) // TODO: Cache Hashes?
+			if (isFilled(it)) // TODO: Cache Hashes? Would definitely provide speedup for hard-to-hash elements (not all that much space?)
 			{
 				const size_t hash = getHash(it->data);
 				emplaceWithHash(hash, MyBegin, std::move(it->data));
@@ -324,14 +324,9 @@ private:
 		p->state = detail::filled;
 	}
 
-	size_t getBucket(const key_type& k) const // TODO: Use power 2 bitmask
+	size_t getBucket(const key_type& k) const // TODO: Use power 2 bitmask & size - 1
 	{
-		return getHash(k) % MyCapacity;
-	}
-
-	NodePtr navigate(const size_t idx) const
-	{
-		return MyBegin + static_cast<difference_type>(idx);
+		return getHash(k) & (capacity() - 1);
 	}
 
 	NodePtr navigate(const size_t idx, const NodePtr first) const
@@ -340,7 +335,7 @@ private:
 	}
 
 	template<class... Val>
-	PairIb emplaceWithHash(const size_t hash, NodePtr first, Val&& ...val)
+	PairIb emplaceWithHash(const size_t hash, NodePtr first, Val&& ...val) // TODO: Excessive forwards here? Read up on it
 	{
 		const size_t bucket = getBucket(getKey(std::forward<Val>(val)...));
 
@@ -407,7 +402,7 @@ private:
 	{
 		const size_t bucket = getBucket(k);
 
-		NodePtr p = navigate(bucket);
+		NodePtr p = navigate(bucket, MyBegin);
 
 		if (isFilled(p) && testEqual(getKey(p->data), k))
 			;
