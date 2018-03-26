@@ -2,25 +2,25 @@
 #include <utility>
 #include "OpenAddressLT.h"
 
-template<class Key,
+template<class Key, class Value,
 	class Hash,
 	class KeyEqual,
 	class Allocator>
-	struct USetTraits
+	struct UMapTraits
 {
-	using key_type		 = Key;
-	using value_type	 = Key;
-	using hasher		 = Hash;
-	using key_equal		 = KeyEqual;
+	using key_type = Key;
+	using value_type = Value;
+	using hasher = Hash;
+	using key_equal = KeyEqual;
 	using allocator_type = Allocator;
 
-	using node_type = key_type;
+	using node_type = std::pair<Key, Value>;
 
 	struct node_equal
 	{
 		bool operator()(const node_type& left, const node_type& right) const
 		{
-			return comp(left, right);
+			return comp(left.first, right.first);
 		}
 
 		key_equal comp;
@@ -30,18 +30,18 @@ template<class Key,
 	{
 		const key_type& operator()(const node_type& n) const
 		{
-			return n;
+			return n.first;
 		}
 	};
 };
 
 
-template<class Key,
+template<class Key, class Value,
 	template<class, bool> class MyBase = OpenAddressLT,
 	class Hash = std::hash<Key>,
 	class KeyEqual = std::equal_to<Key>,
-	class Allocator = std::allocator<Key>>
-	class UnorderedSet : public MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>
+	class Allocator = std::allocator<std::pair<Key, Value>>>
+	class UnorderedMap : public MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, false>
 {
 
 };

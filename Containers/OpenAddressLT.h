@@ -36,7 +36,9 @@ struct HashTypes
 	using reference		  = value_type & ;
 	using const_reference = const value_type&;
 
-	using Node = HashNode<value_type>;
+	using node_type = typename Traits::node_type;
+
+	using Node = HashNode<node_type>;
 	using NodePtr = Node*;
 
 	using NodeAl = RebindAllocator<Alloc, Node>;
@@ -161,7 +163,7 @@ class OpenAddressLT
 	using NodePtr  = typename BaseTypes::NodePtr;
 
 	using key_equal   = typename Traits::key_equal;
-	using value_equal = typename Traits::value_equal;
+	using node_equal  = typename Traits::node_equal;
 
 	using difference_type = typename BaseTypes::difference_type;
 	using value_type      = typename BaseTypes::value_type;
@@ -204,7 +206,8 @@ private:
 	get_hash getHash;
 	get_key  getKey;
 
-	key_equal testEqual;
+	key_equal  keyEqual;
+	node_equal nodeEqual;
 
 
 	// Delete these when done testing
@@ -356,7 +359,7 @@ private:
 			int i = 1; //Testing param
 			for (w; w.ptr != b; ++w)
 			{
-				if (!Multi && testEqual(getKey(w.ptr->data), getKey(std::forward<Val>(val)...)))
+				if (!Multi && keyEqual(getKey(w.ptr->data), getKey(std::forward<Val>(val)...)))
 				{
 					b = w.ptr;
 					break;
@@ -405,7 +408,7 @@ private:
 
 		NodePtr p = navigate(bucket, MyBegin);
 
-		if (isFilled(p) && testEqual(getKey(p->data), k))
+		if (isFilled(p) && keyEqual(getKey(p->data), k))
 			;
 		else
 		{
@@ -418,7 +421,7 @@ private:
 				if (!isFilled(w.ptr))
 					break;
 
-				else if (testEqual(getKey(w.ptr->data), k))
+				else if (keyEqual(getKey(w.ptr->data), k))
 				{
 					found = true;
 					p = w.ptr;
@@ -447,7 +450,7 @@ private:
 
 			NodePtr end = start;
 			for (w; w.ptr != start; end = w.ptr, ++w)
-				if (!testEqual(getKey(w.ptr->data), getKey(start->data)))
+				if (!nodeEqual(w.ptr->data, start->data))
 					break;
 
 			its.second = iterator{ end, this };
