@@ -183,7 +183,7 @@ private:
 	size_t MySize = 0;
 	size_t MyCapacity = 0;
 
-	static constexpr float defaultLoadFactor = 0.85f;
+	static constexpr float defaultLoadFactor = 0.55f;
 	float maxLoadFactor = defaultLoadFactor;
 
 	get_hash getHash;
@@ -207,43 +207,51 @@ private:
 		}	
 	}
 
-	void deallocate(NodePtr p, NodePtr end)
+	void deallocate(NodePtr start, NodePtr end, const size_t size)
 	{
-		for (NodePtr it = p; p != end; ++p)
+		if (!start)
+			return;
+
+		for (NodePtr it = start; it != end; ++it)
 			NodeAlTraits::destroy(nodeAl, it);
 
-		NodeAlTraits::deallocate(nodeAl, p, end - p);
+		NodeAlTraits::deallocate(nodeAl, start, size);
 	}
 
 	// Copy current contents into new array,
-	// pointed at by first, last
-	void copy(NodePtr first, NodePtr last)
+	// pointed at by first, last and swap their values
+	void reallocate(NodePtr& first, NodePtr& last) 
 	{
-		for (NodePtr it = MyBegin; it != MyEnd; ++it)
+		std::swap(MyBegin, first);
+		std::swap(MyEnd, last);
+
+		for (NodePtr it = MyBegin; it != MyEnd; ++it) // TODO: A likely area for optimizations
+		{
+			NodeAlTraits::construct(nodeAl, std::addressof(it->state), detail::empty);
+		}
+
+		for (NodePtr it = first; it != last; ++it)
 		{
 			if (isFilled(it)) // TODO: Cache Hashes?
 			{
 				const size_t hash = getHash(it->data);
-				emplaceWithHash(hash, first, std::move(it->data));
+				emplaceWithHash(hash, MyBegin, std::move(it->data));
 			}
-		//	else
-		//		NodeAlTraits::construct(nodeAl, (first + static_cast<difference_type>(it - MyBegin)), detail::empty);
 		}
 	}
 
 	void increaseCapacity() // TODO: Use a power of 2 bitmask throughout 
 	{
+		const size_t oldSize = MyCapacity;
 		const size_t newSize = MyCapacity ? MyCapacity * 2 : 16;
 		Node* b = nodeAl.allocate(newSize);
 		Node* e = b + static_cast<difference_type>(newSize);
 
-		copy(b, e);
+		MyCapacity = newSize; // Must be set first otherwise items are placed into incorrect buckets in new array
 
-		deallocate(MyBegin, MyEnd); // TODO: Non-bulk deallocation?
+		reallocate(b, e);
 
-		MyBegin = b;
-		MyEnd	= e;
-		MyCapacity = newSize;
+		deallocate(b, e, oldSize); // TODO: Non-bulk deallocation?
 	}
 
 	template<class... Val>
@@ -314,6 +322,9 @@ private:
 	template<class... Val> 
 	NodePtr tryEmplace(Val&& ...val)
 	{	// Get a pointer to where we're going to put element
+
+		auto s = size();
+		auto c = capacity();
 
 		if (size() + 1 > maxLoadFactor * capacity())
 		{

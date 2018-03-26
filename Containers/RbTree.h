@@ -211,6 +211,7 @@ class RedBlackTree
 	friend class TreeIterator<MyBase>;
 
 	using Iterator = std::conditional_t<std::is_same<key_type, value_type>::value, ConstTreeIterator<MyBase>, TreeIterator<MyBase>>;
+	//using Iterator = TreeIterator<MyBase>; // Revert when not testing with intel compiler
 
 	using reverse_iterator = std::reverse_iterator<Iterator>;
 	using Const_Iterator   = ConstTreeIterator<MyBase>;

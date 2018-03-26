@@ -81,19 +81,24 @@ void testMap()
 
 void testHash()
 {
-	constexpr auto num = 100;
-	using tKey = int;
+	constexpr auto num = 500000;
+	using Key = int;
+	std::uniform_int_distribution<Key> distri(0, num);
 
-	std::unordered_set<tKey> stdset;
-	UnorderedSet<tKey> set;
+	std::unordered_set<Key> set;
+	//UnorderedSet<Key> set;
+
+	timer(true);
 
 	for (int i = 0; i < num; ++i)
 	{
-		auto it = set.emplace(i);
+		auto r = distri(defRand);
+		auto it = set.emplace(r);
 
-		auto itf = set.find(i);
+		auto itf = set.find(r);
 	}
 
+	timer(false);
 
 	int a = 5;
 }
