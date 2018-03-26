@@ -93,6 +93,15 @@ struct HashIterator
 		return tmp;
 	}
 
+	bool operator==(const HashIterator& other) const
+	{
+		return this->ptr == other.ptr;
+	}
+
+	bool operator!=(const HashIterator& other) const
+	{
+		return !(this->ptr == other.ptr);
+	}
 
 protected:
 	friend Table;
@@ -165,14 +174,20 @@ class OpenAddressLT
 	friend wrapIterator;
 
 public:	
-	using iterator = HashIterator<MyBase>;
-
-	friend iterator;
 
 	OpenAddressLT()
 	{
 
 	}
+
+	using iterator = HashIterator<MyBase>;
+	using PairIb = std::pair<iterator, bool>;
+	using PairIt = std::pair<iterator, iterator>;
+
+	friend iterator;
+
+	iterator begin() { return iterator { MyBegin, this }; }
+	iterator end() { return iterator { MyEnd, this }; };
 
 private:
 	NodeAl nodeAl;
@@ -237,10 +252,6 @@ private:
 			NodeAlTraits::construct(nodeAl, std::addressof(it->state), detail::empty);
 		}
 
-		for (NodePtr it = first; it != last; ++it) // TODO: A likely area for optimizations
-			if (it->state < 0 || it->state > detail::deleted)
-				int a = 5;
-
 		for (NodePtr it = first; it != last; ++it)
 		{
 			if (isFilled(it)) // TODO: Cache Hashes?
@@ -251,7 +262,7 @@ private:
 		}
 	}
 
-	void printCollisionInfo(size_t oldSize)
+	void printCollisionInfo(size_t oldSize) // Just for testing collisions et al
 	{
 		if (!totalEmplace)
 			return;
@@ -275,8 +286,6 @@ private:
 
 	void increaseCapacity() // TODO: Use a power of 2 bitmask throughout 
 	{
-		//timer<MyBase>(true);
-
 		const size_t oldSize = MyCapacity;
 		const size_t newSize = MyCapacity ? MyCapacity * 2: 16;
 		Node* b = nodeAl.allocate(newSize);
@@ -287,8 +296,6 @@ private:
 		reallocate(b, e);
 
 		deallocate(b, e, oldSize); // TODO: Non-bulk deallocation?
-
-		//timer<MyBase>(false);
 
 		//printCollisionInfo(oldSize);
 	}
@@ -333,55 +340,54 @@ private:
 	}
 
 	template<class... Val>
-	NodePtr emplaceWithHash(const size_t hash, NodePtr first, Val&& ...val)
+	PairIb emplaceWithHash(const size_t hash, NodePtr first, Val&& ...val)
 	{
 		const size_t bucket = getBucket(getKey(std::forward<Val>(val)...));
 
 		NodePtr b = navigate(bucket, first); // bucket - 1?
 
-		++totalEmplace;
+		++totalEmplace; //Testing param
+
+		bool inserted = false;
 
 		if (emptyOrDeleted(b))
 		{
 			setStateFilled(b);
+			inserted = true;
 		}
 		else
 		{
 			wrapIterator w(b, this);
 			++w;
 
-			int i = 1;
+			int i = 1; //Testing param
 			for (w; w.ptr != b; ++w)
 			{
 				if (!Multi && testEqual(getKey(w.ptr->data), getKey(std::forward<Val>(val)...)))
 				{
-					b = nullptr; // TODO: What is the thing to return if key already exists? Currently just returning iterator to end
+					b = w.ptr;
 					break;
 				}
-
-				if (emptyOrDeleted(w.ptr))
+				else if (emptyOrDeleted(w.ptr))
 				{
 					b = w.ptr;
 					setStateFilled(b);
-					totalDistOnCol += i;
+					totalDistOnCol += i; //Testing param
+					inserted = true;
 					break;
 				}
-				++i;
+				++i; //Testing param
 			}
 
-			++totalCollisions;
+			++totalCollisions; //Testing param
 		}
 
-		return b;
+		return PairIb { iterator{b, this}, inserted };
 	}
 
 	template<class... Val> 
-	NodePtr tryEmplace(Val&& ...val)
-	{	// Get a pointer to where we're going to put element
-
-		auto s = size();
-		auto c = capacity();
-
+	PairIb tryEmplace(Val&& ...val)
+	{	
 		if (size() + 1 > maxLoadFactor * capacity())
 		{
 			increaseCapacity();
@@ -389,9 +395,12 @@ private:
 
 		const size_t thash = getHash(std::forward<Val>(val)...);
 
-		NodePtr b = emplaceWithHash(thash, MyBegin, std::forward<Val>(val)...);
+		PairIb ib = emplaceWithHash(thash, MyBegin, std::forward<Val>(val)...);
 
-		return b;
+		if (ib.second) // If this is a true insertion and not a found element iterator
+			constructNode(ib.first.ptr, std::forward<Val>(val)...);
+
+		return ib;
 	}
 
 	NodePtr getElementFromKey(const key_type &k) 
@@ -400,7 +409,7 @@ private:
 
 		NodePtr p = navigate(bucket);
 
-		if (testEqual(getKey(p->data), k))
+		if (isFilled(p) && testEqual(getKey(p->data), k))
 			;
 		else
 		{
@@ -409,18 +418,46 @@ private:
 
 			bool found = false;
 			for (w; w.ptr != p; ++w)
-				if (testEqual(getKey(w.ptr->data), k))
+			{
+				if (!isFilled(w.ptr))
+					break;
+
+				else if (testEqual(getKey(w.ptr->data), k))
 				{
 					found = true;
 					p = w.ptr;
 					break;
-				}	
+				}
+			}
 
 			if (!found)
 				p = MyEnd;
 		}
 
 		return p;
+	}
+
+	PairIt getEqualRange(const key_type& k)
+	{
+		NodePtr start = getElementFromKey(k);
+
+		iterator it = iterator { start, this };
+		PairIt its = { it, it };
+
+		if (start != MyEnd)
+		{
+			wrapIterator w(start, this);
+			++w;
+
+			NodePtr end = start;
+			for (w; w.ptr != start; end = w.ptr, ++w)
+				if (!testEqual(getKey(w.ptr->data), getKey(start->data)))
+					break;
+
+			its.second = iterator{ end, this };
+		}
+		
+		return its;
 	}
 
 public:
@@ -436,23 +473,24 @@ public:
 	}
 
 	template<class... Val>
-	iterator emplace(Val&& ...val)
+	PairIb emplace(Val&& ...val)
 	{
-		NodePtr p = tryEmplace(std::forward<Val>(val)...);
+		PairIb ib = tryEmplace(std::forward<Val>(val)...);
 
-		if (p)
-			constructNode(p, std::forward<Val>(val)...);
-		else
-			p = MyEnd;
-
-		return iterator(p, this);
+		return ib;
 	}
 
-	iterator find(const key_type& k) 
+	template<class K>
+	iterator find(const K& k) 
 	{
 		NodePtr p = getElementFromKey(k);
 
 		return iterator(p, this);
 	}
 
+	template<class K>
+	PairIt equal_range(const K& k)
+	{
+		return getEqualRange(k);
+	}
 };

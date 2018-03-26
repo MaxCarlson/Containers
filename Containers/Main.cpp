@@ -51,16 +51,19 @@ void testMap()
 	int a = 5;
 }
 
+
 void testHash()
 {
-	constexpr long long num = 1500000;
-	using Key = int;
-	std::uniform_int_distribution<Key> distri(0, num * 1000);
+	constexpr long long num = 500000;
+	using Key = uint64_t;
+	std::uniform_int_distribution<uint64_t> distri(0, num * 1000);
 
 	//std::unordered_set<Key> set;
 	UnorderedSet<Key> set;
 
 	timer<Key>(true);
+
+	std::unordered_set<Key> inserted;
 
 	for (auto i = 0; i < num; ++i)
 	{
@@ -68,7 +71,17 @@ void testHash()
 		auto it = set.emplace(r);
 
 		auto itf = set.find(r);
+
+		auto eq = set.equal_range(r);
+
+		inserted.emplace(r);
+
+		int a = 5;
 	}
+
+	for (const auto i : inserted)
+		if (set.find(i) == set.end()) // Not good! This triggers bp
+			int a = 5;
 
 	timer<Key>(false);
 
