@@ -18,29 +18,6 @@
 
 std::default_random_engine defRand;
 
-template<class C>
-inline void printCVector(Vector<C> &v)
-{
-	for (auto it = v.begin(); it != v.end(); ++it)
-		std::cout << *it << " ";
-
-	std::cout << "\n";
-}
-
-inline void timer(bool startNow)
-{
-	using namespace std::chrono;
-
-	static std::chrono::time_point<std::chrono::steady_clock> start;
-
-	if (startNow)
-	{
-		start = high_resolution_clock::now();
-		return;
-	}
-
-	std::cout << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << "\n";
-}
 
 void testMap()
 {
@@ -52,7 +29,6 @@ void testMap()
 	//Map<Key, Value, RedBlackTree> map;
 	std::map<Key, Value> map;
 
-	timer(true);
 
 	//for (int times = 0; times < num; ++times){
 	
@@ -64,15 +40,11 @@ void testMap()
 		map.emplace(x, i);
 	}
 
-	timer(false);
-	timer(true);
-
 	for (auto it = map.begin(); it != map.end();)
 	{
 		it = map.erase(it);
 	}
 
-	timer(false);
 	
 	//}
 
@@ -81,14 +53,14 @@ void testMap()
 
 void testHash()
 {
-	constexpr auto num = 500000;
+	constexpr auto num = 100000;
 	using Key = int;
-	std::uniform_int_distribution<Key> distri(0, num);
+	std::uniform_int_distribution<Key> distri(0, num * 10000);
 
-	std::unordered_set<Key> set;
-	//UnorderedSet<Key> set;
+	//std::unordered_set<Key> set;
+	UnorderedSet<Key> set;
 
-	timer(true);
+	timer<Key>(true);
 
 	for (int i = 0; i < num; ++i)
 	{
@@ -98,7 +70,7 @@ void testHash()
 		auto itf = set.find(r);
 	}
 
-	timer(false);
+	timer<Key>(false);
 
 	int a = 5;
 }

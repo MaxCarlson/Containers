@@ -183,13 +183,20 @@ private:
 	size_t MySize = 0;
 	size_t MyCapacity = 0;
 
-	static constexpr float defaultLoadFactor = 0.55f;
+	static constexpr float defaultLoadFactor = 0.85f;
 	float maxLoadFactor = defaultLoadFactor;
 
 	get_hash getHash;
 	get_key  getKey;
 
 	key_equal testEqual;
+
+
+	// Delete these when done testing
+	// collisions and places needed to be moved over
+	long totalEmplace = 0;
+	long totalCollisions = 0;
+	long totalDistOnCol = 0;
 
 	void allocateStorage(size_t s)
 	{
@@ -240,10 +247,34 @@ private:
 		}
 	}
 
+	void printCollisionInfo(size_t oldSize)
+	{
+		if (!totalEmplace)
+			return;
+
+		double percCol = (100.0 / double(totalEmplace)) * double(totalCollisions);
+		double avgDistCol = double(totalDistOnCol) / double(totalCollisions);
+		double avgDist = double(totalDistOnCol) / double(totalEmplace);
+
+		std::cout << "\n" << "For Size: " << oldSize;
+		std::cout << "\n" << "Total Inserts: " << totalEmplace;
+		std::cout << "\n" << "Total Collissions: " << totalCollisions;
+		std::cout << "\n" << "% Collisions: " << percCol;
+		std::cout << "\n" << "Average Dist per Collison: " << avgDistCol;
+		std::cout << "\n" << "Average Dist per Insert: " << avgDist;
+		std::cout << "\n";
+
+		totalCollisions = 0;
+		totalDistOnCol = 0;
+		totalEmplace = 0;
+	}
+
 	void increaseCapacity() // TODO: Use a power of 2 bitmask throughout 
 	{
+		timer<MyBase>(true);
+
 		const size_t oldSize = MyCapacity;
-		const size_t newSize = MyCapacity ? MyCapacity * 2 : 16;
+		const size_t newSize = MyCapacity ? MyCapacity * 2 * 2: 16;
 		Node* b = nodeAl.allocate(newSize);
 		Node* e = b + static_cast<difference_type>(newSize);
 
@@ -252,6 +283,9 @@ private:
 		reallocate(b, e);
 
 		deallocate(b, e, oldSize); // TODO: Non-bulk deallocation?
+
+		timer<MyBase>(false);
+		printCollisionInfo(oldSize);
 	}
 
 	template<class... Val>
@@ -300,20 +334,31 @@ private:
 
 		NodePtr b = navigate(bucket, first); // bucket - 1?
 
+		++totalEmplace;
+
 		if (emptyOrDeleted(b))
+		{
 			setStateFilled(b);
+		}
 		else
 		{
 			wrapIterator w(b, this);
 			++w;
 
-			for (w; w.ptr != b; ++w) // TODO: Exception handling
+			int i = 1;
+			for (w; w.ptr != b; ++w)
+			{
 				if (emptyOrDeleted(w.ptr))
 				{
 					b = w.ptr;
 					setStateFilled(b);
+					totalDistOnCol += i;
 					break;
 				}
+				++i;
+			}
+
+			++totalCollisions;
 		}
 
 		return b;
