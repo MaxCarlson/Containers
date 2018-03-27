@@ -335,18 +335,16 @@ private:
 		return first + static_cast<difference_type>(idx);
 	}
 
-	//*
 	template<class... Val>
-	key_type getKeyFromPack(Val&&... val) noexcept // Is there any situation where the key isn't the first element?
+	decltype(auto) getKeyFromPack(Val&&... val) noexcept 
 	{
-		return std::get<0>(std::forward_as_tuple<Val>(val)...);
+		return  getKey({ std::forward<Val>(val)... });
 	}
-	//*/
 
 	template<class... Val>
 	PairIb emplaceWithHash(const size_t hash, NodePtr first, Val&& ...val) // TODO: Excessive forwards here? Read up on it
 	{
-		const size_t bucket = 1; // getBucket(getKeyFromPack(std::forward<Val>(val)...));
+		const size_t bucket = getBucket(getKey({ std::forward<Val>(val)... }));
 
 		NodePtr b = navigate(bucket, first); // bucket - 1?
 
@@ -367,7 +365,7 @@ private:
 			int i = 1; //Testing param
 			for (w; w.ptr != b; ++w)
 			{
-				if (!Multi && keyEqual(getKey(w.ptr->data), 1 ))//, getKeyFromPack(std::forward<Val>(val)...)))
+				if (!Multi && keyEqual(getKey(w.ptr->data), getKey({ std::forward<Val>(val)... })))
 				{
 					b = w.ptr;
 					break;
@@ -400,7 +398,7 @@ private:
 			increaseCapacity();
 		}
 
-		const size_t thash = 1;// getHash(getKeyFromPack(std::forward<Val>(val)...));
+		const size_t thash = getHash(getKey({ std::forward<Val>(val)... }));
 
 		PairIb ib = emplaceWithHash(thash, MyBegin, std::forward<Val>(val)...);
 

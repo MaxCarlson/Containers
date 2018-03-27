@@ -60,35 +60,36 @@ void testHash()
 	std::uniform_int_distribution<uint64_t> distri(0, num * 1000);
 
 	//std::unordered_set<Key> set;
+	//std::unordered_map<Key, Value> set;
 	UnorderedMap<Key, Value> set;
 	//UnorderedSet<Key> set;
 
 	timer<Key>(true);
 
-	//std::unordered_set<Key> inserted;
+	//std::unordered_map<Key, Value> inserted;
 
 	for (auto i = 0; i < num; ++i)
 	{
 		auto r = distri(defRand);
 
-		auto it = set.emplace(r, r);
+		auto it = set.emplace(r, r - 5);
 
 		auto itf = set.find(r);
 
 		auto eq = set.equal_range(r);
 
-		//inserted.emplace(r);
+	//	inserted.emplace(r, r - 5);
 
 		int a = 5;
 	}
 	
 //	int numNotFound = 0;
 //	for (const auto i : inserted)
-//		if (set.find(i) == set.end()) // Not good! This triggers bp
-	//		++numNotFound;
+//		if (set.find(i.first) == set.end() || set.find(i.first)->second != i.second) // Not good! This triggers bp
+//			++numNotFound;
 
 	timer<Key>(false);
-	//std::cout << "Num not found: " << numNotFound;
+//	std::cout << "Num not found: " << numNotFound;
 
 	int a = 5;
 }
