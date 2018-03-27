@@ -2,7 +2,6 @@
 #include "Vector.h"
 #include "BinaryTree.h"
 #include "RbTree.h"
-#include "TemplateTesting.h"
 #include "UnorderedSet.h"
 #include "UnorderedMap.h"
 #include "Map.h"
@@ -55,44 +54,41 @@ void testMap()
 
 void testHash()
 {
-	constexpr long long num = 500000;
+	constexpr long long num = 19500000;
 	using Key = uint64_t;
 	using Value = int;
 	std::uniform_int_distribution<uint64_t> distri(0, num * 1000);
 
 	//std::unordered_set<Key> set;
-	//UnorderedMap<Key, Value> set;
-	UnorderedSet<Key> set;
+	UnorderedMap<Key, Value> set;
+	//UnorderedSet<Key> set;
 
 	timer<Key>(true);
 
-	std::unordered_set<Key> inserted;
+	//std::unordered_set<Key> inserted;
 
 	for (auto i = 0; i < num; ++i)
 	{
 		auto r = distri(defRand);
 
-		if (r == 274252815)
-			int a = 5;
-
-		auto it = set.emplace(r);
+		auto it = set.emplace(r, r);
 
 		auto itf = set.find(r);
 
 		auto eq = set.equal_range(r);
 
-		inserted.emplace(r);
+		//inserted.emplace(r);
 
 		int a = 5;
 	}
 	
-	int numNotFound = 0;
-	for (const auto i : inserted)
-		if (set.find(i) == set.end()) // Not good! This triggers bp
-			++numNotFound;
+//	int numNotFound = 0;
+//	for (const auto i : inserted)
+//		if (set.find(i) == set.end()) // Not good! This triggers bp
+	//		++numNotFound;
 
 	timer<Key>(false);
-	std::cout << "Num not found: " << numNotFound;
+	//std::cout << "Num not found: " << numNotFound;
 
 	int a = 5;
 }

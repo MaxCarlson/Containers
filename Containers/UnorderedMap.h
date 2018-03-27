@@ -14,7 +14,7 @@ template<class Key, class Value,
 	using key_equal = KeyEqual;
 	using allocator_type = Allocator;
 
-	using node_type = std::pair<Key, Value>;
+	using node_type = std::pair<Key, Value>; // const Key
 
 	struct node_equal
 	{
@@ -40,7 +40,7 @@ template<class Key, class Value,
 	template<class, bool> class MyBase = OpenAddressLT,
 	class Hash = std::hash<Key>,
 	class KeyEqual = std::equal_to<Key>,
-	class Allocator = std::allocator<std::pair<Key, Value>>>
+	class Allocator = std::allocator<std::pair<Key, Value>>> // const Key
 	class UnorderedMap : public MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, false>
 {
 

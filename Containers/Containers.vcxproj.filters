@@ -29,9 +29,6 @@
     <ClInclude Include="RbTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TemplateTesting.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Map.h">
       <Filter>Header Files</Filter>
     </ClInclude>

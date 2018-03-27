@@ -10,12 +10,12 @@ namespace detail
 }
 
 
-template<class value_type>
+template<class node_type>
 struct HashNode
 {
 	unsigned char state;
 
-	value_type data;
+	node_type data;
 };
 
 // Wrapper for types needed by Hashtable
@@ -46,13 +46,12 @@ struct HashTypes
 
 	struct get_hash
 	{
-		size_t operator()(const value_type& v) const
+		size_t operator()(const key_type& v) const
 		{
-			return hash(get(v));
+			return hash(v);
 		}
 
 		hasher hash;
-		get_key get;
 	};
 };
 
@@ -81,7 +80,7 @@ struct HashIterator
 	{
 		for (NodePtr p = ptr; ptr < table->end->ptr; ++ptr)
 		{
-			if (ptr == table->end->ptr || ptr->state & filled)
+			if (ptr == table->end->ptr || ptr->state & detail::filled)
 				break;
 		}
 
@@ -156,11 +155,12 @@ class OpenAddressLT
 	using NodeAl	   = typename BaseTypes::NodeAl;
 	using NodeAlTraits = typename BaseTypes::NodeAlTraits;
 
-	using key_type = typename BaseTypes::key_type;
-	using get_hash = typename BaseTypes::get_hash;
-	using get_key  = typename BaseTypes::get_key;
-	using Node	   = typename BaseTypes::Node;
-	using NodePtr  = typename BaseTypes::NodePtr;
+	using key_type  = typename BaseTypes::key_type;
+	using get_hash  = typename BaseTypes::get_hash;
+	using get_key   = typename BaseTypes::get_key;
+	using Node	    = typename BaseTypes::Node;
+	using NodePtr   = typename BaseTypes::NodePtr;
+	using node_type = typename BaseTypes::node_type;
 
 	using key_equal   = typename Traits::key_equal;
 	using node_equal  = typename Traits::node_equal;
@@ -179,7 +179,7 @@ public:
 
 	OpenAddressLT()
 	{
-
+		MyBegin = MyEnd = nullptr;
 	}
 
 	using iterator = HashIterator<MyBase>;
@@ -259,7 +259,7 @@ private:
 		{
 			if (isFilled(it)) // TODO: Cache Hashes? Would definitely provide speedup for hard-to-hash elements (not all that much space?)
 			{
-				const size_t hash = getHash(it->data);
+				const size_t hash = getHash(getKey(it->data));
 				emplaceWithHash(hash, MyBegin, std::move(it->data));
 			}
 		}
@@ -314,10 +314,10 @@ private:
 		return p->state & detail::filled; 
 	}
 
-	bool emptyOrDeleted(NodePtr p) const noexcept
+	bool emptyOrDeleted(const int state) const noexcept
 	{
-		return (p->state ^ detail::filled)
-			 | (p->state & detail::deleted);
+		return (state ^ detail::filled)
+			 | (state & detail::deleted);
 	}
 
 	void setStateFilled(NodePtr p)
@@ -335,10 +335,18 @@ private:
 		return first + static_cast<difference_type>(idx);
 	}
 
+	//*
+	template<class... Val>
+	key_type getKeyFromPack(Val&&... val) noexcept // Is there any situation where the key isn't the first element?
+	{
+		return std::get<0>(std::forward_as_tuple<Val>(val)...);
+	}
+	//*/
+
 	template<class... Val>
 	PairIb emplaceWithHash(const size_t hash, NodePtr first, Val&& ...val) // TODO: Excessive forwards here? Read up on it
 	{
-		const size_t bucket = getBucket(getKey(std::forward<Val>(val)...));
+		const size_t bucket = 1; // getBucket(getKeyFromPack(std::forward<Val>(val)...));
 
 		NodePtr b = navigate(bucket, first); // bucket - 1?
 
@@ -346,7 +354,7 @@ private:
 
 		bool inserted = false;
 
-		if (emptyOrDeleted(b))
+		if (emptyOrDeleted(b->state))
 		{
 			setStateFilled(b);
 			inserted = true;
@@ -359,12 +367,12 @@ private:
 			int i = 1; //Testing param
 			for (w; w.ptr != b; ++w)
 			{
-				if (!Multi && keyEqual(getKey(w.ptr->data), getKey(std::forward<Val>(val)...)))
+				if (!Multi && keyEqual(getKey(w.ptr->data), 1 ))//, getKeyFromPack(std::forward<Val>(val)...)))
 				{
 					b = w.ptr;
 					break;
 				}
-				else if (emptyOrDeleted(w.ptr))
+				else if (emptyOrDeleted(w.ptr->state))
 				{
 					b = w.ptr;
 					setStateFilled(b);
@@ -392,7 +400,7 @@ private:
 			increaseCapacity();
 		}
 
-		const size_t thash = getHash(std::forward<Val>(val)...);
+		const size_t thash = 1;// getHash(getKeyFromPack(std::forward<Val>(val)...));
 
 		PairIb ib = emplaceWithHash(thash, MyBegin, std::forward<Val>(val)...);
 
