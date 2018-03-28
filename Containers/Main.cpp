@@ -52,6 +52,34 @@ void testMap()
 }
 
 
+struct TT
+{
+	TT(int aa)
+	{
+		a = aa;
+	}
+
+	int a;
+};
+
+struct HashTT
+{
+	size_t operator()(const TT& t) const
+	{
+		return hasher(t.a);
+	}
+
+	std::hash<int> hasher;
+};
+
+struct HashEqual
+{
+	bool operator()(const TT& t, const TT& tt) const
+	{
+		return t.a == tt.a;
+	}
+};
+
 void testHash()
 {
 	constexpr long long num = 19500000;
@@ -61,7 +89,8 @@ void testHash()
 
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
-	UnorderedMap<Key, Value> set;
+	//UnorderedMap<Key, Value> set;
+	UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
 	//UnorderedSet<Key> set;
 
 	timer<Key>(true);
@@ -74,12 +103,11 @@ void testHash()
 
 		auto it = set.emplace(r, r - 5);
 
-		auto itf = set.find(r);
+		//auto itf = set.find(r);
 
-		auto eq = set.equal_range(r);
+		//auto eq = set.equal_range(r);
 
 	//	inserted.emplace(r, r - 5);
-
 		int a = 5;
 	}
 	

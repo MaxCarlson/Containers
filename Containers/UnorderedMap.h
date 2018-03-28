@@ -28,7 +28,12 @@ template<class Key, class Value,
 
 	struct get_key
 	{
-		const key_type& operator()(const node_type& n) const
+		const key_type& operator()(const node_type& n) const noexcept
+		{
+			return n.first;
+		}
+
+		key_type& operator()(node_type&& n) const noexcept
 		{
 			return n.first;
 		}

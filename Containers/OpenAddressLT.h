@@ -9,7 +9,6 @@ namespace detail
 	constexpr char deleted = 2;
 }
 
-
 template<class node_type>
 struct HashNode
 {
@@ -216,22 +215,6 @@ private:
 	long long totalCollisions = 0;
 	long long totalDistOnCol = 0;
 
-	void allocateStorage(size_t s)
-	{
-		if (s)
-		{
-			MyBegin = nodeAl.allocate(s);
-			MyEnd = MyBegin + static_cast<difference_type>(s);
-
-			for (NodePtr p = MyBegin; p != MyEnd; ++p)
-			{
-				NodeAlTraits::construct(nodeAl, std::addressof(p->state), detail::empty);
-			}
-
-			MyCapacity = s;
-		}	
-	}
-
 	void deallocate(NodePtr start, NodePtr end, const size_t size)
 	{
 		if (!start)
@@ -259,8 +242,9 @@ private:
 		{
 			if (isFilled(it)) // TODO: Cache Hashes? Would definitely provide speedup for hard-to-hash elements (not all that much space?)
 			{
-				const size_t hash = getHash(getKey(it->data));
-				emplaceWithHash(hash, MyBegin, std::move(it->data));
+				const auto[key, hash] = getHashAndKey(it->data);
+
+				emplaceWithHash(key, hash, MyBegin);
 			}
 		}
 	}
@@ -330,23 +314,23 @@ private:
 		return getHash(k) & (capacity() - 1);
 	}
 
-	NodePtr navigate(const size_t idx, const NodePtr first) const
+	template<class... Args>
+	std::pair<const key_type&, size_t> getHashAndKey(Args&& ...args)
+	{
+		const key_type& k = getKey({ std::forward<Args>(args)... });
+		return std::make_pair(k, getHash(k));
+	}
+
+	NodePtr navigate(const size_t idx, const NodePtr first) const //noexcept?
 	{
 		return first + static_cast<difference_type>(idx);
 	}
 
-	template<class... Val>
-	decltype(auto) getKeyFromPack(Val&&... val) noexcept 
+	PairIb emplaceWithHash(const key_type& key, const size_t hash, NodePtr first) 
 	{
-		return  getKey({ std::forward<Val>(val)... });
-	}
+		const size_t bucket = getBucket(key); // Excessive calls to key constructor here! Fix!
 
-	template<class... Val>
-	PairIb emplaceWithHash(const size_t hash, NodePtr first, Val&& ...val) // TODO: Excessive forwards here? Read up on it
-	{
-		const size_t bucket = getBucket(getKey({ std::forward<Val>(val)... }));
-
-		NodePtr b = navigate(bucket, first); // bucket - 1?
+		NodePtr b = navigate(bucket, first); 
 
 		++totalEmplace; //Testing param
 
@@ -365,7 +349,7 @@ private:
 			int i = 1; //Testing param
 			for (w; w.ptr != b; ++w)
 			{
-				if (!Multi && keyEqual(getKey(w.ptr->data), getKey({ std::forward<Val>(val)... })))
+				if (!Multi && keyEqual(getKey(w.ptr->data), key))
 				{
 					b = w.ptr;
 					break;
@@ -384,9 +368,6 @@ private:
 			++totalCollisions; //Testing param
 		}
 
-		if (inserted)
-			constructNode(b, std::forward<Val>(val)...);
-
 		return PairIb { iterator{b, this}, inserted };
 	}
 
@@ -398,12 +379,15 @@ private:
 			increaseCapacity();
 		}
 
-		const size_t thash = getHash(getKey({ std::forward<Val>(val)... }));
+		const auto[key, hash] = getHashAndKey(val...);
 
-		PairIb ib = emplaceWithHash(thash, MyBegin, std::forward<Val>(val)...);
+		PairIb ib = emplaceWithHash(key, hash, MyBegin);
 
 		if (ib.second) // If this is a true insertion and not a found element iterator
+		{
+			constructNode(ib.first.ptr, std::forward<Val>(val)...);
 			++MySize;
+		}
 
 		return ib;
 	}
