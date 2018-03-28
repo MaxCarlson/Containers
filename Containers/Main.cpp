@@ -89,8 +89,8 @@ void testHash()
 
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
-	//UnorderedMap<Key, Value> set;
-	UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
+	UnorderedMap<Key, Value> set;
+	//UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
 	//UnorderedSet<Key> set;
 
 	timer<Key>(true);
@@ -104,6 +104,8 @@ void testHash()
 		auto it = set.emplace(r, r - 5);
 
 		//auto itf = set.find(r);
+
+		set.erase(r);
 
 		//auto eq = set.equal_range(r);
 

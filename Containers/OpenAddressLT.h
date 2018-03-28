@@ -36,6 +36,7 @@ struct HashTypes
 	using const_reference = const value_type&;
 
 	using node_type = typename Traits::node_type;
+	using size_type = size_t;
 
 	using Node = HashNode<node_type>;
 	using NodePtr = Node*;
@@ -45,7 +46,7 @@ struct HashTypes
 
 	struct get_hash
 	{
-		size_t operator()(const key_type& v) const
+		size_type operator()(const key_type& v) const
 		{
 			return hash(v);
 		}
@@ -77,9 +78,9 @@ struct HashIterator
 
 	HashIterator& operator++()
 	{
-		for (NodePtr p = ptr; ptr < table->end->ptr; ++ptr)
+		for (ptr; ptr < table->end().ptr; ++ptr)
 		{
-			if (ptr == table->end->ptr || ptr->state & detail::filled)
+			if (ptr->state & detail::filled)
 				break;
 		}
 
@@ -160,6 +161,7 @@ class OpenAddressLT
 	using Node	    = typename BaseTypes::Node;
 	using NodePtr   = typename BaseTypes::NodePtr;
 	using node_type = typename BaseTypes::node_type;
+	using size_type = typename BaseTypes::size_type;
 
 	using key_equal   = typename Traits::key_equal;
 	using node_equal  = typename Traits::node_equal;
@@ -184,6 +186,7 @@ public:
 	using iterator = HashIterator<MyBase>;
 	using PairIb = std::pair<iterator, bool>;
 	using PairIt = std::pair<iterator, iterator>;
+	using PairIs = std::pair<iterator, size_type>;
 
 	friend iterator;
 
@@ -196,8 +199,8 @@ private:
 	NodePtr MyBegin;
 	NodePtr MyEnd;
 
-	size_t MySize = 0;
-	size_t MyCapacity = 0;
+	size_type MySize = 0;
+	size_type MyCapacity = 0;
 
 	static constexpr float defaultLoadFactor = 0.85f;
 	float maxLoadFactor = defaultLoadFactor;
@@ -215,7 +218,7 @@ private:
 	long long totalCollisions = 0;
 	long long totalDistOnCol = 0;
 
-	void deallocate(NodePtr start, NodePtr end, const size_t size)
+	void deallocate(NodePtr start, NodePtr end, const size_type size)
 	{
 		if (!start)
 			return;
@@ -249,7 +252,7 @@ private:
 		}
 	}
 
-	void printCollisionInfo(size_t oldSize) // Just for testing collisions et al
+	void printCollisionInfo(size_type oldSize) // Just for testing collisions et al
 	{
 		if (!totalEmplace)
 			return;
@@ -273,8 +276,8 @@ private:
 
 	void increaseCapacity() // TODO: Use a power of 2 bitmask throughout 
 	{
-		const size_t oldSize = MyCapacity;
-		const size_t newSize = MyCapacity ? MyCapacity * 2: 16;
+		const size_type oldSize = MyCapacity;
+		const size_type newSize = MyCapacity ? MyCapacity * 2: 16;
 		Node* b = nodeAl.allocate(newSize);
 		Node* e = b + static_cast<difference_type>(newSize);
 
@@ -309,26 +312,26 @@ private:
 		p->state = detail::filled;
 	}
 
-	size_t getBucket(const key_type& k) const // TODO: Use power 2 bitmask & size - 1
+	size_type getBucket(const size_type hash) const noexcept 
 	{
-		return getHash(k) & (capacity() - 1);
+		return hash & (capacity() - 1);
 	}
 
 	template<class... Args>
-	std::pair<const key_type&, size_t> getHashAndKey(Args&& ...args)
+	std::pair<const key_type&, size_type> getHashAndKey(Args&& ...args)
 	{
 		const key_type& k = getKey({ std::forward<Args>(args)... });
 		return std::make_pair(k, getHash(k));
 	}
 
-	NodePtr navigate(const size_t idx, const NodePtr first) const //noexcept?
+	NodePtr navigate(const size_type idx, const NodePtr first) const //noexcept?
 	{
 		return first + static_cast<difference_type>(idx);
 	}
 
-	PairIb emplaceWithHash(const key_type& key, const size_t hash, NodePtr first) 
+	PairIb emplaceWithHash(const key_type& key, const size_type hash, NodePtr first) 
 	{
-		const size_t bucket = getBucket(key); // Excessive calls to key constructor here! Fix!
+		const size_type bucket = getBucket(hash); // Excessive calls to key constructor here! Fix!
 
 		NodePtr b = navigate(bucket, first); 
 
@@ -394,7 +397,7 @@ private:
 
 	NodePtr getElementFromKey(const key_type &k) 
 	{
-		const size_t bucket = getBucket(k);
+		const size_type bucket = getBucket(getHash(k));
 
 		NodePtr p = navigate(bucket, MyBegin);
 
@@ -440,7 +443,7 @@ private:
 
 			NodePtr end = start;
 			for (w; w.ptr != start; end = w.ptr, ++w)
-				if (!nodeEqual(w.ptr->data, start->data))
+				if (!nodeEqual(w.ptr->data, start->data) || !isFilled(w.ptr))
 					break;
 
 			its.second = iterator{ end, this };
@@ -449,14 +452,32 @@ private:
 		return its;
 	}
 
+	void deconstructNode(NodePtr p) // Deconstruct and mark area as deleted
+	{
+		NodeAlTraits::destroy(nodeAl, p);
+		p->state = detail::deleted;
+	}
+
+	PairIs eraseElements(PairIt pit) // make const iterator?
+	{
+		PairIs is = { pit.second, 0 };
+
+		for (iterator it = pit.first; it != pit.second; ++it, ++is.second) // make sure iterator points to next element!!!
+			deconstructNode(it.ptr);
+
+		MySize -= is.second;
+
+		return is;
+	}
+
 public:
 
-	size_t size() const noexcept
+	size_type size() const noexcept
 	{
 		return MySize;
 	}
 
-	size_t capacity() const noexcept
+	size_type capacity() const noexcept
 	{
 		return MyCapacity;
 	}
@@ -464,9 +485,7 @@ public:
 	template<class... Val>
 	PairIb emplace(Val&& ...val)
 	{
-		PairIb ib = tryEmplace(std::forward<Val>(val)...);
-
-		return ib;
+		return tryEmplace(std::forward<Val>(val)...);
 	}
 
 	template<class K>
@@ -482,4 +501,20 @@ public:
 	{
 		return getEqualRange(k);
 	}
+
+	size_type erase(const key_type& k)
+	{
+		PairIt its;
+
+		if constexpr (Multi) // Test this to make sure it works!
+			its = equal_range(k);
+
+		else
+			its.first = its.second = find(k);
+
+		PairIs is = eraseElements(its);
+
+		return is.second;
+	}
+
 };
