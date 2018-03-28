@@ -46,7 +46,7 @@ template<class Key, class Value,
 	class Hash = std::hash<Key>,
 	class KeyEqual = std::equal_to<Key>,
 	class Allocator = std::allocator<std::pair<Key, Value>>> // const Key
-	class UnorderedMap : public MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, false>
+	class UnorderedMap : public MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, true>
 {
 
 };

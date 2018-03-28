@@ -105,6 +105,7 @@ void testHash()
 
 		//auto itf = set.find(r);
 
+		if(i % 5 == 0 && i != 0)
 		set.erase(r);
 
 		//auto eq = set.equal_range(r);

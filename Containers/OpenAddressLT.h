@@ -80,6 +80,7 @@ struct HashIterator
 	{
 		for (ptr; ptr < table->end().ptr; ++ptr)
 		{
+			std::cout << ptr->data.first << " ";
 			if (ptr->state & detail::filled)
 				break;
 		}
@@ -132,7 +133,7 @@ struct WrappingIterator
 
 	WrappingIterator& operator++()
 	{
-		if (++ptr == table->MyEnd)
+		if (++ptr >= table->MyEnd) // Is this safe?
 			ptr = table->MyBegin;
 
 		return *this;
@@ -429,7 +430,7 @@ private:
 		return p;
 	}
 
-	PairIt getEqualRange(const key_type& k)
+	PairIt getEqualRange(const key_type& k) // Major issue: When returning a range from (end - n) to (begin + n) what do we do should iterator be a wrapping iterator? Big Design issue here?
 	{
 		NodePtr start = getElementFromKey(k);
 
@@ -441,12 +442,12 @@ private:
 			wrapIterator w(start, this);
 			++w;
 
-			NodePtr end = start;
-			for (w; w.ptr != start; end = w.ptr, ++w)
+			for (w; w.ptr != start; ++w)
 				if (!nodeEqual(w.ptr->data, start->data) || !isFilled(w.ptr))
 					break;
 
-			its.second = iterator{ end, this };
+			its.second = iterator{ w.ptr, this };
+			++its.second;
 		}
 		
 		return its;
