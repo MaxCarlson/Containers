@@ -82,7 +82,7 @@ struct HashEqual
 
 void testHash()
 {
-	constexpr long long num = 19500000;
+	constexpr long long num = 5000;
 	using Key = uint64_t;
 	using Value = int;
 	std::uniform_int_distribution<uint64_t> distri(0, num * 1000);
@@ -103,16 +103,21 @@ void testHash()
 
 		auto it = set.emplace(r, r - 5);
 
-		//auto itf = set.find(r);
+		auto f = set.find(r);
 
-		if(i % 5 == 0 && i != 0)
-		set.erase(r);
+	
 
 		//auto eq = set.equal_range(r);
 
 	//	inserted.emplace(r, r - 5);
 		int a = 5;
 	}
+
+	for(auto it = set.cbegin(); it != set.end(); ++it)
+
+
+	for (auto it = set.begin(); it != set.end();)
+		it = set.erase(it);
 	
 //	int numNotFound = 0;
 //	for (const auto i : inserted)

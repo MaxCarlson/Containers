@@ -41,7 +41,7 @@ template<class Key,
 	class Hash = std::hash<Key>,
 	class KeyEqual = std::equal_to<Key>,
 	class Allocator = std::allocator<Key>>
-	class UnorderedSet : public MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>
+	class UnorderedSet : public MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, true>
 {
 
 };

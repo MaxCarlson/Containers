@@ -56,14 +56,16 @@ struct HashTypes
 };
 
 template<class Table>
-struct HashIterator
+class HashIterator
 {
+public:
+
 	using NodePtr   = typename Table::NodePtr;
 	using pointer   = typename Table::pointer;
 	using reference = typename Table::reference;
 
 	HashIterator() = default;
-	HashIterator(NodePtr ptr, Table *table) 
+	HashIterator(NodePtr ptr, const Table *table) 
 		: ptr(ptr), table(table) {}
 
 	reference operator*()
@@ -80,7 +82,6 @@ struct HashIterator
 	{
 		for (ptr; ptr < table->end().ptr; ++ptr)
 		{
-			std::cout << ptr->data.first << " ";
 			if (ptr->state & detail::filled)
 				break;
 		}
@@ -109,7 +110,34 @@ protected:
 	friend Table;
 
 	NodePtr ptr;
-	Table *table;
+	const Table *table;
+};
+
+template<class Table>
+class ConstHashIterator : public HashIterator<Table>
+{
+public:
+	using MyBase = HashIterator<Table>;
+	using NodePtr = typename Table::NodePtr;
+	using pointer = typename Table::const_pointer;
+	using reference = typename Table::const_reference;
+	friend class MyBase;
+
+	ConstHashIterator() : MyBase() {};
+	ConstHashIterator(const MyBase& it) // Regular to const iterator
+		: MyBase(it) {}
+	ConstHashIterator(NodePtr p, const Table *t) 
+		: MyBase(p, t) {}
+
+	reference operator*() const
+	{
+		return this->ptr->data;
+	}
+
+	pointer operator->() const
+	{
+		return std::pointer_traits<pointer>::pointer_to(**this);
+	}
 };
 
 template<class Table>
@@ -185,14 +213,23 @@ public:
 	}
 
 	using iterator = HashIterator<MyBase>;
+	using const_iterator = ConstHashIterator<MyBase>;
+
 	using PairIb = std::pair<iterator, bool>;
 	using PairIt = std::pair<iterator, iterator>;
 	using PairIs = std::pair<iterator, size_type>;
 
 	friend iterator;
+	friend const_iterator;
 
-	iterator begin() { return iterator { MyBegin, this }; }
+	iterator begin() { return findFirst(); }
 	iterator end() { return iterator { MyEnd, this }; };
+	
+	const_iterator begin() const { return findFirst(); }
+	const_iterator end() const { return const_iterator { MyEnd, this }; }
+
+	const_iterator cbegin() const { return const_iterator { findFirst() }; }
+	const_iterator cend() const { return const_iterator { MyEnd, this }; }
 
 private:
 	NodeAl nodeAl;
@@ -295,6 +332,13 @@ private:
 	void constructNode(NodePtr p, Val&& ...val) // TODO: Exception handling
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
+	}
+
+	const_iterator findFirst() const
+	{
+		for (const_iterator it(MyBegin, this); it.ptr != MyEnd; ++it)
+			if (isFilled(it.ptr))
+				return it;
 	}
 
 	bool isFilled(NodePtr p) const noexcept
@@ -463,7 +507,7 @@ private:
 	{
 		PairIs is = { pit.second, 0 };
 
-		for (iterator it = pit.first; it != pit.second; ++it, ++is.second) // make sure iterator points to next element!!!
+		for (iterator it = pit.first; it != pit.second; ++it, ++is.second)
 			deconstructNode(it.ptr);
 
 		MySize -= is.second;
@@ -503,15 +547,25 @@ public:
 		return getEqualRange(k);
 	}
 
+	iterator erase(iterator it) // use const_iterator?
+	{
+		PairIs is = eraseElements({ it, ++it });
+
+		return is.first;
+	}
+
 	size_type erase(const key_type& k)
 	{
 		PairIt its;
 
-		if constexpr (Multi) // Test this to make sure it works!
+		if constexpr (Multi) // This is not working due to wrapping iterator issue
 			its = equal_range(k);
 
 		else
+		{
 			its.first = its.second = find(k);
+			++its.second;
+		}
 
 		PairIs is = eraseElements(its);
 
