@@ -212,7 +212,9 @@ public:
 		MyBegin = MyEnd = nullptr;
 	}
 
-	using iterator = HashIterator<MyBase>;
+	using iterator = std::conditional_t<std::is_same<key_type, value_type>::value,
+		ConstHashIterator<MyBase>, 
+		HashIterator<MyBase>>;
 	using const_iterator = ConstHashIterator<MyBase>;
 
 	using PairIb = std::pair<iterator, bool>;
@@ -547,7 +549,7 @@ public:
 		return getEqualRange(k);
 	}
 
-	iterator erase(iterator it) // use const_iterator?
+	iterator erase(const_iterator it) // use const_iterator?
 	{
 		PairIs is = eraseElements({ it, ++it });
 
