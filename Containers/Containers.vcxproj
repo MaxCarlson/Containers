@@ -179,12 +179,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BinaryTree.h" />
+    <ClInclude Include="HashtableHelpers.h" />
     <ClInclude Include="helpers.h" />
-    <ClInclude Include="OpenAddressLT.h" />
+    <ClInclude Include="OpenAddressLinear.h" />
+    <ClInclude Include="RobinHood.h" />
     <ClInclude Include="UnorderedMap.h" />
     <ClInclude Include="UnorderedSet.h" />
     <ClInclude Include="Map.h" />
-    <ClInclude Include="RbTree.h" />
+    <ClInclude Include="RedBlackTree.h" />
     <ClInclude Include="Set.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>

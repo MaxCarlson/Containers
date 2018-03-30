@@ -26,9 +26,6 @@
     <ClInclude Include="BinaryTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RbTree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -38,13 +35,22 @@
     <ClInclude Include="UnorderedSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OpenAddressLT.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UnorderedMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RedBlackTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenAddressLinear.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RobinHood.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HashtableHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

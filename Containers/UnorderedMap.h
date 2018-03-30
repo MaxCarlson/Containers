@@ -1,6 +1,6 @@
 #pragma once
 #include <utility>
-#include "OpenAddressLT.h"
+#include "OpenAddressLinear.h"
 
 template<class Key, class Value,
 	class Hash,
