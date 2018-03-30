@@ -101,7 +101,7 @@ class RobinhoodHash
 		{
 			if (isFilled(it))
 			{
-				//	PairIb place = emplaceWithHash(key, hash, MyBegin);
+				PairIb place = emplaceWithHash(key, hash, MyBegin);
 				constructNode(place.first.ptr, std::move(it->data));
 			}
 		}
@@ -120,5 +120,43 @@ class RobinhoodHash
 
 		deallocate(b, e, oldSize); // TODO: Non-bulk deallocation?
 	}
+
+	size_type getBucket(size_type hash) const noexcept
+	{
+		return hash & (capacity() - 1);
+	}
+
+	NodePtr navigate(const size_type idx, const NodePtr first) const //noexcept?
+	{
+		return first + static_cast<difference_type>(idx);
+	}
 	
+	PairIb emplaceWithHash(const key_type& k, const size_type hash, NodePtr start)
+	{
+		const size_type initial = getBucket(hash);
+
+		bool inserted = false;
+		NodePtr pos = navigate(initial, start);
+
+		if (!isFilled(pos))
+			inserted = true;
+		else
+		{
+
+		}
+
+		return PairIb { iterator{pos, this}, inserted };
+	}
+
+public:
+
+	size_type size() const noexcept
+	{
+		return MySize;
+	}
+
+	size_type capacity() const noexcept
+	{
+		return MyCapacity;
+	}
 };
