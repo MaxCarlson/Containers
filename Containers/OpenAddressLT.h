@@ -522,6 +522,8 @@ private:
 		for (auto it = first; it != end; ++it, ++num)
 			deconstructNode(it.ptr);
 
+		MySize -= num;
+
 		return PairIs { end, num };
 	}
 
