@@ -37,11 +37,11 @@ template<class Key, class Value,
 
 
 template<class Key, class Value,
-	template<class, bool> class MyBase = OpenAddressLT,
+	template<class, bool> class MyBase = OpenAddLinear,
 	class Hash = std::hash<Key>,
 	class KeyEqual = std::equal_to<Key>,
 	class Allocator = std::allocator<std::pair<const Key, Value>>> // const Key
-	class UnorderedMap : public MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, true>
+	class UnorderedMap : public MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, false>
 {
 
 };

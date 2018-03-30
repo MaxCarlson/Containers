@@ -83,13 +83,14 @@ struct HashEqual
 void testHash()
 {
 	constexpr long long num = 5000;
-	using Key = uint64_t;
+	using Key = int;
 	using Value = int;
-	std::uniform_int_distribution<uint64_t> distri(0, num * 1000);
+	std::uniform_int_distribution<uint64_t> distri(0, num);
 
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
 	UnorderedMap<Key, Value> set;
+	//UnorderedSet<Key> set;
 	//UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
 	//UnorderedSet<Key> set;
 
@@ -99,33 +100,22 @@ void testHash()
 
 	for (auto i = 0; i < num; ++i)
 	{
-		auto r = distri(defRand);
+		//auto r = distri(defRand);
 
-		auto it = set.emplace(r, r - 5);
+		auto it = set.emplace(i, i + 1);
 
-		auto f = set.find(r);
-
-	
+		auto f = set.find(i);
 
 		//auto eq = set.equal_range(r);
 
 	//	inserted.emplace(r, r - 5);
-		int a = 5;
+		//int a = 5;
 	}
-
-	for(auto it = set.cbegin(); it != set.end(); ++it)
-
 
 	for (auto it = set.begin(); it != set.end();)
 		it = set.erase(it);
 	
-//	int numNotFound = 0;
-//	for (const auto i : inserted)
-//		if (set.find(i.first) == set.end() || set.find(i.first)->second != i.second) // Not good! This triggers bp
-//			++numNotFound;
-
 	timer<Key>(false);
-//	std::cout << "Num not found: " << numNotFound;
 
 	int a = 5;
 }

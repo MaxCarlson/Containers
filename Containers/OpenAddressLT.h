@@ -12,7 +12,7 @@ namespace detail
 template<class node_type>
 struct HashNode
 {
-	unsigned char state;
+	unsigned char state = 0;
 
 	node_type data;
 };
@@ -80,6 +80,7 @@ public:
 
 	HashIterator& operator++()
 	{
+		++ptr;
 		for (ptr; ptr < table->end().ptr; ++ptr)
 		{
 			if (ptr->state & detail::filled)
@@ -174,9 +175,9 @@ struct WrappingIterator
 // Open address linear probing table
 
 template<class Traits, bool Multi>
-class OpenAddressLT
+class OpenAddLinear
 {
-	using MyBase = OpenAddressLT<Traits, Multi>;
+	using MyBase = OpenAddLinear<Traits, Multi>;
 	using BaseTypes = HashTypes<Traits>;
 
 	using Alloc		   = typename BaseTypes::Alloc;
@@ -207,7 +208,7 @@ class OpenAddressLT
 
 public:	
 
-	OpenAddressLT()
+	OpenAddLinear()
 	{
 		MyBegin = MyEnd = nullptr;
 	}
@@ -276,20 +277,29 @@ private:
 		std::swap(MyBegin, first);
 		std::swap(MyEnd, last);
 
-		for (NodePtr it = MyBegin; it != MyEnd; ++it) // TODO: A likely area for optimizations
+		for (NodePtr it = MyBegin; it != MyEnd; ++it) // TODO: A likely area for optimizations would a memset be able to set all these states to zero?
 		{
 			NodeAlTraits::construct(nodeAl, std::addressof(it->state), detail::empty);
 		}
 
-		for (NodePtr it = first; it != last; ++it)
+		for (NodePtr it = first; it != last; ++it) 
 		{
 			if (isFilled(it)) // TODO: Cache Hashes? Would definitely provide speedup for hard-to-hash elements (not all that much space?)
 			{
+
 				const auto[key, hash] = getHashAndKey(it->data);
 
-				emplaceWithHash(key, hash, MyBegin);
+				if (key < 0)
+					int a = 5;
+
+				PairIb place = emplaceWithHash(key, hash, MyBegin);
+				constructNode(place.first.ptr, std::move(it->data));
 			}
 		}
+
+		for (NodePtr it = MyBegin; it != MyEnd; ++it)
+			if (it->data.first < 0 && it->state == 1)
+				int a = 5;
 	}
 
 	void printCollisionInfo(size_type oldSize) // Just for testing collisions et al
@@ -341,6 +351,8 @@ private:
 		for (const_iterator it(MyBegin, this); it.ptr != MyEnd; ++it)
 			if (isFilled(it.ptr))
 				return it;
+
+		return const_iterator { MyEnd, this };
 	}
 
 	bool isFilled(NodePtr p) const noexcept
@@ -365,7 +377,7 @@ private:
 	}
 
 	template<class... Args>
-	std::pair<const key_type&, size_type> getHashAndKey(Args&& ...args)
+	std::pair<const key_type, size_type> getHashAndKey(Args&& ...args)
 	{
 		const key_type& k = getKey({ std::forward<Args>(args)... });
 		return std::make_pair(k, getHash(k));
@@ -439,6 +451,9 @@ private:
 			++MySize;
 		}
 
+		if (ib.first.ptr->data.first < 0)
+			int a = 5;
+
 		return ib;
 	}
 
@@ -476,6 +491,7 @@ private:
 		return p;
 	}
 
+	/*
 	PairIt getEqualRange(const key_type& k) // Major issue: When returning a range from (end - n) to (begin + n) what do we do should iterator be a wrapping iterator? Big Design issue here?
 	{
 		NodePtr start = getElementFromKey(k);
@@ -498,23 +514,21 @@ private:
 		
 		return its;
 	}
+	*/
+
+	PairIs eraseElements(const_iterator first, const_iterator end) // TODO: Exception Handling?
+	{
+		size_type num = 0;
+		for (auto it = first; it != end; ++it, ++num)
+			deconstructNode(it.ptr);
+
+		return PairIs { end, num };
+	}
 
 	void deconstructNode(NodePtr p) // Deconstruct and mark area as deleted
 	{
 		NodeAlTraits::destroy(nodeAl, p);
 		p->state = detail::deleted;
-	}
-
-	PairIs eraseElements(PairIt pit) // make const iterator?
-	{
-		PairIs is = { pit.second, 0 };
-
-		for (iterator it = pit.first; it != pit.second; ++it, ++is.second)
-			deconstructNode(it.ptr);
-
-		MySize -= is.second;
-
-		return is;
 	}
 
 public:
@@ -543,35 +557,23 @@ public:
 		return iterator(p, this);
 	}
 
-	template<class K>
-	PairIt equal_range(const K& k)
+	iterator erase(const_iterator first, const_iterator last)
 	{
-		return getEqualRange(k);
+		return eraseElements(first, last).first;
 	}
 
-	iterator erase(const_iterator it) // use const_iterator?
+	iterator erase(const_iterator it) 
 	{
-		PairIs is = eraseElements({ it, ++it });
-
-		return is.first;
+		const_iterator first = it++;
+		return eraseElements(first, it).first;
 	}
 
 	size_type erase(const key_type& k)
 	{
-		PairIt its;
+		const_iterator last = find(k);
+		const_iterator first = last++;
 
-		if constexpr (Multi) // This is not working due to wrapping iterator issue
-			its = equal_range(k);
-
-		else
-		{
-			its.first = its.second = find(k);
-			++its.second;
-		}
-
-		PairIs is = eraseElements(its);
-
-		return is.second;
+		return eraseElements(first, last).second;
 	}
 
 };
