@@ -82,10 +82,10 @@ struct HashEqual
 
 void testHash()
 {
-	constexpr long long num = 5000;
+	constexpr long long num = 10000000;
 	using Key = int;
 	using Value = int;
-	std::uniform_int_distribution<uint64_t> distri(0, num);
+	std::uniform_int_distribution<int> distri(0, num);
 
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
@@ -96,15 +96,15 @@ void testHash()
 
 	timer<Key>(true);
 
-	//std::unordered_map<Key, Value> inserted;
+	//std::unordered_map<Key, Value> inserted; inserted.max_load_factor(0.0f);
 
 	for (auto i = 0; i < num; ++i)
 	{
 		//auto r = distri(defRand);
 
-		auto it = set.emplace(i, i + 1);
+		auto it = set.emplace(i, i);
 
-		auto f = set.find(i);
+	//	auto f = set.find(i);
 
 		//auto eq = set.equal_range(r);
 
@@ -112,8 +112,8 @@ void testHash()
 		//int a = 5;
 	}
 
-	for (auto it = set.begin(); it != set.end();)
-		it = set.erase(it);
+	//for (auto it = set.begin(); it != set.end();)
+	//	it = set.erase(it);
 	
 	timer<Key>(false);
 

@@ -289,17 +289,10 @@ private:
 
 				const auto[key, hash] = getHashAndKey(it->data);
 
-				if (key < 0)
-					int a = 5;
-
 				PairIb place = emplaceWithHash(key, hash, MyBegin);
 				constructNode(place.first.ptr, std::move(it->data));
 			}
 		}
-
-		for (NodePtr it = MyBegin; it != MyEnd; ++it)
-			if (it->data.first < 0 && it->state == 1)
-				int a = 5;
 	}
 
 	void printCollisionInfo(size_type oldSize) // Just for testing collisions et al
@@ -451,9 +444,6 @@ private:
 			++MySize;
 		}
 
-		if (ib.first.ptr->data.first < 0)
-			int a = 5;
-
 		return ib;
 	}
 
@@ -534,6 +524,23 @@ private:
 	}
 
 public:
+
+	float max_load_factor() const noexcept
+	{
+		return maxLoadFactor;
+	}
+
+	void max_load_factor(float f)
+	{
+		if (f > 0.0 && f <= 1.0)
+			maxLoadFactor = f;
+	}
+
+	float load_factor() const noexcept
+	{
+		return static_cast<float>(size()) 
+			 / static_cast<float>(capacity());
+	}
 
 	size_type size() const noexcept
 	{
