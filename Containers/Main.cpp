@@ -4,6 +4,7 @@
 #include "RedBlackTree.h"
 #include "UnorderedSet.h"
 #include "UnorderedMap.h"
+#include "RobinHood.h"
 #include "Map.h"
 #include "Set.h"
 #include <unordered_map>
@@ -90,6 +91,7 @@ void testHash()
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
 	UnorderedMap<Key, Value> set;
+	UnorderedSet<Key, RobinhoodHash> robin;
 	//UnorderedSet<Key> set;
 	//UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
 	//UnorderedSet<Key> set;
