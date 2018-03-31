@@ -83,7 +83,7 @@ struct HashEqual
 
 void testHash()
 {
-	constexpr long long num = 10000000;
+	constexpr long long num = 20000000;
 	using Key = int;
 	using Value = int;
 	std::uniform_int_distribution<int> distri(0, num);
@@ -100,13 +100,15 @@ void testHash()
 
 	//std::unordered_map<Key, Value> inserted; inserted.max_load_factor(0.0f);
 
+	int f = sizeof(RobinhoodNode<int>);
+
 	for (auto i = 0; i < num; ++i)
 	{
 		//auto r = distri(defRand);
 
-		//robin.emplace(i);
+		robin.emplace(i);
 
-		set.emplace(i);
+		//set.emplace(i);
 
 	//	auto f = set.find(i);
 

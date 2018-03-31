@@ -85,7 +85,7 @@ private:
 	size_type MySize = 0;
 	size_type MyCapacity = 0;
 
-	static constexpr float defaultLoadFactor = 0.85f;
+	static constexpr float defaultLoadFactor = 0.65f;
 	float maxLoadFactor = defaultLoadFactor;
 
 	get_hash getHash;

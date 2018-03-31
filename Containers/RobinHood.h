@@ -7,7 +7,7 @@ struct RobinhoodNode
 {
 	int dist;
 
-	size_t hash; // Should maybe use size_type template param?
+	size_t hash; 
 
 	NodeType data;
 };
@@ -57,7 +57,7 @@ class RobinhoodHash
 	size_type MySize = 0;
 	size_type MyCapacity = 0;
 
-	static constexpr float defaultLoadFactor = 0.85f;
+	static constexpr float defaultLoadFactor = 0.65f;
 	float maxLoadFactor = defaultLoadFactor;
 
 	get_hash getHash;
@@ -88,24 +88,26 @@ class RobinhoodHash
 
 		for (NodePtr it = MyBegin; it != MyEnd; ++it) 
 		{
-			NodeAlTraits::construct(nodeAl, std::addressof(it->hash), 0);
-			NodeAlTraits::construct(nodeAl, std::addressof(it->dist), 0); // TODO: This probably isn't completely necassary?>
+			NodeAlTraits::construct(nodeAl, &it->hash, 0);
+		//	NodeAlTraits::construct(nodeAl, std::addressof(it->dist), 0); // TODO: This probably isn't completely necassary?>
 		}
 
-		for (NodePtr it = first; it != last; ++it)
+		if (first)
 		{
-			if (isFilled(it))
+			for (NodePtr it = first; it != last; ++it)
 			{
-				std::pair<const key_type, size_type> kh = getHashAndKey(it->data);
+				if (it->hash) //isFilled(it)
+				{
+					std::pair<const key_type, size_type> kh = getHashAndKey(it->data);
 
-				emplaceWithHash(kh.first, kh.second, std::move(it->data));
+					emplaceWithHash(kh.first, kh.second, std::move(it->data));
+				}
+
+				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called for every element right? Or no?
 			}
 
-			NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called for every element right? Or no?
-		}
-
-		if(first)
 			NodeAlTraits::deallocate(nodeAl, first, oldSize);
+		}
 	}
 
 	void increaseCapacity() 
@@ -129,7 +131,7 @@ class RobinhoodHash
 	{
 		return first + static_cast<difference_type>(idx);
 	}
-	
+	/*
 	template<class... Args>
 	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
 	{
@@ -139,7 +141,7 @@ class RobinhoodHash
 		bool inserted = false;
 		NodePtr pos = navigate(initial, MyBegin);
 
-		if (!isFilled(pos))
+		if (!pos->hash) // !isFilled(pos)
 		{
 			inserted = true;
 			constructNode(pos, hash, dist, std::forward<Args>(args)...);
@@ -154,9 +156,9 @@ class RobinhoodHash
 			nt.data = { std::forward<Args>(args)... };
 			nt.hash = std::move(hash);
 
-			for (w; w.ptr != pos; ++w, ++dist) // TODO: Put a limit on search distance?
+			for (w; w.ptr != pos; ++w, ++dist) 
 			{
-				if (!isFilled(w.ptr))
+				if (!w.ptr->hash) // !isFilled(w.ptr)
 				{
 					constructNode(w.ptr, nt.hash, dist, std::move(nt.data));
 					break;
@@ -180,6 +182,46 @@ class RobinhoodHash
 		}
 
 		return PairIb { iterator{pos, this}, inserted };
+	}
+	*/
+	template<class... Args>
+	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
+	{
+		const size_type initial = getBucket(hash);
+
+		int dist = 0;
+		bool inserted = false;
+		NodePtr pos = navigate(initial, MyBegin);
+
+		Node nt;
+		nt.data = { std::forward<Args>(args)... };
+		nt.hash = std::move(hash);
+
+		for (wrapIterator w(pos, this); ; ++w, ++dist)
+		{
+			if (!w.ptr->hash) // !isFilled(w.ptr)
+			{
+				constructNode(w.ptr, nt.hash, dist, std::move(nt.data));
+				break;
+			}
+			else if (!Multi && keyEqual(k, getKey(w.ptr->data))) // TODO: Add template param to function that allows for overwriting old identical elements
+				break; // No emplacement of identical elements. 
+
+			else if (w.ptr->dist < dist)
+			{
+				if (!inserted)
+				{   // Mark location of our original element emplacement 
+					pos = w.ptr;
+					inserted = true;
+				}
+
+				std::swap(nt.data, w.ptr->data);
+				std::swap(nt.hash, w.ptr->hash);
+				std::swap(dist, w.ptr->dist);
+			}
+		}
+
+		return PairIb { iterator { pos, this }, inserted };
 	}
 
 	template<class... Args>
