@@ -14,11 +14,11 @@ template<class Key, class Value,
 	using key_equal = KeyEqual;
 	using allocator_type = Allocator;
 
-	using node_type = std::pair<const Key, Value>; // const Key
+	using node_type = std::pair<const Key, Value>; 
 
 	struct node_equal
 	{
-		bool operator()(const node_type& left, const node_type& right) const
+		bool operator()(const node_type& left, const node_type& right) const //noexcept?
 		{
 			return comp(left.first, right.first);
 		}
@@ -40,7 +40,7 @@ template<class Key, class Value,
 	template<class, bool> class MyBase = OpenAddLinear,
 	class Hash = std::hash<Key>,
 	class KeyEqual = std::equal_to<Key>,
-	class Allocator = std::allocator<std::pair<const Key, Value>>> // const Key
+	class Allocator = std::allocator<std::pair<const Key, Value>>> 
 	class UnorderedMap : public MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, false>
 {
 

@@ -91,7 +91,7 @@ void testHash()
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
 	UnorderedSet<Key, OpenAddLinear> set;
-	UnorderedSet<Key, RobinhoodHash> robin;
+	UnorderedMap<Key, Value, RobinhoodHash> robin;
 	//UnorderedSet<Key> set;
 	//UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
 	//UnorderedSet<Key> set;
@@ -100,15 +100,17 @@ void testHash()
 
 	//std::unordered_map<Key, Value> inserted; inserted.max_load_factor(0.0f);
 
+	int iii = sizeof(short);
+	int ii = sizeof(int16_t);
 	int f = sizeof(RobinhoodNode<int>);
 
 	for (auto i = 0; i < num; ++i)
 	{
 		//auto r = distri(defRand);
 
-		//robin.emplace(i);
+		robin.emplace(i, i);
 
-		set.emplace(i);
+		//set.emplace(i);
 
 	//	auto f = set.find(i);
 
@@ -127,6 +129,7 @@ void testHash()
 }
 
 // Things to implement
+// Flat-Maps
 // B-Tree
 // AVL-Tree
 // Splay-Tree
@@ -135,6 +138,8 @@ void testHash()
 // Skip List
 // Deque
 // bloom-filter
+// Pool allocated lists
+// lock-free stuff
 
 int main()
 { 

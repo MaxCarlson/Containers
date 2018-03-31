@@ -68,7 +68,7 @@ class RobinhoodHash
 
 	enum { EMPTY = -1 };
 
-	bool isFilled(NodePtr p) const
+	bool isFilled(NodePtr p) const // TODO: Pass by int value instead of ptr, make noexcept
 	{
 		return p->dist > -1;
 	}
@@ -78,8 +78,6 @@ class RobinhoodHash
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
 		NodeAlTraits::construct(nodeAl, std::addressof(p->dist), dist);
-		//NodeAlTraits::construct(nodeAl, std::addressof(p->hash), hash);
-
 		++MySize;
 	}
 
@@ -99,7 +97,7 @@ class RobinhoodHash
 			{
 				if (isFilled(it))
 				{
-					std::pair<const key_type, size_type> kh = getHashAndKey(it->data);
+					std::pair<key_type, size_type> kh = getHashAndKey(it->data);
 
 					emplaceWithHash(kh.first, kh.second, std::move(it->data)); // TODO: Create sepperate non duplicate checking function to insert
 				}
@@ -132,60 +130,6 @@ class RobinhoodHash
 	{
 		return first + static_cast<difference_type>(idx);
 	}
-	/*
-	template<class... Args>
-	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
-	{
-		const size_type initial = getBucket(hash);
-
-		int dist = 0;
-		bool inserted = false;
-		NodePtr pos = navigate(initial, MyBegin);
-
-		if (!pos->hash) // !isFilled(pos)
-		{
-			inserted = true;
-			constructNode(pos, hash, dist, std::forward<Args>(args)...);
-		}
-		else
-		{
-			wrapIterator w(pos, this);
-			++w;
-			++dist;
-
-			Node nt;
-			nt.data = { std::forward<Args>(args)... };
-			nt.hash = std::move(hash);
-
-			for (w; w.ptr != pos; ++w, ++dist) 
-			{
-				if (!w.ptr->hash) // !isFilled(w.ptr)
-				{
-					constructNode(w.ptr, nt.hash, dist, std::move(nt.data));
-					break;
-				}
-				else if (!Multi && keyEqual(k, getKey(w.ptr->data))) // TODO: Add template param to function that allows for overwriting old identical elements
-					break; // No emplacement of identical elements. 
-				
-				else if (w.ptr->dist < dist)
-				{
-					if (!inserted)
-					{   // Mark location of our original element emplacement 
-						pos = w.ptr;  
-						inserted = true;
-					}
-
-					std::swap(nt.data, w.ptr->data);
-					std::swap(nt.hash, w.ptr->hash);
-					std::swap(dist,    w.ptr->dist);
-				}		
-			}
-		}
-
-		return PairIb { iterator{pos, this}, inserted };
-	}
-	*/
-
 
 	template<class... Args>
 	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
@@ -196,28 +140,36 @@ class RobinhoodHash
 		bool inserted = false;
 		NodePtr pos = navigate(initial, MyBegin);
 
-		Node nt;
-		nt.data = { std::forward<Args>(args)... };
+		node_type nt = { std::forward<Args>(args)... };
 
 		wrapIterator w(pos, this);
 		for (w; dist <= w.ptr->dist ; ++w)
 		{
-			if (keyEqual(getKey(w.ptr->data), k))
+			if (!Multi && keyEqual(getKey(w.ptr->data), k)) // TODO: Look into multi and make sure working correctly!
 			{
-				inserted = false; // TODO: return it pair here instead of breaking
-				break;
+				inserted = false; 		
+				return PairIb { iterator{w.ptr, this}, false };
 			}
-
 			++dist;
 		}
+
+		return insertAtNode(w, std::forward<Args>(args)...);
+	}
+
+	template<class... Args>
+	PairIb insertAtNode(wrapIterator w, Args&&... args)
+	{
+		NodePtr pos = w.ptr;
+		bool inserted = false;
+		node_type nt = { std::forward<Args>(args)... };
 
 		for (w;; ++w, ++dist)
 		{
 			if (!isFilled(w.ptr))
 			{
-				constructNode(w.ptr, dist, std::move(nt.data));
-
-				break;
+				constructNode(w.ptr, dist, std::move(nt));
+				
+				return PairIb { iterator{pos, this}, inserted };
 			}
 			else if (w.ptr->dist < dist)
 			{
@@ -227,8 +179,15 @@ class RobinhoodHash
 					inserted = true; // TODO: Iterator return correctness is broken after refactor. FIX!
 				}
 
-				std::swap(nt.data, w.ptr->data); // std::move() ?
-				std::swap(dist,    w.ptr->dist);
+				if constexpr(!std::is_same_v<key_type, value_type>)
+				{	// Get rid of const-ness of the key for just a moment so we can do a move-swap here
+					std::swap(const_cast<key_type&>(nt.first), const_cast<key_type&>(w.ptr->data.first));
+					std::swap(nt.second, w.ptr->data.second);
+				}
+				else
+					std::swap(nt, w.ptr->data);
+
+				std::swap(dist, w.ptr->dist);
 			}
 		}
 
@@ -236,9 +195,9 @@ class RobinhoodHash
 	}
 
 	template<class... Args>
-	std::pair<const key_type, size_type> getHashAndKey(Args&& ...args)
+	std::pair<key_type, size_type> getHashAndKey(Args&& ...args)
 	{
-		const key_type& k = getKey({ std::forward<Args>(args)... });
+		const key_type k = getKey({ std::forward<Args>(args)... });
 		return std::make_pair(k, getHash(k));
 	}
 
@@ -248,7 +207,7 @@ class RobinhoodHash
 		if (size() + 1 > maxLoadFactor * capacity())
 			increaseCapacity();
 		
-		std::pair<const key_type, size_type> kh = getHashAndKey(std::forward<Args>(args)...);
+		std::pair<key_type, size_type> kh = getHashAndKey(std::forward<Args>(args)...);
 
 		PairIb ib = emplaceWithHash(kh.first, kh.second, std::forward<Args>(args)...);
 
