@@ -77,6 +77,8 @@ class RobinhoodHash
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
 		NodeAlTraits::construct(nodeAl, std::addressof(p->dist), dist);
 		NodeAlTraits::construct(nodeAl, std::addressof(p->hash), hash);
+
+		++MySize;
 	}
 
 	void reallocate(NodePtr first, NodePtr last, const size_type oldSize)
@@ -168,7 +170,6 @@ class RobinhoodHash
 					{   // Mark location of our original element emplacement 
 						pos = w.ptr;  
 						inserted = true;
-						++MySize;
 					}
 
 					std::swap(nt.data, w.ptr->data);
