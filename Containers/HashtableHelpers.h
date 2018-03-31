@@ -1,6 +1,14 @@
 #pragma once
 
 
+namespace detail
+{
+	constexpr char empty = 0;
+	constexpr char filled = 1;
+	constexpr char deleted = 2;
+}
+
+
 // Wrapper for types needed by Hashtable
 template<class Traits, template<class> class NodeT>
 struct HashTypes

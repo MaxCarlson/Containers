@@ -79,18 +79,7 @@ class RobinhoodHash
 		NodeAlTraits::construct(nodeAl, std::addressof(p->hash), hash);
 	}
 
-	void deallocate(NodePtr start, NodePtr end, const size_type size)
-	{
-		if (!start)
-			return;
-
-		for (NodePtr it = start; it != end; ++it)
-			NodeAlTraits::destroy(nodeAl, it);
-
-		NodeAlTraits::deallocate(nodeAl, start, size);
-	}
-
-	void reallocate(NodePtr& first, NodePtr& last)
+	void reallocate(NodePtr first, NodePtr last, const size_type oldSize)
 	{
 		std::swap(MyBegin, first);
 		std::swap(MyEnd, last);
@@ -98,18 +87,23 @@ class RobinhoodHash
 		for (NodePtr it = MyBegin; it != MyEnd; ++it) 
 		{
 			NodeAlTraits::construct(nodeAl, std::addressof(it->hash), 0);
-			//NodeAlTraits::construct(nodeAl, std::addressof(it->dist), 0);
+			NodeAlTraits::construct(nodeAl, std::addressof(it->dist), 0); // TODO: This probably isn't completely necassary?>
 		}
 
 		for (NodePtr it = first; it != last; ++it)
 		{
 			if (isFilled(it))
 			{
-				const auto[key, hash] = getHashAndKey(it->data);
+				std::pair<const key_type, size_type> kh = getHashAndKey(it->data);
 
-				PairIb place = emplaceWithHash(key, hash, it->data);
+				emplaceWithHash(kh.first, kh.second, std::move(it->data));
 			}
+
+			NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called for every element right? Or no?
 		}
+
+		if(first)
+			NodeAlTraits::deallocate(nodeAl, first, oldSize);
 	}
 
 	void increaseCapacity() 
@@ -117,13 +111,11 @@ class RobinhoodHash
 		const size_type oldSize = MyCapacity;
 		const size_type newSize = MyCapacity ? MyCapacity * 2 : 16;
 		Node* b = nodeAl.allocate(newSize);
-		Node* e = b + static_cast<difference_type>(newSize);
+		Node* e = navigate(newSize, b);
 
 		MyCapacity = newSize; // Must be set first otherwise items are placed into incorrect buckets in new array
 
-		reallocate(b, e);
-
-		deallocate(b, e, oldSize); // TODO: Non-bulk deallocation?
+		reallocate(b, e, oldSize);
 	}
 
 	size_type getBucket(size_type hash) const noexcept
@@ -131,7 +123,7 @@ class RobinhoodHash
 		return hash & (capacity() - 1);
 	}
 
-	NodePtr navigate(const size_type idx, const NodePtr first) const //noexcept?
+	NodePtr navigate(const size_type idx, const NodePtr first) const 
 	{
 		return first + static_cast<difference_type>(idx);
 	}
@@ -156,27 +148,33 @@ class RobinhoodHash
 			++w;
 			++dist;
 
-			bool first = true; // First item insertion
+			Node nt;
+			nt.data = { std::forward<Args>(args)... };
+			nt.hash = std::move(hash);
 
 			for (w; w.ptr != pos; ++w, ++dist) // TODO: Put a limit on search distance?
 			{
-				bool richer = w.ptr->dist < dist;
-
 				if (!isFilled(w.ptr))
 				{
-					if (first)
-					{
-						first = false;
-						pos = w.ptr;
-						constructNode(pos, hash, dist, std::forward<Args>(args)...);
-					}
-
+					constructNode(w.ptr, nt.hash, dist, std::move(nt.data));
 					break;
 				}
-				else if (richer)
+				else if (!Multi && keyEqual(k, getKey(w.ptr->data))) // TODO: Add template param to function that allows for overwriting old identical elements
+					break; // No emplacement of identical elements. 
+				
+				else if (w.ptr->dist < dist)
 				{
+					if (!inserted)
+					{   // Mark location of our original element emplacement 
+						pos = w.ptr;  
+						inserted = true;
+						++MySize;
+					}
 
-				}
+					std::swap(nt.data, w.ptr->data);
+					std::swap(nt.hash, w.ptr->hash);
+					std::swap(dist,    w.ptr->dist);
+				}		
 			}
 		}
 
@@ -196,9 +194,9 @@ class RobinhoodHash
 		if (size() + 1 > maxLoadFactor * capacity())
 			increaseCapacity();
 		
-		const auto[key, hash] = getHashAndKey(std::forward<Args>(args)...);
+		std::pair<const key_type, size_type> kh = getHashAndKey(std::forward<Args>(args)...);
 
-		PairIb ib = emplaceWithHash(key, hash, std::forward<Args>(args)...);
+		PairIb ib = emplaceWithHash(kh.first, kh.second, std::forward<Args>(args)...);
 
 		return ib;
 	}

@@ -3,13 +3,6 @@
 #include "helpers.h"
 #include "HashtableHelpers.h"
 
-namespace detail
-{
-	constexpr char empty = 0;
-	constexpr char filled = 1;
-	constexpr char deleted = 2;
-}
-
 template<class node_type>
 struct LinearHashNode
 {
@@ -42,6 +35,8 @@ class OpenAddLinear
 	using key_equal   = typename Traits::key_equal;
 	using node_equal  = typename Traits::node_equal;
 
+public:
+
 	using difference_type = typename BaseTypes::difference_type;
 	using value_type      = typename BaseTypes::value_type;
 	using pointer		  = typename BaseTypes::pointer;
@@ -49,6 +44,7 @@ class OpenAddLinear
 	using reference       = typename BaseTypes::reference;
 	using const_reference = typename BaseTypes::const_reference;
 
+private:
 	using wrapIterator = WrappingIterator<MyBase>;
 	friend wrapIterator;
 
@@ -68,7 +64,7 @@ public:
 	using PairIt = std::pair<iterator, iterator>;
 	using PairIs = std::pair<iterator, size_type>;
 
-	friend iterator;
+	friend HashIterator<MyBase>;
 	friend const_iterator;
 
 	iterator begin() { return findFirst(); }
@@ -133,9 +129,9 @@ private:
 			if (isFilled(it)) // TODO: Cache Hashes? Would definitely provide speedup for hard-to-hash elements (not all that much space?)
 			{
 
-				const auto[key, hash] = getHashAndKey(it->data);
+				std::pair<const key_type, size_type> kh = getHashAndKey(it->data);
 
-				PairIb place = emplaceWithHash(key, hash, MyBegin);
+				PairIb place = emplaceWithHash(kh.first, kh.second, MyBegin);
 				constructNode(place.first.ptr, std::move(it->data));
 			}
 		}
@@ -280,9 +276,9 @@ private:
 			increaseCapacity();
 		}
 
-		const auto[key, hash] = getHashAndKey(val...);
+		std::pair<const key_type, size_type> kh = getHashAndKey(val...);
 
-		PairIb ib = emplaceWithHash(key, hash, MyBegin);
+		PairIb ib = emplaceWithHash(kh.first, kh.second, MyBegin);
 
 		if (ib.second) // If this is a true insertion and not a found element iterator
 		{

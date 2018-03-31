@@ -83,14 +83,14 @@ struct HashEqual
 
 void testHash()
 {
-	constexpr long long num = 50000000;
+	constexpr long long num = 10000000;
 	using Key = int;
 	using Value = int;
 	std::uniform_int_distribution<int> distri(0, num);
 
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
-	UnorderedMap<Key, Value> set;
+	UnorderedSet<Key, OpenAddLinear> set;
 	UnorderedSet<Key, RobinhoodHash> robin;
 	//UnorderedSet<Key> set;
 	//UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
@@ -106,7 +106,7 @@ void testHash()
 
 		robin.emplace(i);
 
-		auto it = set.emplace(i, i);
+		//set.emplace(i);
 
 	//	auto f = set.find(i);
 
