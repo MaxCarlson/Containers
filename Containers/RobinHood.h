@@ -45,6 +45,7 @@ class RobinhoodHash
 	using iterator = HashIterator<MyBase>;
 
 	friend wrapIterator;
+	friend iterator;
 
 	using PairIb = std::pair<iterator, bool>;
 
@@ -71,9 +72,11 @@ class RobinhoodHash
 	}
 
 	template<class... Val>
-	void constructNode(NodePtr p, Val&& ...val) // TODO: Exception handling
+	void constructNode(NodePtr p, const size_type hash, const int dist, Val&& ...val) // TODO: Exception handling
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
+		NodeAlTraits::construct(nodeAl, std::addressof(p->dist), dist);
+		NodeAlTraits::construct(nodeAl, std::addressof(p->hash), hash);
 	}
 
 	void deallocate(NodePtr start, NodePtr end, const size_type size)
@@ -92,22 +95,24 @@ class RobinhoodHash
 		std::swap(MyBegin, first);
 		std::swap(MyEnd, last);
 
-		for (NodePtr it = MyBegin; it != MyEnd; ++it) // TODO: A likely area for optimizations would a memset be able to set all these states to zero?
+		for (NodePtr it = MyBegin; it != MyEnd; ++it) 
 		{
 			NodeAlTraits::construct(nodeAl, std::addressof(it->hash), 0);
+			//NodeAlTraits::construct(nodeAl, std::addressof(it->dist), 0);
 		}
 
 		for (NodePtr it = first; it != last; ++it)
 		{
 			if (isFilled(it))
 			{
-				PairIb place = emplaceWithHash(key, hash, MyBegin);
-				constructNode(place.first.ptr, std::move(it->data));
+				const auto[key, hash] = getHashAndKey(it->data);
+
+				PairIb place = emplaceWithHash(key, hash, it->data);
 			}
 		}
 	}
 
-	void increaseCapacity() // TODO: Use a power of 2 bitmask throughout 
+	void increaseCapacity() 
 	{
 		const size_type oldSize = MyCapacity;
 		const size_type newSize = MyCapacity ? MyCapacity * 2 : 16;
@@ -131,24 +136,82 @@ class RobinhoodHash
 		return first + static_cast<difference_type>(idx);
 	}
 	
-	PairIb emplaceWithHash(const key_type& k, const size_type hash, NodePtr start)
+	template<class... Args>
+	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
 	{
 		const size_type initial = getBucket(hash);
 
+		int dist = 0;
 		bool inserted = false;
-		NodePtr pos = navigate(initial, start);
+		NodePtr pos = navigate(initial, MyBegin);
 
 		if (!isFilled(pos))
+		{
 			inserted = true;
+			constructNode(pos, hash, dist, std::forward<Args>(args)...);
+		}
 		else
 		{
+			wrapIterator w(pos, this);
+			++w;
+			++dist;
 
+			bool first = true; // First item insertion
+
+			for (w; w.ptr != pos; ++w, ++dist) // TODO: Put a limit on search distance?
+			{
+				bool richer = w.ptr->dist < dist;
+
+				if (!isFilled(w.ptr))
+				{
+					if (first)
+					{
+						first = false;
+						pos = w.ptr;
+						constructNode(pos, hash, dist, std::forward<Args>(args)...);
+					}
+
+					break;
+				}
+				else if (richer)
+				{
+
+				}
+			}
 		}
 
 		return PairIb { iterator{pos, this}, inserted };
 	}
 
+	template<class... Args>
+	std::pair<const key_type, size_type> getHashAndKey(Args&& ...args)
+	{
+		const key_type& k = getKey({ std::forward<Args>(args)... });
+		return std::make_pair(k, getHash(k));
+	}
+
+	template<class... Args>
+	PairIb tryEmplace(Args&&... args)
+	{
+		if (size() + 1 > maxLoadFactor * capacity())
+			increaseCapacity();
+		
+		const auto[key, hash] = getHashAndKey(std::forward<Args>(args)...);
+
+		PairIb ib = emplaceWithHash(key, hash, std::forward<Args>(args)...);
+
+		return ib;
+	}
+
 public:
+
+	template<class... Args>
+	PairIb emplace(Args&&... args)
+	{
+		PairIb ib = tryEmplace(std::forward<Args>(args)...);
+
+		return ib;
+	}
 
 	size_type size() const noexcept
 	{

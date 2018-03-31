@@ -83,7 +83,7 @@ struct HashEqual
 
 void testHash()
 {
-	constexpr long long num = 10000000;
+	constexpr long long num = 50000000;
 	using Key = int;
 	using Value = int;
 	std::uniform_int_distribution<int> distri(0, num);
@@ -103,6 +103,8 @@ void testHash()
 	for (auto i = 0; i < num; ++i)
 	{
 		//auto r = distri(defRand);
+
+		robin.emplace(i);
 
 		auto it = set.emplace(i, i);
 
@@ -134,8 +136,9 @@ void testHash()
 
 int main()
 { 
+	
+
 	//testMap();
 	testHash();
-
 	return 0;
 }
