@@ -106,9 +106,9 @@ void testHash()
 	{
 		//auto r = distri(defRand);
 
-		robin.emplace(i);
+		//robin.emplace(i);
 
-		//set.emplace(i);
+		set.emplace(i);
 
 	//	auto f = set.find(i);
 

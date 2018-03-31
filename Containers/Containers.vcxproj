@@ -164,7 +164,7 @@
       <ConformanceMode>true</ConformanceMode>
       <Cpp0xSupport>false</Cpp0xSupport>
       <CCppSupport>Cpp17Support</CCppSupport>
-      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>

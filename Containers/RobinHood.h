@@ -7,7 +7,7 @@ struct RobinhoodNode
 {
 	int dist;
 
-	size_t hash; 
+	//size_t hash; // TODO: Make hash optional to store?
 
 	NodeType data;
 };
@@ -66,17 +66,19 @@ class RobinhoodHash
 	key_equal  keyEqual;
 	node_equal nodeEqual;
 
+	enum { EMPTY = -1 };
+
 	bool isFilled(NodePtr p) const
 	{
-		return p->hash;
+		return p->dist > -1;
 	}
 
 	template<class... Val>
-	void constructNode(NodePtr p, const size_type hash, const int dist, Val&& ...val) // TODO: Exception handling
+	void constructNode(NodePtr p, const int dist, Val&& ...val) // TODO: Exception handling
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
 		NodeAlTraits::construct(nodeAl, std::addressof(p->dist), dist);
-		NodeAlTraits::construct(nodeAl, std::addressof(p->hash), hash);
+		//NodeAlTraits::construct(nodeAl, std::addressof(p->hash), hash);
 
 		++MySize;
 	}
@@ -88,19 +90,18 @@ class RobinhoodHash
 
 		for (NodePtr it = MyBegin; it != MyEnd; ++it) 
 		{
-			NodeAlTraits::construct(nodeAl, &it->hash, 0);
-		//	NodeAlTraits::construct(nodeAl, std::addressof(it->dist), 0); // TODO: This probably isn't completely necassary?>
+			NodeAlTraits::construct(nodeAl, std::addressof(it->dist), EMPTY);
 		}
 
 		if (first)
 		{
 			for (NodePtr it = first; it != last; ++it)
 			{
-				if (it->hash) //isFilled(it)
+				if (isFilled(it))
 				{
 					std::pair<const key_type, size_type> kh = getHashAndKey(it->data);
 
-					emplaceWithHash(kh.first, kh.second, std::move(it->data));
+					emplaceWithHash(kh.first, kh.second, std::move(it->data)); // TODO: Create sepperate non duplicate checking function to insert
 				}
 
 				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called for every element right? Or no?
@@ -122,7 +123,7 @@ class RobinhoodHash
 		reallocate(b, e, oldSize);
 	}
 
-	size_type getBucket(size_type hash) const noexcept
+	size_type getBucket(const size_type hash) const noexcept
 	{
 		return hash & (capacity() - 1);
 	}
@@ -184,6 +185,8 @@ class RobinhoodHash
 		return PairIb { iterator{pos, this}, inserted };
 	}
 	*/
+
+
 	template<class... Args>
 	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
 	{
@@ -195,29 +198,37 @@ class RobinhoodHash
 
 		Node nt;
 		nt.data = { std::forward<Args>(args)... };
-		nt.hash = std::move(hash);
 
-		for (wrapIterator w(pos, this); ; ++w, ++dist)
+		wrapIterator w(pos, this);
+		for (w; dist <= w.ptr->dist ; ++w)
 		{
-			if (!w.ptr->hash) // !isFilled(w.ptr)
+			if (keyEqual(getKey(w.ptr->data), k))
 			{
-				constructNode(w.ptr, nt.hash, dist, std::move(nt.data));
+				inserted = false; // TODO: return it pair here instead of breaking
 				break;
 			}
-			else if (!Multi && keyEqual(k, getKey(w.ptr->data))) // TODO: Add template param to function that allows for overwriting old identical elements
-				break; // No emplacement of identical elements. 
 
+			++dist;
+		}
+
+		for (w;; ++w, ++dist)
+		{
+			if (!isFilled(w.ptr))
+			{
+				constructNode(w.ptr, dist, std::move(nt.data));
+
+				break;
+			}
 			else if (w.ptr->dist < dist)
 			{
 				if (!inserted)
 				{   // Mark location of our original element emplacement 
 					pos = w.ptr;
-					inserted = true;
+					inserted = true; // TODO: Iterator return correctness is broken after refactor. FIX!
 				}
 
-				std::swap(nt.data, w.ptr->data);
-				std::swap(nt.hash, w.ptr->hash);
-				std::swap(dist, w.ptr->dist);
+				std::swap(nt.data, w.ptr->data); // std::move() ?
+				std::swap(dist,    w.ptr->dist);
 			}
 		}
 
