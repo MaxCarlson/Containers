@@ -4,7 +4,7 @@
 template<class NodeType>
 struct RobinhoodNode
 {
-	int dist : 16;
+	signed short dist : 16;
 
 	//size_t hash; // TODO: Make hash optional to store?
 
@@ -15,10 +15,10 @@ template<class Table>
 class RobinIterator : public HashIterator<Table>
 {
 public:
-	using NodePtr = typename Table::NodePtr;
-	using pointer = typename Table::pointer;
+	using NodePtr   = typename Table::NodePtr;
+	using pointer   = typename Table::pointer;
 	using reference = typename Table::reference;
-	using MyBase = HashIterator<Table>;
+	using MyBase    = HashIterator<Table>;
 	friend MyBase;
 
 	RobinIterator() : MyBase() {}
@@ -36,6 +36,31 @@ public:
 		return *this; 
 	}
 
+};
+
+template<class Table>
+class ConstRobinIterator : public RobinIterator<Table>
+{
+public:
+	using NodePtr   = typename Table::NodePtr;
+	using pointer   = typename Table::const_pointer;
+	using reference = typename Table::const_reference;
+	using MyBase    = RobinIterator<Table>;
+	friend MyBase;
+
+	ConstRobinIterator(): MyBase() {}
+	ConstRobinIterator(const MyBase& b) : MyBase(b) {}
+	ConstRobinIterator(NodePtr p, Table* t) : MyBase(p, t) {}
+
+	reference operator*() const
+	{
+		return ptr->data;
+	}
+
+	pointer operator->() const
+	{
+		return std::pointer_traits<pointer>::pointer_to(**this);
+	}
 };
 
 template<class Traits, bool Multi>
@@ -69,8 +94,11 @@ public:
 	using const_reference = typename BaseTypes::const_reference;
 
 	using wrapIterator = WrappingIterator<MyBase>;
-	using iterator = RobinIterator<MyBase>;
-	using const_iterator = ConstHashIterator<MyBase>;
+	using iterator = std::conditional_t<std::is_same<key_type, value_type>::value,
+		ConstRobinIterator<MyBase>,
+		RobinIterator<MyBase>>;
+
+	using const_iterator = ConstRobinIterator<MyBase>;
 
 	friend wrapIterator;
 	friend iterator;
@@ -95,11 +123,11 @@ private:
 	key_equal  keyEqual;
 	node_equal nodeEqual;
 
-	enum { EMPTY = -1 };
+	static constexpr short EMPTY = 0xFFFF;
 
-	bool isEmpty(const int dist) const noexcept// TODO: Pass ptr here for better readability? Any speed loss?
+	bool isEmpty(const int dist) const noexcept // TODO: Pass ptr here for better readability? Any speed loss?
 	{
-		return dist & EMPTY;
+		return dist == EMPTY;//!(dist & EMPTY);
 	}
 
 	template<class... Val>
@@ -162,7 +190,7 @@ private:
 	template<bool checkDupli, class... Args>
 	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
 	{
-		int dist = 0;
+		int dist = 1;
 		wrapIterator w(navigate(getBucket(hash), MyBegin), this);
 
 		// Find the first location this new node can be inserted
@@ -228,18 +256,17 @@ private:
 		return emplaceWithHash<!Multi>(kh.first, kh.second, std::forward<Args>(args)...); 
 	}
 
-	iterator locateElement(const key_type& k) const
+	const_iterator locateElement(const key_type& k) 
 	{
-		const size_type idx = getHash(k);
-		NodePtr pos = navigate(idx, MyBegin);
+		NodePtr pos = navigate(getBucket(getHash(k)), MyBegin);
 
 		for (wrapIterator w(pos, this);; ++w)
 		{
 			if (isEmpty(w.ptr->dist))
-				return iterator { MyEnd, this };
+				return const_iterator { MyEnd, this };
 
 			else if (keyEqual(getKey(w.ptr->data), k))
-				return iterator { w.ptr, this };
+				return const_iterator { w.ptr, this };
 		}
 		return iterator { MyEnd, this };
 	}
@@ -275,8 +302,12 @@ public:
 		return ib;
 	}
 
-	template<class K>
-	iterator find(const K& k)
+	iterator find(const key_type& k)
+	{
+		return locateElement(k);
+	}
+
+	const_iterator find(const key_type& k) const
 	{
 		return locateElement(k);
 	}

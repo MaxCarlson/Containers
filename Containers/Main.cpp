@@ -108,9 +108,16 @@ void testHash()
 	{
 		//auto r = distri(defRand);
 
+		if (i == 513)
+			int a = 5;
+
 		robin.emplace(i, i);
 
 		//set.emplace(i);
+		//auto it = robin.find(i);
+
+		//if (it->first != i)
+		//	std::cout << "MyBad!! ";
 
 	//	auto f = set.find(i);
 
