@@ -280,13 +280,30 @@ private:
 		size_type num = 0;
 		for (auto it = first; it != end; ++it, ++num) // Call objects destructor
 			NodeAlTraits::destroy(nodeAl, std::addressof(p->data));
-
-		// Left shift all objects with a dist > 0
-		wrapIterator w((--end).ptr, this);
-
 		
-
 		MySize -= num;
+
+		// Left shift all objects with a dist > 0 (by one on multi delete? Will that cause issues?)	
+		wrapIterator l(--end, this);
+		
+		for (wrapIterator f(l++);; ++l, ++f)
+		{
+			if (l.ptr->dist > 0)
+			{
+				if constexpr(!std::is_same<key_type, value_type>::value)
+				{
+					std::swap(const_cast<key_type&>(f.ptr->data.first), const_cast<key_type&>(l.ptr->data.first));
+					std::swap(f.ptr->data.second, l.ptr->data.second);
+				}
+				else
+					std::swap(f.ptr->data, l.ptr->data);
+
+				--f.ptr->dist;
+			}
+			else
+				break;
+		}
+
 
 		return PairIs { end, num };
 	}
