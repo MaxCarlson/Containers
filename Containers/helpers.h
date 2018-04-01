@@ -1,12 +1,19 @@
 #pragma once
+#include <iostream>
+#include <chrono>
+#include <xmmintrin.h> 
+#include <mmintrin.h> 
 
+template<class T>
+inline void prefetch(T * n)
+{
+	_mm_prefetch((const char *)n, _MM_HINT_T0);
+}
 
 template<class Alloc, class Type>
 using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_alloc<Type>;
 
 
-#include <iostream>
-#include <chrono>
 template<class C>
 inline void timer(bool startNow)
 {

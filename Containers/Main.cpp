@@ -140,6 +140,12 @@ void testHash()
 // bloom-filter
 // Pool allocated lists
 // lock-free stuff
+// Pool allocate other stuff as well
+
+// vector + uset/umap fast lookups fast traversal 
+// store and iterate through vector when it's small
+// allocate uset/map once larger for find ops
+// for erase either do a linear erase or store vec idx's in the map nodes
 
 int main()
 { 

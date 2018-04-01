@@ -1,20 +1,47 @@
 #pragma once
 #include "HashtableHelpers.h"
 
-
 template<class NodeType>
 struct RobinhoodNode
 {
-	int dist;
+	signed int dist : 16;
 
 	//size_t hash; // TODO: Make hash optional to store?
 
 	NodeType data;
 };
 
+template<class Table>
+class RobinIterator : public HashIterator<Table>
+{
+public:
+	using NodePtr = typename Table::NodePtr;
+	using pointer = typename Table::pointer;
+	using reference = typename Table::reference;
+	using MyBase = HashIterator<Table>;
+	friend MyBase;
+
+	RobinIterator() : MyBase() {}
+	RobinIterator(NodePtr ptr, Table* table) 
+		: MyBase(ptr, table) {}
+
+	RobinIterator& operator++()
+	{
+		++ptr;
+		for (ptr; ptr < table->end().ptr; ++ptr)
+		{
+			if (ptr->dist == -1)
+				break;
+		}
+		return *this; 
+	}
+
+};
+
 template<class Traits, bool Multi>
 class RobinhoodHash
 {
+public:
 	using MyBase = RobinhoodHash<Traits, Multi>;
 	using BaseTypes = HashTypes<Traits, RobinhoodNode>;
 
@@ -42,13 +69,15 @@ class RobinhoodHash
 	using const_reference = typename BaseTypes::const_reference;
 
 	using wrapIterator = WrappingIterator<MyBase>;
-	using iterator = HashIterator<MyBase>;
+	using iterator = RobinIterator<MyBase>;
+	using const_iterator = ConstHashIterator<MyBase>;
 
 	friend wrapIterator;
 	friend iterator;
 
 	using PairIb = std::pair<iterator, bool>;
 
+private:
 	NodeAl nodeAl;
 
 	NodePtr MyBegin;
@@ -70,14 +99,15 @@ class RobinhoodHash
 
 	bool isFilled(int dist) const noexcept// TODO: Pass ptr here for better readability? Any speed loss?
 	{
-		return dist > -1;
+		return dist & EMPTY;
 	}
 
 	template<class... Val>
 	void constructNode(NodePtr p, const int dist, Val&& ...val) // TODO: Exception handling
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
-		NodeAlTraits::construct(nodeAl, std::addressof(p->dist), dist);
+		//NodeAlTraits::construct(nodeAl, std::addressof(p->dist), dist);
+		p->dist = dist;
 		++MySize;
 	}
 
@@ -88,7 +118,8 @@ class RobinhoodHash
 
 		for (NodePtr it = MyBegin; it != MyEnd; ++it)
 		{	// TODO: 30% of time is spent here when just running insertions. Optimize?
-			NodeAlTraits::construct(nodeAl, std::addressof(it->dist), EMPTY);
+			it->dist |= EMPTY;
+			//NodeAlTraits::construct(nodeAl, std::addressof(it->dist), EMPTY);
 		}
 
 		if (first)
@@ -184,7 +215,10 @@ class RobinhoodHash
 				else
 					std::swap(nt, w.ptr->data);
 
-				std::swap(dist, w.ptr->dist);
+				//std::swap(dist, w.ptr->dist);
+				int tmp = w.ptr->dist;
+				w.ptr->dist = dist;
+				dist = tmp;
 			}
 		}
 		return PairIb { iterator { pos, this }, false };
@@ -203,19 +237,37 @@ class RobinhoodHash
 		if (size() + 1 > maxLoadFactor * capacity())
 			increaseCapacity();
 		
-		std::pair<key_type, size_type> kh = getKeyAndHash(std::forward<Args>(args)...);
+		std::pair<key_type, size_type> kh = getKeyAndHash(std::forward<Args>(args)...);   // TODO: We're doing 2 total obj constructions, one in getKeyAndHash 
+																						  // and one in insert at node, Pass the object by & and move once created?
+		return emplaceWithHash<!Multi>(kh.first, kh.second, std::forward<Args>(args)...); 
+	}
 
-		return emplaceWithHash<!Multi>(kh.first, kh.second, std::forward<Args>(args)...);
+	iterator locateElement(const key_type& k) const
+	{
+		const size_type idx = getHash(k);
+		NodePtr pos = navigate(idx, MyBegin);
+
+		for (wrapIterator w(pos, this);; ++w)
+		{
+			if (!isFilled(w.ptr->dist))
+				return iterator { MyEnd, this };
+			else if (keyEqual(getKey(w.ptr->data), k))
+				return iterator { w.ptr, this };
+		}
+		return iterator { MyEnd, this };
+	}
+
+	iterator eraseElements(iterator first, iterator last)
+	{
+
 	}
 
 public:
 
-	template<class... Args>
-	PairIb emplace(Args&&... args)
+	void max_load_factor(float f) noexcept
 	{
-		PairIb ib = tryEmplace(std::forward<Args>(args)...);
-
-		return ib;
+		if (f < 0.98f && f > 0.0f)
+			maxLoadFactor = f;
 	}
 
 	size_type size() const noexcept
@@ -226,5 +278,24 @@ public:
 	size_type capacity() const noexcept
 	{
 		return MyCapacity;
+	}
+
+	template<class... Args>
+	PairIb emplace(Args&&... args)
+	{
+		PairIb ib = tryEmplace(std::forward<Args>(args)...);
+
+		return ib;
+	}
+
+	template<class K>
+	iterator find(const K& k)
+	{
+		return locateElement(k);
+	}
+
+	iterator erase(iterator it)
+	{
+
 	}
 };

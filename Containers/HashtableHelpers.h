@@ -116,7 +116,7 @@ public:
 	using NodePtr = typename Table::NodePtr;
 	using pointer = typename Table::const_pointer;
 	using reference = typename Table::const_reference;
-	friend class MyBase;
+	friend MyBase;
 
 	ConstHashIterator() : MyBase() {};
 	ConstHashIterator(const MyBase& it) // Regular to const iterator
