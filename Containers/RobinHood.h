@@ -68,9 +68,9 @@ class RobinhoodHash
 
 	enum { EMPTY = -1 };
 
-	bool isFilled(NodePtr p) const // TODO: Pass by int value instead of ptr, make noexcept
+	bool isFilled(int dist) const noexcept// TODO: Pass ptr here for better readability? Any speed loss?
 	{
-		return p->dist > -1;
+		return dist > -1;
 	}
 
 	template<class... Val>
@@ -86,8 +86,8 @@ class RobinhoodHash
 		std::swap(MyBegin, first);
 		std::swap(MyEnd, last);
 
-		for (NodePtr it = MyBegin; it != MyEnd; ++it) 
-		{
+		for (NodePtr it = MyBegin; it != MyEnd; ++it)
+		{	// TODO: 30% of time is spent here when just running insertions. Optimize?
 			NodeAlTraits::construct(nodeAl, std::addressof(it->dist), EMPTY);
 		}
 
@@ -95,14 +95,14 @@ class RobinhoodHash
 		{
 			for (NodePtr it = first; it != last; ++it)
 			{
-				if (isFilled(it))
+				if (isFilled(it->dist))
 				{
-					std::pair<key_type, size_type> kh = getHashAndKey(it->data);
+					std::pair<key_type, size_type> kh = getKeyAndHash(it->data);
 
-					emplaceWithHash(kh.first, kh.second, std::move(it->data)); // TODO: Create sepperate non duplicate checking function to insert
+					emplaceWithHash<false>(kh.first, kh.second, std::move(it->data)); // TODO: Create sepperate non duplicate checking function to insert
 				}
 
-				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called for every element right? Or no?
+				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called for every element right? Or only elements that have been constructed?
 			}
 
 			NodeAlTraits::deallocate(nodeAl, first, oldSize);
@@ -131,21 +131,18 @@ class RobinhoodHash
 		return first + static_cast<difference_type>(idx);
 	}
 
-	template<class... Args>
+	template<bool checkDupli, class... Args>
 	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
 	{
 		const size_type initial = getBucket(hash);
 
 		int dist = 0;
 		bool inserted = false;
-		NodePtr pos = navigate(initial, MyBegin);
+		wrapIterator w(navigate(initial, MyBegin), this);
 
-		node_type nt = { std::forward<Args>(args)... };
-
-		wrapIterator w(pos, this);
-		for (w; dist <= w.ptr->dist ; ++w)
+		for (w; dist <= w.ptr->dist; ++w)
 		{
-			if (!Multi && keyEqual(getKey(w.ptr->data), k)) // TODO: Look into multi and make sure working correctly!
+			if (checkDupli && keyEqual(getKey(w.ptr->data), k)) // TODO: Look into multi and make sure working correctly!
 			{
 				inserted = false; 		
 				return PairIb { iterator{w.ptr, this}, false };
@@ -153,11 +150,11 @@ class RobinhoodHash
 			++dist;
 		}
 
-		return insertAtNode(w, std::forward<Args>(args)...);
+		return insertAtNode(dist, w, std::forward<Args>(args)...);
 	}
 
 	template<class... Args>
-	PairIb insertAtNode(wrapIterator w, Args&&... args)
+	PairIb insertAtNode(int dist, wrapIterator w, Args&&... args)
 	{
 		NodePtr pos = w.ptr;
 		bool inserted = false;
@@ -165,18 +162,18 @@ class RobinhoodHash
 
 		for (w;; ++w, ++dist)
 		{
-			if (!isFilled(w.ptr))
+			if (!isFilled(w.ptr->dist))
 			{
 				constructNode(w.ptr, dist, std::move(nt));
 				
-				return PairIb { iterator{pos, this}, inserted };
+				return PairIb { iterator{pos, this}, inserted }; // TODO: Iterator return correctness is broken after refactor. FIX!
 			}
 			else if (w.ptr->dist < dist)
 			{
 				if (!inserted)
 				{   // Mark location of our original element emplacement 
 					pos = w.ptr;
-					inserted = true; // TODO: Iterator return correctness is broken after refactor. FIX!
+					inserted = true; 
 				}
 
 				if constexpr(!std::is_same_v<key_type, value_type>)
@@ -190,12 +187,11 @@ class RobinhoodHash
 				std::swap(dist, w.ptr->dist);
 			}
 		}
-
-		return PairIb { iterator { pos, this }, inserted };
+		return PairIb { iterator { pos, this }, false };
 	}
 
 	template<class... Args>
-	std::pair<key_type, size_type> getHashAndKey(Args&& ...args)
+	std::pair<key_type, size_type> getKeyAndHash(Args&& ...args)
 	{
 		const key_type k = getKey({ std::forward<Args>(args)... });
 		return std::make_pair(k, getHash(k));
@@ -207,11 +203,9 @@ class RobinhoodHash
 		if (size() + 1 > maxLoadFactor * capacity())
 			increaseCapacity();
 		
-		std::pair<key_type, size_type> kh = getHashAndKey(std::forward<Args>(args)...);
+		std::pair<key_type, size_type> kh = getKeyAndHash(std::forward<Args>(args)...);
 
-		PairIb ib = emplaceWithHash(kh.first, kh.second, std::forward<Args>(args)...);
-
-		return ib;
+		return emplaceWithHash<!Multi>(kh.first, kh.second, std::forward<Args>(args)...);
 	}
 
 public:
