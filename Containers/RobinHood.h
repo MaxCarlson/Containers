@@ -4,7 +4,7 @@
 template<class NodeType>
 struct RobinhoodNode
 {
-	signed int dist : 16;
+	int dist : 16;
 
 	//size_t hash; // TODO: Make hash optional to store?
 
@@ -97,7 +97,7 @@ private:
 
 	enum { EMPTY = -1 };
 
-	bool isFilled(int dist) const noexcept// TODO: Pass ptr here for better readability? Any speed loss?
+	bool isEmpty(const int dist) const noexcept// TODO: Pass ptr here for better readability? Any speed loss?
 	{
 		return dist & EMPTY;
 	}
@@ -106,7 +106,6 @@ private:
 	void constructNode(NodePtr p, const int dist, Val&& ...val) // TODO: Exception handling
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
-		//NodeAlTraits::construct(nodeAl, std::addressof(p->dist), dist);
 		p->dist = dist;
 		++MySize;
 	}
@@ -117,25 +116,23 @@ private:
 		std::swap(MyEnd, last);
 
 		for (NodePtr it = MyBegin; it != MyEnd; ++it)
-		{	// TODO: 30% of time is spent here when just running insertions. Optimize?
+		{	// 10% speedup just checking for set sign bit
 			it->dist |= EMPTY;
-			//NodeAlTraits::construct(nodeAl, std::addressof(it->dist), EMPTY);
 		}
 
-		if (first)
+		if (first) 
 		{
 			for (NodePtr it = first; it != last; ++it)
 			{
-				if (isFilled(it->dist))
+				if (!isEmpty(it->dist))
 				{
-					std::pair<key_type, size_type> kh = getKeyAndHash(it->data);
+					const std::pair<key_type, size_type> kh = getKeyAndHash(it->data); // TODO: Repeditive, dual construction of obj; here and in insert
 
 					emplaceWithHash<false>(kh.first, kh.second, std::move(it->data)); // TODO: Create sepperate non duplicate checking function to insert
 				}
 
 				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called for every element right? Or only elements that have been constructed?
 			}
-
 			NodeAlTraits::deallocate(nodeAl, first, oldSize);
 		}
 	}
@@ -165,20 +162,16 @@ private:
 	template<bool checkDupli, class... Args>
 	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
 	{
-		const size_type initial = getBucket(hash);
-
 		int dist = 0;
-		bool inserted = false;
-		wrapIterator w(navigate(initial, MyBegin), this);
+		wrapIterator w(navigate(getBucket(hash), MyBegin), this);
 
-		for (w; dist <= w.ptr->dist; ++w)
+		// Find the first location this new node can be inserted
+		for (w; dist <= w.ptr->dist; ++w, ++dist)
 		{
 			if (checkDupli && keyEqual(getKey(w.ptr->data), k)) // TODO: Look into multi and make sure working correctly!
 			{
-				inserted = false; 		
 				return PairIb { iterator{w.ptr, this}, false };
 			}
-			++dist;
 		}
 
 		return insertAtNode(dist, w, std::forward<Args>(args)...);
@@ -188,26 +181,20 @@ private:
 	PairIb insertAtNode(int dist, wrapIterator w, Args&&... args)
 	{
 		NodePtr pos = w.ptr;
-		bool inserted = false;
 		node_type nt = { std::forward<Args>(args)... };
 
+		// Insert new node and shift all other nodes 
+		// (that we need to) over right with robinhood hashing
 		for (w;; ++w, ++dist)
 		{
-			if (!isFilled(w.ptr->dist))
+			if (isEmpty(w.ptr->dist))
 			{
-				constructNode(w.ptr, dist, std::move(nt));
-				
-				return PairIb { iterator{pos, this}, inserted }; // TODO: Iterator return correctness is broken after refactor. FIX!
+				constructNode(w.ptr, dist, std::move(nt));		
+				return PairIb { iterator{ pos, this }, true }; // TODO: Iterator return correctness is broken after refactor. FIX!
 			}
 			else if (w.ptr->dist < dist)
 			{
-				if (!inserted)
-				{   // Mark location of our original element emplacement 
-					pos = w.ptr;
-					inserted = true; 
-				}
-
-				if constexpr(!std::is_same_v<key_type, value_type>)
+				if constexpr(!std::is_same<key_type, value_type>::value)
 				{	// Get rid of const-ness of the key for just a moment so we can do a move-swap here
 					std::swap(const_cast<key_type&>(nt.first), const_cast<key_type&>(w.ptr->data.first));
 					std::swap(nt.second, w.ptr->data.second);
@@ -215,10 +202,9 @@ private:
 				else
 					std::swap(nt, w.ptr->data);
 
-				//std::swap(dist, w.ptr->dist);
-				int tmp = w.ptr->dist;
-				w.ptr->dist = dist;
-				dist = tmp;
+				const int tmp = w.ptr->dist;
+				w.ptr->dist = std::move(dist);
+				dist = std::move(tmp);
 			}
 		}
 		return PairIb { iterator { pos, this }, false };
@@ -249,8 +235,9 @@ private:
 
 		for (wrapIterator w(pos, this);; ++w)
 		{
-			if (!isFilled(w.ptr->dist))
+			if (isEmpty(w.ptr->dist))
 				return iterator { MyEnd, this };
+
 			else if (keyEqual(getKey(w.ptr->data), k))
 				return iterator { w.ptr, this };
 		}

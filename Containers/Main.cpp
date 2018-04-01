@@ -83,7 +83,7 @@ struct HashEqual
 
 void testHash()
 {
-	constexpr long long num = 30000000;
+	constexpr long long num = 40000000;
 	using Key = int;
 	using Value = int;
 	std::uniform_int_distribution<int> distri(0, num);
