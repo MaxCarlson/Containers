@@ -28,9 +28,9 @@ public:
 	RobinIterator& operator++()
 	{
 		++ptr;
-		for (ptr; ptr < table->end().ptr; ++ptr)
+		for (ptr; ptr < table->MyEnd; ++ptr)
 		{
-			if (ptr->dist == -1)
+			if (ptr->dist != -1)
 				break;
 		}
 		return *this; 
@@ -102,8 +102,12 @@ public:
 
 	friend wrapIterator;
 	friend iterator;
+	friend const_iterator;
+	friend RobinIterator<MyBase>;
+	//friend HashIterator<MyBase>;
 
 	using PairIb = std::pair<iterator, bool>;
+	using PairIs = std::pair<iterator, size_type>;
 
 private:
 	NodeAl nodeAl;
@@ -123,7 +127,7 @@ private:
 	key_equal  keyEqual;
 	node_equal nodeEqual;
 
-	static constexpr short EMPTY = 0xFFFF;
+	static constexpr short EMPTY = -1;
 
 	bool isEmpty(const int dist) const noexcept // TODO: Pass ptr here for better readability? Any speed loss?
 	{
@@ -190,7 +194,7 @@ private:
 	template<bool checkDupli, class... Args>
 	PairIb emplaceWithHash(const key_type& k, const size_type hash, Args&&... args)
 	{
-		int dist = 1;
+		int dist = 0;
 		wrapIterator w(navigate(getBucket(hash), MyBegin), this);
 
 		// Find the first location this new node can be inserted
@@ -232,7 +236,7 @@ private:
 
 				const int tmp = w.ptr->dist;
 				w.ptr->dist = std::move(dist);
-				dist = std::move(tmp);
+				dist	    = std::move(tmp);
 			}
 		}
 		return PairIb { iterator { pos, this }, false };
@@ -271,12 +275,41 @@ private:
 		return iterator { MyEnd, this };
 	}
 
-	iterator eraseElements(iterator first, iterator last)
+	PairIs eraseElements(const_iterator first, const_iterator end) // TODO: Exception Handling?
 	{
+		size_type num = 0;
+		for (auto it = first; it != end; ++it, ++num) // Call objects destructor
+			NodeAlTraits::destroy(nodeAl, std::addressof(p->data));
 
+		// Left shift all objects with a dist > 0
+		wrapIterator w((--end).ptr, this);
+
+		
+
+		MySize -= num;
+
+		return PairIs { end, num };
+	}
+
+
+	iterator findFirst()
+	{
+		iterator i(MyBegin, this);
+
+		if (isEmpty(i.ptr->dist))
+			++i;
+
+		return i;
 	}
 
 public:
+
+	iterator begin() { return iterator { findFirst() }; }
+	iterator end() { return iterator { MyEnd, this }; }
+	const_iterator begin() const { return const_iterator { findFirst() }; }
+	const_iterator end() const { return const_iterator { MyEnd, this }; }
+	const_iterator cbegin() const { return const_iterator { findFirst() }; }
+	const_iterator cend() const { return const_iterator { MyEnd, this }; }
 
 	void max_load_factor(float f) noexcept
 	{
@@ -313,6 +346,11 @@ public:
 	}
 
 	iterator erase(iterator it)
+	{
+
+	}
+
+	iterator erase(iterator first, iterator last)
 	{
 
 	}
