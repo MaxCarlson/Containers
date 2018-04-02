@@ -113,18 +113,8 @@ void testHash()
 
 		robin.emplace(i, i);
 
-		//set.emplace(i);
-		//auto it = robin.find(i);
-
-		//if (it->first != i)
-		//	std::cout << "MyBad!! ";
-
-	//	auto f = set.find(i);
-
-		//auto eq = set.equal_range(r);
-
-	//	inserted.emplace(r, r - 5);
-		//int a = 5;
+		if (i % 5 == 0)
+			robin.erase(i);
 	}
 
 	//for (auto it = set.begin(); it != set.end();)

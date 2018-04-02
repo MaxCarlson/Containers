@@ -28,14 +28,36 @@ public:
 	RobinIterator& operator++()
 	{
 		++ptr;
-		for (ptr; ptr < table->MyEnd; ++ptr)
-		{
+		for (ptr; ptr < table->MyEnd; ++ptr) // Broken if ptr == MyEnd
 			if (ptr->dist != -1)
 				break;
-		}
+		
 		return *this; 
 	}
 
+	RobinIterator operator++(int)
+	{
+		RobinIterator tmp = *this;
+		++*this;
+		return tmp;
+	}
+
+	RobinIterator& operator--() // Broken if ptr == MyBegin
+	{
+		--ptr;
+		for (ptr; ptr > table->MyBegin; --ptr)
+			if (ptr->dist != -1)
+				break;
+
+		return *this;
+	}
+
+	RobinIterator operator--(int)
+	{ 
+		RobinIterator tmp = *this;
+		--*this;
+		return tmp;
+	}
 };
 
 template<class Table>
@@ -104,7 +126,6 @@ public:
 	friend iterator;
 	friend const_iterator;
 	friend RobinIterator<MyBase>;
-	//friend HashIterator<MyBase>;
 
 	using PairIb = std::pair<iterator, bool>;
 	using PairIs = std::pair<iterator, size_type>;
@@ -277,14 +298,15 @@ private:
 
 	PairIs eraseElements(const_iterator first, const_iterator end) // TODO: Exception Handling?
 	{
+		const_iterator last = end++;
 		size_type num = 0;
 		for (auto it = first; it != end; ++it, ++num) // Call objects destructor
-			NodeAlTraits::destroy(nodeAl, std::addressof(p->data));
+			NodeAlTraits::destroy(nodeAl, std::addressof(it.ptr->data));
 		
 		MySize -= num;
 
 		// Left shift all objects with a dist > 0 (by one on multi delete? Will that cause issues?)	
-		wrapIterator l(--end, this);
+		wrapIterator l((--end).ptr, this);
 		
 		for (wrapIterator f(l++);; ++l, ++f)
 		{
@@ -362,13 +384,27 @@ public:
 		return locateElement(k);
 	}
 
+	size_type erase(const key_type& k)
+	{
+		iterator it = find(k);
+
+		const_iterator first = it++;
+		PairIs is = eraseElements(first, it);
+		return is.second;
+	}
+
 	iterator erase(iterator it)
 	{
-
+		const_iterator first = it++;
+		
+		PairIs is = eraseElements(first, it);
+		return is.first;
 	}
 
 	iterator erase(iterator first, iterator last)
 	{
+		PairIs is = eraseElements(first, last);
 
+		return is.first;
 	}
 };

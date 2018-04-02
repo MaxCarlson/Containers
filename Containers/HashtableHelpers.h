@@ -31,7 +31,7 @@ struct HashTypes
 	using size_type = size_t;
 
 	using Node = NodeT<node_type>;
-	using NodePtr = Node * ;
+	using NodePtr = Node *;
 
 	using NodeAl = RebindAllocator<Alloc, Node>;
 	using NodeAlTraits = std::allocator_traits<NodeAl>;
@@ -48,12 +48,12 @@ struct HashTypes
 };
 
 template<class Table>
-class HashIterator
+class HashIterator 
 {
 public:
 
-	using NodePtr = typename Table::NodePtr;
-	using pointer = typename Table::pointer;
+	using NodePtr   = typename Table::NodePtr;
+	using pointer   = typename Table::pointer;
 	using reference = typename Table::reference;
 
 	HashIterator() = default;
@@ -100,9 +100,6 @@ public:
 	{
 		return !(this->ptr == other.ptr);
 	}
-
-protected:
-	friend Table;
 
 	NodePtr ptr;
 	const Table *table;
@@ -165,6 +162,13 @@ struct WrappingIterator
 			ptr = table->MyBegin;
 
 		return *this;
+	}
+
+	WrappingIterator operator++(int)
+	{
+		WrappingIterator tmp = *this;
+		++*this;
+		return tmp;
 	}
 
 	Table *table;
