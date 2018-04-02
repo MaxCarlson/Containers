@@ -27,9 +27,9 @@ public:
 
 	RobinIterator& operator++()
 	{
-		++ptr;
-		for (ptr; ptr < table->MyEnd; ++ptr) // Broken if ptr == MyEnd
-			if (ptr->dist != -1)
+		++this->ptr;
+		for (this->ptr; this->ptr < this->table->MyEnd; ++this->ptr) // Broken if this->ptr == MyEnd
+			if (this->ptr->dist != -1)
 				break;
 		
 		return *this; 
@@ -42,11 +42,11 @@ public:
 		return tmp;
 	}
 
-	RobinIterator& operator--() // Broken if ptr == MyBegin
+	RobinIterator& operator--() // Broken if this->ptr == MyBegin
 	{
-		--ptr;
-		for (ptr; ptr > table->MyBegin; --ptr)
-			if (ptr->dist != -1)
+		--this->ptr;
+		for (this->ptr; this->ptr > this->table->MyBegin; --this->ptr)
+			if (this->ptr->dist != -1)
 				break;
 
 		return *this;
@@ -76,7 +76,7 @@ public:
 
 	reference operator*() const
 	{
-		return ptr->data;
+		return this->ptr->data;
 	}
 
 	pointer operator->() const
@@ -230,6 +230,17 @@ private:
 		return insertAtNode(dist, w, std::forward<Args>(args)...);
 	}
 
+	void swapNodes(node_type& n, node_type& n1)
+	{
+		if constexpr(!std::is_same<key_type, value_type>::value)
+		{	// Get rid of const-ness of the key for just a moment so we can do a move-swap here
+			std::swap(const_cast<key_type&>(n.first), const_cast<key_type&>(n1.first));
+			std::swap(n.second, n1.second);
+		}
+		else
+			std::swap(n, n1);
+	}
+
 	template<class... Args>
 	PairIb insertAtNode(int dist, wrapIterator w, Args&&... args)
 	{
@@ -247,13 +258,7 @@ private:
 			}
 			else if (w.ptr->dist < dist)
 			{
-				if constexpr(!std::is_same<key_type, value_type>::value)
-				{	// Get rid of const-ness of the key for just a moment so we can do a move-swap here
-					std::swap(const_cast<key_type&>(nt.first), const_cast<key_type&>(w.ptr->data.first));
-					std::swap(nt.second, w.ptr->data.second);
-				}
-				else
-					std::swap(nt, w.ptr->data);
+				swapNodes(nt, w.ptr->data);
 
 				const int tmp = w.ptr->dist;
 				w.ptr->dist = std::move(dist);
@@ -290,42 +295,45 @@ private:
 			if (isEmpty(w.ptr->dist))
 				return const_iterator { MyEnd, this };
 
-			else if (keyEqual(getKey(w.ptr->data), k))
+			else if (keyEqual(getKey(w.ptr->data), k)) 
 				return const_iterator { w.ptr, this };
 		}
 		return iterator { MyEnd, this };
 	}
 
-	PairIs eraseElements(const_iterator first, const_iterator end) // TODO: Exception Handling?
+	iterator eraseElement(iterator it) // TODO: Exception Handling?
 	{
-		const_iterator last = end++;
-		size_type num = 0;
-		for (auto it = first; it != end; ++it, ++num) // Call objects destructor
-			NodeAlTraits::destroy(nodeAl, std::addressof(it.ptr->data));
+		NodeAlTraits::destroy(nodeAl, std::addressof(it.ptr->data));
 		
-		MySize -= num;
+		iterator ret = it;
+		wrapIterator first(it.ptr, this);
 
-		// Left shift all objects with a dist > 0 (by one on multi delete? Will that cause issues?)	
-		wrapIterator l((--end).ptr, this);
-		
-		for (wrapIterator f(l++);; ++l, ++f)
+		for (wrapIterator next(++it.ptr, this);; ++first, ++next)
 		{
-			if (l.ptr->dist > 0)
+			if (next.ptr->dist > 0)
 			{
-				if constexpr(!std::is_same<key_type, value_type>::value)
-				{
-					std::swap(const_cast<key_type&>(f.ptr->data.first), const_cast<key_type&>(l.ptr->data.first));
-					std::swap(f.ptr->data.second, l.ptr->data.second);
-				}
-				else
-					std::swap(f.ptr->data, l.ptr->data);
-
-				--f.ptr->dist;
+				swapNodes(first.ptr->data, next.ptr->data);
+				--first.ptr->dist;
 			}
 			else
-				break;
+			{	// Mark the last elements place (the old spot of the one just moved to the left) empty
+				first.ptr->dist |= EMPTY;
+
+				if (isEmpty(ret.ptr->dist))
+					++ret;
+
+				return ret;
+			}
 		}
 
+		return ret; // Very unlikely/impossible?
+	}
+
+	PairIs eraseElements(const_iterator first, const_iterator end) // TODO: This can likely be done much faster if we mass delete
+	{															   // and shift elements(move) over till they hit zero or we run out of space
+		size_type num = 0;										   // instead of shifting and erasing one at a time
+		for (iterator it = first; it != end; ++num)
+			eraseElement(it);
 
 		return PairIs { end, num };
 	}
@@ -356,6 +364,11 @@ public:
 			maxLoadFactor = f;
 	}
 
+	bool empty() const noexcept
+	{
+		return MySize;
+	}
+
 	size_type size() const noexcept
 	{
 		return MySize;
@@ -384,24 +397,22 @@ public:
 		return locateElement(k);
 	}
 
-	size_type erase(const key_type& k)
+	size_type erase(const key_type& k) // Need equal-range to use this with Multi
 	{
 		iterator it = find(k);
+		size_type num = it.ptr != MyEnd;
+		
+		eraseElement(it);
 
-		const_iterator first = it++;
-		PairIs is = eraseElements(first, it);
-		return is.second;
+		return num;
 	}
 
 	iterator erase(iterator it)
 	{
-		const_iterator first = it++;
-		
-		PairIs is = eraseElements(first, it);
-		return is.first;
+		return eraseElement(it);
 	}
 
-	iterator erase(iterator first, iterator last)
+	iterator erase(iterator first, iterator last) // Not Functional!
 	{
 		PairIs is = eraseElements(first, last);
 

@@ -108,8 +108,7 @@ void testHash()
 	{
 		//auto r = distri(defRand);
 
-		if (i == 513)
-			int a = 5;
+
 
 		robin.emplace(i, i);
 
