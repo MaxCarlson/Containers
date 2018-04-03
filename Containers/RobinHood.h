@@ -133,8 +133,8 @@ public:
 private:
 	NodeAl nodeAl;
 
-	NodePtr MyBegin;
-	NodePtr MyEnd;
+	NodePtr MyBegin = nullptr;
+	NodePtr MyEnd = nullptr;
 
 	size_type MySize = 0;
 	size_type MyCapacity = 0;
@@ -150,6 +150,11 @@ private:
 
 	static constexpr short EMPTY = -1;
 
+public:
+	RobinhoodHash() { MySize = MyCapacity = 0; MyBegin = MyEnd = nullptr; }
+
+private:
+
 	bool isEmpty(const int dist) const noexcept // TODO: Pass ptr here for better readability? Any speed loss?
 	{
 		return dist == EMPTY;//!(dist & EMPTY);
@@ -160,7 +165,7 @@ private:
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
 		p->dist = dist;
-		++MySize;
+		++MySize; 
 	}
 
 	void reallocate(NodePtr first, NodePtr last, const size_type oldSize)
@@ -194,8 +199,14 @@ private:
 	{
 		const size_type oldSize = MyCapacity;
 		const size_type newSize = MyCapacity ? MyCapacity * 2 : 16;
-		Node* b = nodeAl.allocate(newSize);
-		Node* e = navigate(newSize, b);
+
+		std::cout << "\n";
+		std::cout <<"oldSize " << oldSize << " newSize " << newSize << std::endl;
+
+		NodePtr b = nodeAl.allocate(newSize);
+		NodePtr e = navigate(newSize, b);
+
+		std::cout << b << " " << e << std::endl;
 
 		MyCapacity = newSize; // Must be set first otherwise items are placed into incorrect buckets in new array
 
@@ -303,6 +314,7 @@ private:
 
 	iterator eraseElement(iterator it) // TODO: Exception Handling?
 	{
+		--MySize;
 		NodeAlTraits::destroy(nodeAl, std::addressof(it.ptr->data));
 		
 		iterator ret = it;
