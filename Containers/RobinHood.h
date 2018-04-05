@@ -173,24 +173,22 @@ private:
 		std::swap(MyBegin, first);
 		std::swap(MyEnd, last);
 
-		for (NodePtr it = MyBegin; it != MyEnd; ++it)
-		{	// 10% speedup just checking for set sign bit
+		for (NodePtr it = MyBegin; it <= MyEnd; ++it)	
 			it->dist |= EMPTY;
-		}
 
-		if (first) 
+		for (NodePtr it = first; it != last; ++it)
 		{
-			for (NodePtr it = first; it != last; ++it)
+			if (!isEmpty(it->dist))
 			{
-				if (!isEmpty(it->dist))
-				{
-					const std::pair<key_type, size_type> kh = getKeyAndHash(it->data); // TODO: Repeditive, dual construction of obj; here and in insert
+				const std::pair<key_type, size_type> kh = getKeyAndHash(it->data); // TODO: Repeditive, dual construction of obj; here and in insert
 
-					emplaceWithHash<false>(kh.first, kh.second, std::move(it->data)); // TODO: Create sepperate non duplicate checking function to insert
-				}
-
-				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called for every element right? Or only elements that have been constructed?
+				emplaceWithHash<false>(kh.first, kh.second, std::move(it->data)); 
+				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called only for constructed elements right?
 			}
+		}
+		if (first)
+		{
+			std::cout << "ENewBegin " << first << " New End " << last << std::endl;
 			NodeAlTraits::deallocate(nodeAl, first, oldSize);
 		}
 	}
@@ -201,12 +199,13 @@ private:
 		const size_type newSize = MyCapacity ? MyCapacity * 2 : 16;
 
 		std::cout << "\n";
-		std::cout <<"oldSize " << oldSize << " newSize " << newSize << std::endl;
+		std::cout << "oldSize " << oldSize << " newSize " << newSize << std::endl;
+		std::cout << "Begin     " << MyBegin << " End     " << MyEnd << std::endl;
 
 		NodePtr b = nodeAl.allocate(newSize);
 		NodePtr e = navigate(newSize, b);
 
-		std::cout << b << " " << e << std::endl;
+		std::cout << "New Begin " << b << " New End " << e << std::endl;
 
 		MyCapacity = newSize; // Must be set first otherwise items are placed into incorrect buckets in new array
 
