@@ -172,7 +172,7 @@ private:
 		std::swap(MyBegin, first);
 		std::swap(MyEnd, last);
 
-		for (NodePtr it = MyBegin; it <= MyEnd; ++it)	
+		for (NodePtr it = MyBegin; it != MyEnd; ++it)	
 			it->dist |= EMPTY;
 
 		for (NodePtr it = first; it != last; ++it)
@@ -182,12 +182,12 @@ private:
 				const std::pair<key_type, size_type> kh = getKeyAndHash(it->data); // TODO: Repeditive, dual construction of obj; here and in insert
 
 				emplaceWithHash<false>(kh.first, kh.second, std::move(it->data)); 
-				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called only for constructed elements right?
 			}
+			NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called only for constructed elements or not?
 		}
 		if (first)
 		{
-			std::cout << "ENewBegin " << first << " New End " << last << std::endl;
+			std::cout << "Deallocate " << first << "         " << last << std::endl;
 			NodeAlTraits::deallocate(nodeAl, first, oldSize);
 		}
 	}
@@ -199,16 +199,18 @@ private:
 
 		std::cout << "\n";
 		std::cout << "oldSize " << oldSize << " newSize " << newSize << std::endl;
-		std::cout << "Begin     " << MyBegin << " End     " << MyEnd << std::endl;
+		std::cout << "Old Begin  " << MyBegin << " Old End " << MyEnd << std::endl;
 
 		NodePtr b = nodeAl.allocate(newSize);
 		NodePtr e = navigate(newSize, b);
 
-		std::cout << "New Begin " << b << " New End " << e << std::endl;
+		std::cout << "New Begin  " << b << " New End " << e << std::endl;
 
 		MyCapacity = newSize; // Must be set first otherwise items are placed into incorrect buckets in new array
 
 		reallocate(b, e, oldSize);
+
+		int a = 5;
 	}
 
 	size_type getBucket(const size_type hash) const noexcept
@@ -317,6 +319,9 @@ private:
 
 	iterator eraseElement(iterator it) // TODO: Exception Handling?
 	{
+		if (it.ptr == MyEnd)
+			return end();
+
 		--MySize;
 		NodeAlTraits::destroy(nodeAl, std::addressof(it.ptr->data));
 		
@@ -417,7 +422,8 @@ public:
 		iterator it = find(k);
 		size_type num = it.ptr != MyEnd;
 		
-		eraseElement(it);
+		if(num)
+			eraseElement(it);
 
 		return num;
 	}

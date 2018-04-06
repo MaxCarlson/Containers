@@ -83,7 +83,8 @@ struct HashEqual
 
 void testHash()
 {
-	constexpr long long num = 40000000;
+	//constexpr long long num = 5000; 
+	constexpr long long num = 40000000; // For release
 	using Key = int;
 	using Value = int;
 	std::uniform_int_distribution<int> distri(0, num);
@@ -100,8 +101,6 @@ void testHash()
 
 	//std::unordered_map<Key, Value> inserted; inserted.max_load_factor(0.0f);
 
-	int iii = sizeof(short);
-	int ii = sizeof(int16_t);
 	int f = sizeof(RobinhoodNode<std::pair<int, int>>);
 
 	for (auto i = 0; i < num; ++i)
@@ -118,9 +117,8 @@ void testHash()
 			robin.erase(i);
 	}
 
-	//for (auto it = set.begin(); it != set.end();)
-	//	it = set.erase(it);
-
+	for (auto it = set.begin(); it != set.end();)
+		it = set.erase(it);
 
 	timer<Key>(false);
 
@@ -145,47 +143,6 @@ void testHash()
 // store and iterate through vector when it's small
 // allocate uset/map once larger for find ops
 // for erase either do a linear erase or store vec idx's in the map nodes
-
-struct Nodee {
-	signed int dist : 16; 
-
-	int data;
-};
-
-using NodeAlc  = std::allocator<Nodee>;
-using NodeAlT = std::allocator_traits<NodeAlc>;
-using NodePtr = Nodee * ;
-NodeAlc alc;
-
-NodePtr MyBegin;
-NodePtr MyEnd;
-
-void reallocate(NodePtr first, NodePtr last, const size_t oldSize)
-{
-	std::swap(MyBegin, first);
-	std::swap(MyEnd, last);
-
-	if (first)
-		NodeAlT::deallocate(alc, first, oldSize); 
-}
-
-int MyCapacity = 0;
-
-void increaseCapacity()
-{
-	const size_t oldSize = MyCapacity;
-	const size_t newSize = MyCapacity ? MyCapacity * 2 : 16;
-
-
-	NodePtr b = alc.allocate(newSize);
-	NodePtr e = b + static_cast<std::ptrdiff_t>(newSize);
-
-	MyCapacity = newSize; // Must be set first otherwise items are placed into incorrect buckets in new array
-
-	reallocate(b, e, oldSize);
-}
-
-
 
 int main()
 { 

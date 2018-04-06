@@ -12,10 +12,6 @@ struct LinearHashNode
 };
 
 // Open address linear probing table
-
-// TODO: Make inherited template classes for const and normal iterator inheriting with protected
-// to reduce noise when debugging open address iterators ?
-
 template<class Traits, bool Multi>
 class OpenAddLinear
 {

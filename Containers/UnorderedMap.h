@@ -18,7 +18,7 @@ template<class Key, class Value,
 
 	struct node_equal
 	{
-		bool operator()(const node_type& left, const node_type& right) const //noexcept?
+		bool operator()(const node_type& left, const node_type& right) const 
 		{
 			return comp(left.first, right.first);
 		}

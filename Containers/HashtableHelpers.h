@@ -1,13 +1,14 @@
 #pragma once
 #include "helpers.h"
 
-namespace detail
+// TODO: Encapsulate this in a namespace
+
+namespace detail 
 {
 	constexpr char empty = 0;
 	constexpr char filled = 1;
 	constexpr char deleted = 2;
 }
-
 
 // Wrapper for types needed by Hashtable
 template<class Traits, template<class> class NodeT>
@@ -144,7 +145,8 @@ struct WrappingIterator
 	using pointer = typename Table::pointer;
 	using reference = typename Table::reference;
 
-	WrappingIterator(NodePtr ptr, Table* table) : ptr(ptr), table(table) {}
+	WrappingIterator(NodePtr ptr, Table* table)
+		: ptr(ptr == table->MyEnd ? table->MyBegin : ptr), table(table) {}
 
 	reference operator*()
 	{
