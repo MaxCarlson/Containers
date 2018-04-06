@@ -165,7 +165,6 @@ private:
 	{
 		NodeAlTraits::construct(nodeAl, std::addressof(p->data), std::forward<Val>(val)...);
 		p->dist = dist;
-		++MySize; 
 	}
 
 	void reallocate(NodePtr first, NodePtr last, const size_type oldSize)
@@ -293,7 +292,12 @@ private:
 		
 		std::pair<key_type, size_type> kh = getKeyAndHash(std::forward<Args>(args)...);   // TODO: We're doing 2 total obj constructions, one in getKeyAndHash 
 																						  // and one in insert at node, Pass the object by & and move once created?
-		return emplaceWithHash<!Multi>(kh.first, kh.second, std::forward<Args>(args)...); 
+		PairIb ib = emplaceWithHash<!Multi>(kh.first, kh.second, std::forward<Args>(args)...); 
+
+		if(ib.second) 
+			++MySize;
+
+		return ib;
 	}
 
 	const_iterator locateElement(const key_type& k) 
