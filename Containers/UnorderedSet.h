@@ -1,6 +1,6 @@
 #pragma once
 #include <utility>
-#include "OpenAddressLinear.h"
+#include "RobinHood.h"
 
 template<class Key,
 	class Hash,
@@ -37,14 +37,15 @@ template<class Key,
 
 
 template<class Key,
-	template<class, bool> class MyBase = OpenAddLinear,
+	template<class, bool> class MyBase = RobinhoodHash,
 	class Hash = std::hash<Key>,
 	class KeyEqual = std::equal_to<Key>,
 	class Allocator = std::allocator<Key>>
 	class UnorderedSet : public MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>
 {
-	using Base = MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>;
+public:
 
-	using iterator = typename Base::iterator;
-	using const_iterator = typename Base::const_iterator;
+	//using Base = MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>;
+	// iterator = typename Base::iterator;
+	//using const_iterator = typename Base::const_iterator;
 };

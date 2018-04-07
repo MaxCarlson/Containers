@@ -15,6 +15,7 @@ struct LinearHashNode
 template<class Traits, bool Multi>
 class OpenAddLinear
 {
+public:
 	using MyBase = OpenAddLinear<Traits, Multi>;
 	using BaseTypes = HashTypes<Traits, LinearHashNode>;
 
@@ -33,8 +34,6 @@ class OpenAddLinear
 
 	using key_equal   = typename Traits::key_equal;
 	using node_equal  = typename Traits::node_equal;
-
-public:
 
 	using difference_type = typename BaseTypes::difference_type;
 	using value_type      = typename BaseTypes::value_type;

@@ -81,25 +81,6 @@ struct HashEqual
 	}
 };
 
-static const size_t num = 100000;
-
-template<class Arg>
-void fillContainers(Arg&& arg)
-{
-	for (auto i = 0; i < num; ++i)
-		if constexpr(std::is_same<typename Arg::iterator, typename Arg::const_iterator>::value)
-			arg.emplace(i);
-		else
-			arg.emplace(i, i);
-}
-
-template<class Arg, class... Args>
-void fillContainers(Arg&& arg, Args&&... args)
-{
-	fillContainers<Arg>(arg);
-	//fillContainers(args...);
-}
-
 void testHash()
 {
 	//constexpr long long num = 5000; 
@@ -112,14 +93,12 @@ void testHash()
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
 	UnorderedSet<Key, RobinhoodHash> robin;
-	//UnorderedMap<Key, Value, RobinhoodHash> robin;
+	UnorderedMap<Key, Value, RobinhoodHash> rm;
 	UnorderedSet<Key> set;
 	//UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
 	//UnorderedSet<Key> set;
 
 	timer<Key>(true);
-
-	fillContainers(robin);
 
 	//std::unordered_map<Key, Value> inserted; inserted.max_load_factor(0.0f);
 
