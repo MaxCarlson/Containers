@@ -153,11 +153,28 @@ private:
 public:
 	RobinhoodHash() { MySize = MyCapacity = 0; MyBegin = MyEnd = nullptr; }
 
+	~RobinhoodHash()
+	{
+		destructAll();
+		deallocate(MyBegin, MyCapacity);
+	}
+
 private:
 
 	bool isEmpty(const int dist) const noexcept // TODO: Pass ptr here for better readability? Any speed loss?
 	{
 		return dist == EMPTY;//!(dist & EMPTY);
+	}
+
+	void destructAll() noexcept
+	{
+		for (iterator it = begin(); it != end(); ++it, --MySize)
+			NodeAlTraits::destroy(nodeAl, it.ptr);
+	}
+
+	void deallocate(NodePtr first, const size_type size)
+	{
+		NodeAlTraits::deallocate(nodeAl, first, size);
 	}
 
 	template<class... Val>
@@ -186,10 +203,7 @@ private:
 			NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called only for constructed elements or not?
 		}
 		if (first)
-		{
-			std::cout << "Deallocate " << first << "         " << last << std::endl;
-			NodeAlTraits::deallocate(nodeAl, first, oldSize);
-		}
+			deallocate(first, oldSize);
 	}
 
 	void increaseCapacity() 
@@ -197,20 +211,12 @@ private:
 		const size_type oldSize = MyCapacity;
 		const size_type newSize = MyCapacity ? MyCapacity * 2 : 16;
 
-		std::cout << "\n";
-		std::cout << "oldSize " << oldSize << " newSize " << newSize << std::endl;
-		std::cout << "Old Begin  " << MyBegin << " Old End " << MyEnd << std::endl;
-
 		NodePtr b = nodeAl.allocate(newSize);
 		NodePtr e = navigate(newSize, b);
-
-		std::cout << "New Begin  " << b << " New End " << e << std::endl;
 
 		MyCapacity = newSize; // Must be set first otherwise items are placed into incorrect buckets in new array
 
 		reallocate(b, e, oldSize);
-
-		int a = 5;
 	}
 
 	size_type getBucket(const size_type hash) const noexcept
@@ -384,6 +390,11 @@ public:
 			maxLoadFactor = f;
 	}
 
+	void shrink_to_fit() noexcept
+	{
+
+	}
+
 	bool empty() const noexcept
 	{
 		return MySize;
@@ -397,6 +408,11 @@ public:
 	size_type capacity() const noexcept
 	{
 		return MyCapacity;
+	}
+
+	void clear() noexcept
+	{
+		destructAll();
 	}
 
 	template<class... Args>
