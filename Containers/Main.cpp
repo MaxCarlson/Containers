@@ -90,6 +90,7 @@ void testHash()
 	using Value = int;
 	std::uniform_int_distribution<int> distri(0, num);
 
+	//{
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
 	UnorderedSet<Key, RobinhoodHash> robin;
@@ -115,9 +116,10 @@ void testHash()
 		robin.emplace(i);
 	}
 
+	int b = 5;
 	for (auto it = robin.begin(); it != robin.end();)
 		it = robin.erase(it);
-
+	//}
 
 	timer<Key>(false);
 

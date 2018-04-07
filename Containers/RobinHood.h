@@ -159,6 +159,16 @@ public:
 		deallocate(MyBegin, MyCapacity);
 	}
 
+	RobinhoodHash& operator=(const RobinhoodHash& other)
+	{
+		destructAll();
+
+		if (other.capacity() > this->capacity())
+		{
+			allocateMore(other.capacity());
+		}
+	}
+
 private:
 
 	bool isEmpty(const int dist) const noexcept // TODO: Pass ptr here for better readability? Any speed loss?
@@ -184,26 +194,46 @@ private:
 		p->dist = dist;
 	}
 
-	void reallocate(NodePtr first, NodePtr last, const size_type oldSize)
+	std::pair<NodePtr, NodePtr> allocateMore(const size_type newSize)
 	{
+		NodePtr first = nodeAl.allocate(newSize);
+		NodePtr last = navigate(newSize, first);
+
 		std::swap(MyBegin, first);
 		std::swap(MyEnd, last);
 
 		for (NodePtr it = MyBegin; it != MyEnd; ++it)	
 			it->dist |= EMPTY;
 
+		return { first, last };
+	}
+
+	void copyElements(NodePtr first, NodePtr last)
+	{
 		for (NodePtr it = first; it != last; ++it)
 		{
 			if (!isEmpty(it->dist))
 			{
 				const std::pair<key_type, size_type> kh = getKeyAndHash(it->data); // TODO: Repeditive, dual construction of obj; here and in insert
 
-				emplaceWithHash<false>(kh.first, kh.second, std::move(it->data)); 
+				emplaceWithHash<false>(kh.first, kh.second, std::move(it->data));
 			}
 			NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called only for constructed elements or not?
 		}
-		if (first)
-			deallocate(first, oldSize);
+	}
+
+	void increaseCapacity(const size_type newCapacity)
+	{
+		const size_type oldCapacity = MyCapacity;
+
+		auto[oldFirst, oldLast] = allocateMore(newCapacity);
+
+		MyCapacity = newCapacity;
+
+		copyElements(oldFirst, oldLast);
+
+		if (oldCapacity)
+			deallocate(oldFirst, oldCapacity);
 	}
 
 	void increaseCapacity() 
@@ -211,12 +241,7 @@ private:
 		const size_type oldSize = MyCapacity;
 		const size_type newSize = MyCapacity ? MyCapacity * 2 : 16;
 
-		NodePtr b = nodeAl.allocate(newSize);
-		NodePtr e = navigate(newSize, b);
-
-		MyCapacity = newSize; // Must be set first otherwise items are placed into incorrect buckets in new array
-
-		reallocate(b, e, oldSize);
+		increaseCapacity(newSize);
 	}
 
 	size_type getBucket(const size_type hash) const noexcept
@@ -367,6 +392,9 @@ private:
 
 	iterator findFirst()
 	{
+		if (!MyBegin)
+			return iterator{ MyEnd, this };
+
 		iterator i(MyBegin, this);
 
 		if (isEmpty(i.ptr->dist))
@@ -390,10 +418,15 @@ public:
 			maxLoadFactor = f;
 	}
 
-	void shrink_to_fit() noexcept
+	void shrink_to_fit() noexcept // Not Implemented
 	{
 
 	}
+
+	void reserve() // Not Implemented
+	{
+
+	} 
 
 	bool empty() const noexcept
 	{
