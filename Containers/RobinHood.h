@@ -165,8 +165,18 @@ public:
 
 		if (other.capacity() > this->capacity())
 		{
-			allocateMore(other.capacity());
+			const size_type oldCapacity = this->capacity();
+			auto [oldBegin, oldEnd] = allocateMore(other.capacity());
+
+			if(oldCapacity)
+				deallocate(oldBegin, oldCapacity);
 		}
+		
+		// Copy elements over without destructing them in other container
+		// increment our size 
+		copyElements<false, true>(other.MyBegin, other.MyEnd);
+
+		return *this;
 	}
 
 private:
@@ -194,10 +204,14 @@ private:
 		p->dist = dist;
 	}
 
-	std::pair<NodePtr, NodePtr> allocateMore(const size_type newSize)
+	// Allocates new storage and swaps the old begin with our begin
+	// Returns a pair of pointers to the old begin and end nodes
+	std::pair<NodePtr, NodePtr> allocateMore(const size_type newCapacity)
 	{
-		NodePtr first = nodeAl.allocate(newSize);
-		NodePtr last = navigate(newSize, first);
+		NodePtr first = nodeAl.allocate(newCapacity);
+		NodePtr last = navigate(newCapacity, first);
+
+		MyCapacity = newCapacity;
 
 		std::swap(MyBegin, first);
 		std::swap(MyEnd, last);
@@ -208,6 +222,7 @@ private:
 		return { first, last };
 	}
 
+	template<bool destructElements, bool incrementSize = false>
 	void copyElements(NodePtr first, NodePtr last)
 	{
 		for (NodePtr it = first; it != last; ++it)
@@ -217,8 +232,13 @@ private:
 				const std::pair<key_type, size_type> kh = getKeyAndHash(it->data); // TODO: Repeditive, dual construction of obj; here and in insert
 
 				emplaceWithHash<false>(kh.first, kh.second, std::move(it->data));
+
+				if (incrementSize)
+					++MySize;
 			}
-			NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called only for constructed elements or not?
+
+			if(destructElements)
+				NodeAlTraits::destroy(nodeAl, it); // TODO: This needs to be called only for constructed elements or not?
 		}
 	}
 
@@ -228,9 +248,7 @@ private:
 
 		auto[oldFirst, oldLast] = allocateMore(newCapacity);
 
-		MyCapacity = newCapacity;
-
-		copyElements(oldFirst, oldLast);
+		copyElements<true>(oldFirst, oldLast);
 
 		if (oldCapacity)
 			deallocate(oldFirst, oldCapacity);

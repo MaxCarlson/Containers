@@ -116,6 +116,17 @@ void testHash()
 		robin.emplace(i);
 	}
 
+
+	UnorderedMap<Key, Value> newRobin;
+
+	for (auto i = 0; i < 10000; ++i)
+		newRobin.emplace(i, i);
+	for (auto it = newRobin.begin(); it != newRobin.end(); )
+		it = newRobin.erase(it);
+
+
+//	robin = newRobin;
+
 	int b = 5;
 	for (auto it = robin.begin(); it != robin.end();)
 		it = robin.erase(it);
