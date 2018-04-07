@@ -43,5 +43,8 @@ template<class Key,
 	class Allocator = std::allocator<Key>>
 	class UnorderedSet : public MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>
 {
+	using Base = MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>;
 
+	using iterator = typename Base::iterator;
+	using const_iterator = typename Base::const_iterator;
 };

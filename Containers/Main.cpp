@@ -81,27 +81,49 @@ struct HashEqual
 	}
 };
 
+static const size_t num = 100000;
+
+template<class Arg>
+void fillContainers(Arg&& arg)
+{
+	for (auto i = 0; i < num; ++i)
+		if constexpr(std::is_same<typename Arg::iterator, typename Arg::const_iterator>::value)
+			arg.emplace(i);
+		else
+			arg.emplace(i, i);
+}
+
+template<class Arg, class... Args>
+void fillContainers(Arg&& arg, Args&&... args)
+{
+	fillContainers<Arg>(arg);
+	//fillContainers(args...);
+}
+
 void testHash()
 {
 	//constexpr long long num = 5000; 
-	constexpr long long num = 40000000; // For release
+	constexpr long long num = 1000000; // For non-optimized
+	//constexpr long long num = 40000000; // For release
 	using Key = int;
 	using Value = int;
 	std::uniform_int_distribution<int> distri(0, num);
 
 	//std::unordered_set<Key> set;
 	//std::unordered_map<Key, Value> set;
-	UnorderedSet<Key, OpenAddLinear> set;
-	UnorderedMap<Key, Value, RobinhoodHash> robin;
-	//UnorderedSet<Key> set;
+	UnorderedSet<Key, RobinhoodHash> robin;
+	//UnorderedMap<Key, Value, RobinhoodHash> robin;
+	UnorderedSet<Key> set;
 	//UnorderedMap<Key, Value, OpenAddressLT, HashTT, HashEqual> set;
 	//UnorderedSet<Key> set;
 
 	timer<Key>(true);
 
+	fillContainers(robin);
+
 	//std::unordered_map<Key, Value> inserted; inserted.max_load_factor(0.0f);
 
-	int f = sizeof(RobinhoodNode<std::pair<int, int>>);
+	int f = sizeof(RobinhoodNode<std::pair<Key, Value>>);
 
 	for (auto i = 0; i < num; ++i)
 	{
@@ -111,14 +133,11 @@ void testHash()
 		if (i == 13)
 			int a = 5;
 
-		robin.emplace(i, i);
-
-		if (i % 10 == 0)
-			robin.erase(i);
+		robin.emplace(i);
 	}
 
-	for (auto it = set.begin(); it != set.end();)
-		it = set.erase(it);
+	for (auto it = robin.begin(); it != robin.end();)
+		it = robin.erase(it);
 
 	timer<Key>(false);
 
