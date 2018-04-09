@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <memory>
 #include "OrderedStructuresHelpers.h"
 
 template<class Traits>
@@ -14,10 +15,12 @@ struct SkipListNode
 	int height;
 
 	SkipListNode* down;
-	SkipListNode* right;
+	SkipListNode* right; // TODO: Use an array of two here? Faster or slower?
 
 	Type data;
 };
+
+// TODO: Flat array storage, using indexes instead of pointers?
 
 template<class Traits>
 class SkipList
@@ -52,8 +55,10 @@ private:
 	get_key getKey;
 	key_compare compare;
 
-	static bool xorshift128plus() const noexcept // From the wiki xorshift
-	{
+	enum { DOWN, RIGHT };
+
+	static bool xorshift128plus() const noexcept // TODO: Test distribution of different bits for our use case
+	{	// From the wiki xorshift
 		static constexpr uint64_t andBit = 1 << 5;
 		uint64_t x = s[0];
 		const uint64_t y = s[1];
@@ -63,7 +68,7 @@ private:
 		return (s[1] + y) & andBit;
 	}
 
-	static int generateLevel() const noexcept
+	static int generateHeight() const noexcept
 	{
 		int n = 0;
 		while (xorshift128plus())
@@ -72,4 +77,37 @@ private:
 		return n;
 	}
 
+	template<class... Args>
+	NodePtr createNode(Args&& ...args) // TODO: Exception handling
+	{
+		NodePtr n = nodeAl.allocate(1);
+		//NodeAlTraits::construct(nodeAl, std::addressof(n->height), height);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->down), nullptr);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->right), nullptr);
+		NodeAlTraits::construct(nodeAl, std::addressof(n->data), std::forward<Args>(args)...);
+
+		// TODO: Exception handling
+		return n; 
+	}
+
+	template<class... Args>
+	void tryEmplace(Args&& ...args)
+	{
+		NodePtr p = createNode(std::forward<Args>(args)...);
+
+		int curHeight = 0;
+		const int desHeight = generateHeight();
+
+		NodePtr cur = Head;
+
+		for (;;)
+		{
+			int dir = compare(getKey(cur->data), getKey(p->data));
+
+			if (dir == RIGHT)
+				cur = cur->right;
+			else
+				cur = cur->down;
+		}
+	}
 };
