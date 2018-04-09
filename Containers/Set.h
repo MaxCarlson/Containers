@@ -39,5 +39,5 @@ template<class Key,
 	class Allocator = std::allocator<Key>>
 	class Set : public MyBase<SetTraits<Key, Compare, Allocator>>
 {
-//	using MyBas = MyBase<SetTraits<Key, Compare, Allocator>>;
+
 };

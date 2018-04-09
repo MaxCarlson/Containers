@@ -53,5 +53,11 @@
     <ClInclude Include="HashtableHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SkipList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OrderedStructuresHelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

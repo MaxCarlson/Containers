@@ -372,8 +372,7 @@ private:
 			return end();
 
 		--MySize;
-		NodeAlTraits::destroy(nodeAl, std::addressof(it.ptr->data));
-		
+		NodeAlTraits::destroy(nodeAl, std::addressof(it.ptr->data)); // TODO: THIS FUNCITON IS FAILING RIGHT NOW, FIX!!!@@@		
 		iterator ret = it;
 		wrapIterator first(it.ptr, this);
 

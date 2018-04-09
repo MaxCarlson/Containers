@@ -122,7 +122,14 @@ void testHash()
 	for (auto i = 0; i < 10000; ++i)
 		newRobin.emplace(i, i);
 	for (auto it = newRobin.begin(); it != newRobin.end(); )
+	{
 		it = newRobin.erase(it);
+	}
+
+	for (auto it = newRobin.begin(); it != newRobin.end(); ) // Weird bug, very very long iteration time when table is "Empty"
+	{
+		it = newRobin.erase(it);
+	}
 
 
 //	robin = newRobin;
@@ -160,8 +167,8 @@ int main()
 { 
 //	for(int i = 0; i < 100; ++i)
 //		increaseCapacity();
-	
 
+	
 	//testMap();
 	testHash();
 	return 0;

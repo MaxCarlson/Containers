@@ -197,7 +197,9 @@
     <ClInclude Include="HashtableHelpers.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="OpenAddressLinear.h" />
+    <ClInclude Include="OrderedStructuresHelpers.h" />
     <ClInclude Include="RobinHood.h" />
+    <ClInclude Include="SkipList.h" />
     <ClInclude Include="UnorderedMap.h" />
     <ClInclude Include="UnorderedSet.h" />
     <ClInclude Include="Map.h" />
