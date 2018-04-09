@@ -177,6 +177,7 @@ class RedBlackTree
 	using key_compare   = typename Traits::key_compare;
 	using value_compare = typename Traits::value_compare;
 	using get_key		= typename Traits::get_key;
+	using size_type     = size_t;
 
 	using NodeAl	    = typename BaseTypes::NodeAl;
 	using NodeAlTraits  = typename BaseTypes::NodeAlTraits;
@@ -197,7 +198,7 @@ class RedBlackTree
 private:
 	NodePtr Head;
 	NodePtr root = nullptr;
-	long treeSize = 0;
+	size_type treeSize = 0;
 
 	// If we're working with key/value pair extract the value of the key
 	// from the pairs and compare the two
@@ -574,6 +575,11 @@ public:
 	Const_Iterator find(const key_type &t) const
 	{
 		return Const_Iterator(find(t));
+	}
+
+	size_type size() const noexcept
+	{
+		return treeSize;
 	}
 
 private:
