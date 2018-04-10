@@ -59,5 +59,8 @@
     <ClInclude Include="OrderedStructuresHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FlatTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

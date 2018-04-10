@@ -194,6 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BinaryTree.h" />
+    <ClInclude Include="FlatTree.h" />
     <ClInclude Include="HashtableHelpers.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="OpenAddressLinear.h" />
