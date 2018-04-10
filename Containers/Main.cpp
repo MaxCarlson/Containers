@@ -7,6 +7,8 @@
 #include "RobinHood.h"
 #include "Map.h"
 #include "Set.h"
+#include "SmallVec.h"
+#include "FlatTree.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -144,6 +146,15 @@ void testHash()
 	int a = 5;
 }
 
+void testFlat()
+{
+	using Key = int;
+
+	SmallVec<Key, 10> vec;
+	
+	Set<Key, FlatTree> set;
+}
+
 // Things to implement
 // Flat-Maps
 // B-Tree
@@ -170,6 +181,7 @@ int main()
 
 	
 	//testMap();
-	testHash();
+	//testHash();
+	testFlat();
 	return 0;
 }
