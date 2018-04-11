@@ -153,8 +153,14 @@ void testFlat()
 
 	SmallVec<Key, 10> vec;
 
-	for(int i = 0; i < num; ++i)
+	for (int i = 0; i < num; ++i)
+	{
 		vec.emplace_back(i);
+
+		auto x = vec[i];
+
+		int a = 5;
+	}
 
 	vec.pop_back();
 

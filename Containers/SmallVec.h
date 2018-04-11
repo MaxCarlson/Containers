@@ -25,7 +25,7 @@ public:
 
 	VecIterator& operator++()
 	{
-		if (ptr <= MyVec->Mylast)
+		if (ptr <= MyVec->MyLast)
 			++ptr;
 
 		return *this;
@@ -65,7 +65,31 @@ public:
 
 private:
 	NodePtr ptr;
-	VectorType *MyVec;
+	const VectorType *MyVec;
+};
+
+template<class VectorType>
+class ConstVecIterator : public VecIterator<VectorType>
+{
+public:
+	using MyBase = VecIterator<VectorType>;
+	using NodePtr = typename VectorType::NodePtr;
+	using reference = typename VectorType::const_reference;
+	using pointer = typename VectorType::const_pointer;
+
+	ConstVecIterator() = default;
+	ConstVecIterator(VectorType *MyVec) : MyBase(MyVec) {}
+	ConstVecIterator(VectorType *MyVec, NodePtr ptr) : MyBase(MyVec, ptr) {}
+
+	reference operator*() const
+	{
+		return ptr;
+	}
+
+	pointer operator->() const
+	{
+		return std::pointer_traits<pointer>::pointer_to(**this);
+	}
 };
 
 
@@ -87,6 +111,10 @@ public:
 	using NodePtr = Type *;
 
 	using iterator = VecIterator<MyBase>;
+	using const_iterator = ConstVecIterator<MyBase>;
+
+	friend iterator;
+	friend const_iterator;
 
 private:
 	Allocator alloc;
@@ -117,7 +145,20 @@ public:
 
 	iterator begin() { return iterator{ this, MyBegin }; }
 	iterator end() { return iterator{ this, MyLast }; }
+	const_iterator begin() const { return const_iterator{ this, MyLast }; }
+	const_iterator end() const { return const_iterator{ this, MyLast }; }
+	const_iterator cbegin() const { return const_iterator{ this, MyLast }; }
+	const_iterator cend() const { return const_iterator{ this, MyLast }; }
 
+	reference operator[](const int idx)
+	{
+		return *(MyBegin + static_cast<difference_type>(idx));
+	}
+
+	const_reference operator[](const int idx) const
+	{
+		return *(MyBegin + static_cast<difference_type>(idx));
+	}
 
 private:
 
