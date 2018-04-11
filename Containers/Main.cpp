@@ -155,6 +155,14 @@ void testFlat()
 
 	for(int i = 0; i < num; ++i)
 		vec.emplace_back(i);
+
+	vec.pop_back();
+
+	auto it = vec.begin();
+
+	vec.clear();
+
+	std::vector<int> vv;
 	
 	Set<Key, FlatTree> set;
 }
