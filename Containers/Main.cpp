@@ -148,9 +148,13 @@ void testHash()
 
 void testFlat()
 {
+	static constexpr int num = 100;
 	using Key = int;
 
 	SmallVec<Key, 10> vec;
+
+	for(int i = 0; i < num; ++i)
+		vec.emplace_back(i);
 	
 	Set<Key, FlatTree> set;
 }

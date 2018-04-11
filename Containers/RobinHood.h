@@ -294,7 +294,7 @@ private:
 	{
 		if constexpr(!std::is_same<key_type, value_type>::value)
 		{	// Get rid of const-ness of the key for just a moment so we can do a move-swap here
-			std::swap(const_cast<key_type&>(n.first), const_cast<key_type&>(n1.first));
+			std::swap(const_cast<key_type&>(n.first), const_cast<key_type&>(n1.first));			// TODO: Undefined behavior here, figure out how to remove!
 			std::swap(n.second, n1.second);
 		}
 		else
