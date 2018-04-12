@@ -153,27 +153,34 @@ public:
 	const_iterator cbegin() const { return const_iterator{ this, MyLast }; }
 	const_iterator cend() const { return const_iterator{ this, MyLast }; }
 
-	template<class T, int size, class Al>
-	SmallVec& operator=(const SmallVec<T, size, Al>& other)
+	template<class T, int Sz, class Al>
+	SmallVec& operator=(const SmallVec<T, Sz, Al>& other)
 	{
+		// This is here so we can convert a vector containing ints 
+		// to a vector of size_t's for example
+		using OtherNodePtr = typename SmallVec<T, Sz, Al>::NodePtr;
+
 		for (NodePtr n = MyBegin; n <= MyLast; ++n)
 			AlTraits::destroy(alloc, n);
 
 		if (other.size() >= this->capacity()) // TODO: Include copy instructions if their size doesn't exceed our aligned storage size
 		{
 			auto nodePair = allocate(other.capacity()); // Should we use size of capacity here?
+
+			if (!useAligned)
+				AlTraits::deallocate(alloc, MyBegin, MyCapacity);
+			else
+				useAligned = false;
+
 			MyBegin = nodePair.first;
 			MyEnd = nodePair.second;
 			MyCapacity = other.capacity();
 		}
 
-		if (useAligned)	
-			useAligned = false;
-
 		MySize = other.size();
 
 		NodePtr mb = MyBegin;
-		for(NodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
+		for(OtherNodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
 			AlTraits::construct(alloc, mb, *p);
 
 		return *this;
