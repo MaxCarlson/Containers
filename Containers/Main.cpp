@@ -145,46 +145,9 @@ void testHash()
 
 	int a = 5;
 }
-int count = 53424524;
-
-
-#include <array>
-template<class Arg, int... idx>
-void getFromPack(Arg& arg, std::index_sequence<idx...>)
-{
-	constexpr std::array<int, sizeof...(idx)> arr = {idx...};
-
-	std::for_each(arr.begin(), arr.end(), [](constexpr int id) 
-	{
-		std::get<id>(arg).emplace_back(id);
-	});
-}
-
-template<class... Args>
-void fillVectors(Args&& ...args)
-{
-	constexpr int ccc = sizeof...(Args);
-	auto tt = std::make_tuple(args...);
-
-	using seq = std::index_sequence_for<Args...>;
-
-	for (int i = 0; i < count; ++i)
-		getFromPack(tt, seq{});
-		//for (int j = 0; j < std::tuple_size_v<std::tuple<Args...>>; ++j)
-			//int a = 5;//std::get<std::index_sequence_for<Args...>>(tt).emplace(i);
-
-}
 
 void testFlat()
 {
-	SmallVec<int, 1> vec1;
-	SmallVec<int, 15> vec15;
-	SmallVec<int, 80> vec80;
-	SmallVec<int, 300> vec300;
-	SmallVec<int, 1000> vec1000;
-
-	fillVectors(vec1, vec15, vec80, vec300);
-
 	static constexpr int num = 100;
 	using Key = int;
 

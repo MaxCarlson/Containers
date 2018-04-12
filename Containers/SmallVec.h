@@ -204,7 +204,7 @@ private:
 public:
 
 	template<class... Args>
-	void emplace_back(Args&& ...args)
+	reference emplace_back(Args&& ...args)
 	{
 		if (useAligned)
 		{
@@ -226,6 +226,18 @@ public:
 
 		if (MySize > MyCapacity - 1)
 			grow();
+
+		return *(MyLast - 1);
+	}
+
+	void push_back(const Type& t)
+	{
+		emplace_back(t);
+	}
+
+	void push_back(Type&& t)
+	{
+		emplace_back(std::move(t));
 	}
 
 	void pop_back()
