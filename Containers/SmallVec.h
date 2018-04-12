@@ -150,6 +150,17 @@ public:
 	const_iterator cbegin() const { return const_iterator{ this, MyLast }; }
 	const_iterator cend() const { return const_iterator{ this, MyLast }; }
 
+	SmallVec& operator=(const SmallVec& other)
+	{
+		for (NodePtr n = MyBegin; n <= MyLast; ++n)
+			AlTraits::destroy(alloc, n);
+
+		if (other.size() >= this->capacity())
+		{
+
+		}
+	}
+
 	reference operator[](const int idx)
 	{
 		return *(MyBegin + static_cast<difference_type>(idx));
@@ -165,14 +176,9 @@ private:
 	void copyTo(NodePtr first) // TODO: More of a reallocate function, split it up so we can use the copy mechanics elsewhere!
 	{
 		NodePtr oldFirst = MyBegin;
-		NodePtr oldEnd = MyEnd;		
-		if (copyFromAligned)
-		{
-			oldFirst = reinterpret_cast<NodePtr>(std::addressof(data[0]));
-			oldEnd = reinterpret_cast<NodePtr>(std::addressof(data[alignedSize])); // TODO: Is this a safe way to do this from aligned storage?
-		}
+		NodePtr oldLast = MyLast;		
 
-		for (oldFirst; oldFirst != oldEnd; ++oldFirst, ++first)	// Should we be using <= oldLast here?
+		for (oldFirst; oldFirst <= oldLast; ++oldFirst, ++first)
 		{
 			*first = std::move(*oldFirst);
 			AlTraits::destroy(alloc, oldFirst);
@@ -203,6 +209,20 @@ private:
 
 public:
 
+	void reserve(size_type newCap)
+	{
+		NodePtr first = alloc.allocate(newCap);
+		NodePtr last = first + static_cast<difference_type>(newCap);
+
+		if (useAligned && newCap > alignedSize)
+		{
+			copyFromAligned = true;
+			useAligned = false;
+		}
+
+		copyTo(first);
+	}
+
 	template<class... Args>
 	reference emplace_back(Args&& ...args)
 	{
@@ -214,7 +234,7 @@ public:
 			//AlTraits::construct(alloc, data + MySize, std::forward<Args>(args)...); // TODO: Figure out if we can use allocator construction here
 			new(data + MySize) Type(std::forward<Args>(args)...);
 
-			if (MySize >= alignedSize - 1)
+			if (MySize > alignedSize - 2)
 			{	// Don't use aligned storage again after this threshold is passed!
 				copyFromAligned = true;
 				grow();
@@ -258,6 +278,11 @@ public:
 		return MySize;
 	}
 
+	size_type max_size() const noexcept
+	{
+		return (std::min(static_cast<size_type>((numeric_limits<difference_type>::max)()), AlTraits::max_size(alloc)));
+	}
+
 	size_type capacity() const noexcept
 	{
 		return MyCapacity;
@@ -270,7 +295,17 @@ public:
 
 	const_reference back() const
 	{
-		return back();
+		return *MyLast;
+	}
+
+	pointer data() noexcept
+	{
+		return MyBegin;
+	}
+
+	const_pointer data() const noexcept
+	{
+		return MyBegin;
 	}
 
 	void clear() noexcept // TODO:
