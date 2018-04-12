@@ -119,7 +119,7 @@ public:
 private:
 	Allocator alloc;
 
-	AlignedStorage data[alignedSize];
+	AlignedStorage MyData[alignedSize];
 
 	unsigned int useAligned		 : 1;
 	unsigned int copyFromAligned : 1;
@@ -139,7 +139,7 @@ public:
 	{
 		if (useAligned)
 		{
-			MyBegin = MyLast = reinterpret_cast<NodePtr>(&data[0]);
+			MyBegin = MyLast = reinterpret_cast<NodePtr>(std::addressof(MyData[0]));
 		}
 	}
 
@@ -155,10 +155,24 @@ public:
 		for (NodePtr n = MyBegin; n <= MyLast; ++n)
 			AlTraits::destroy(alloc, n);
 
-		if (other.size() >= this->capacity())
+		if (other.size() >= this->capacity()) // TODO: Include copy instructions if their size doesn't exceed our aligned storage size
 		{
-
+			auto nodePair = allocate(other.capacity()); // Should we use size of capacity here?
+			MyBegin = nodePair.first;
+			MyEnd = nodePair.second;
+			MyCapacity = other.capacity();
 		}
+
+		if (useAligned)	
+			useAligned = false;
+
+		MySize = other.size();
+
+		NodePtr mb = MyBegin;
+		for(NodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
+			AlTraits::construct(alloc, mb, *p);
+
+		return *this;
 	}
 
 	reference operator[](const int idx)
@@ -189,13 +203,18 @@ private:
 		else
 			AlTraits::deallocate(alloc, MyBegin, MyCapacity);	
 	}
+
+	std::pair<NodePtr, NodePtr> allocate(const size_type sz)
+	{
+		NodePtr first = alloc.allocate(sz);
+		return { first, first + static_cast<difference_type>(sz) };
+	}
 	
 	void grow()
 	{
 		const size_type newCapacity = MyCapacity + (MyCapacity + 1) / 2; // TODO: Revisit Growth Rates
 
-		NodePtr first = alloc.allocate(newCapacity);
-		NodePtr last = first + static_cast<difference_type>(newCapacity);
+		auto[first, last] = allocate(newCapacity);
 
 		copyTo(first);
 
@@ -211,8 +230,10 @@ public:
 
 	void reserve(size_type newCap)
 	{
-		NodePtr first = alloc.allocate(newCap);
-		NodePtr last = first + static_cast<difference_type>(newCap);
+		if (newCap <= MyCapacity)
+			return;
+
+		auto[first, last] = allocate(newCap);
 
 		if (useAligned && newCap > alignedSize)
 		{
@@ -231,8 +252,8 @@ public:
 
 		if (useAligned)
 		{
-			//AlTraits::construct(alloc, data + MySize, std::forward<Args>(args)...); // TODO: Figure out if we can use allocator construction here
-			new(data + MySize) Type(std::forward<Args>(args)...);
+			//AlTraits::construct(alloc, MyData + MySize, std::forward<Args>(args)...); // TODO: Figure out if we can use allocator construction here
+			new(MyData + MySize) Type(std::forward<Args>(args)...);
 
 			if (MySize > alignedSize - 2)
 			{	// Don't use aligned storage again after this threshold is passed!
@@ -315,8 +336,8 @@ public:
 
 		if (useAligned)
 		{
-			first = reinterpret_cast<NodePtr>(std::addressof(data[0]));
-			last  = reinterpret_cast<NodePtr>(std::addressof(data[MySize])); // TODO: Is this a safe way to do this from aligned storage?
+			first = reinterpret_cast<NodePtr>(std::addressof(MyData[0]));
+			last  = reinterpret_cast<NodePtr>(std::addressof(MyData[MySize])); // TODO: Is this a safe way to do this from aligned storage?
 		}
 
 		for (first; first != last; ++first)

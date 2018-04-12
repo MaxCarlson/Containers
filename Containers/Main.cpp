@@ -152,11 +152,14 @@ void testFlat()
 	using Key = int;
 
 	SmallVec<Key, 15> vec;
+	SmallVec<Key, 15> vec2;
 
 	for (int i = 0; i < num; ++i)
 	{
 		vec.emplace_back(i);
 	}
+
+	vec2 = vec;
 
 	Set<Key, FlatTree> set;
 }
