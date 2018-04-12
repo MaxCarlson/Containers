@@ -165,14 +165,14 @@ private:
 	void copyTo(NodePtr first) // TODO: More of a reallocate function, split it up so we can use the copy mechanics elsewhere!
 	{
 		NodePtr oldFirst = MyBegin;
-		NodePtr oldEnd = MyEnd;
+		NodePtr oldEnd = MyEnd;		
 		if (copyFromAligned)
 		{
-			oldFirst = reinterpret_cast<NodePtr>(&data[0]);
-			oldEnd = reinterpret_cast<NodePtr>(&data[alignedSize]); // TODO: Is this a safe way to do this from aligned storage?
+			oldFirst = reinterpret_cast<NodePtr>(std::addressof(data[0]));
+			oldEnd = reinterpret_cast<NodePtr>(std::addressof(data[alignedSize])); // TODO: Is this a safe way to do this from aligned storage?
 		}
-			
-		for (oldFirst; oldFirst != oldEnd; ++oldFirst, ++first)
+
+		for (oldFirst; oldFirst != oldEnd; ++oldFirst, ++first)	// Should we be using <= oldLast here?
 		{
 			*first = std::move(*oldFirst);
 			AlTraits::destroy(alloc, oldFirst);
@@ -197,7 +197,7 @@ private:
 		// MyBegin and MyEnd get switched over out of the AlignedStorage array
 		MyCapacity = newCapacity;
 		MyBegin = first;
-		MyLast = MyBegin + MySize;
+		MyLast = MyBegin + static_cast<difference_type>(MySize);
 		MyEnd = last;
 	}
 
@@ -206,6 +206,9 @@ public:
 	template<class... Args>
 	reference emplace_back(Args&& ...args)
 	{
+		++MySize;
+		++MyLast;
+
 		if (useAligned)
 		{
 			//AlTraits::construct(alloc, data + MySize, std::forward<Args>(args)...); // TODO: Figure out if we can use allocator construction here
@@ -221,10 +224,7 @@ public:
 		else	
 			AlTraits::construct(alloc, MyBegin + MySize, std::forward<Args>(args)...);
 
-		++MySize;
-		++MyLast; // TODO: Would this just be better to calculate this on the spot for the end() func?
-
-		if (MySize > MyCapacity - 1)
+		if (MySize > MyCapacity - 2)
 			grow();
 
 		return *(MyLast - 1);
@@ -242,11 +242,7 @@ public:
 
 	void pop_back()
 	{	// Don't call with an empty vector!
-		if (useAligned)
-			reinterpret_cast<NodePtr>(&data[MySize - 1])->~Type(); // TODO: Revisit these
-		
-		else
-			AlTraits::destroy(alloc, MyBegin + (MySize - 1));
+		AlTraits::destroy(alloc, MyBegin + (MySize - 1)); // TODO: Make sure this is okay when toDelete is in aligned storage!
 		
 		--MySize;
 		--MyLast; // TODO: Would this just be better to calculate this on the spot for the end() func?
@@ -284,8 +280,8 @@ public:
 
 		if (useAligned)
 		{
-			first = reinterpret_cast<NodePtr>(&data[0]);
-			last  = reinterpret_cast<NodePtr>(&data[MySize]); // TODO: Is this a safe way to do this from aligned storage?
+			first = reinterpret_cast<NodePtr>(std::addressof(data[0]));
+			last  = reinterpret_cast<NodePtr>(std::addressof(data[MySize])); // TODO: Is this a safe way to do this from aligned storage?
 		}
 
 		for (first; first != last; ++first)
