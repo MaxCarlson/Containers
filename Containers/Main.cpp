@@ -148,19 +148,30 @@ void testHash()
 
 void testFlat()
 {
-	static constexpr int num = 100;
+	static constexpr int num = 100000;
 	using Key = int;
 
-	SmallVec<Key, 10> vec;
+	SmallVec<Key, 15> vec;
 
 	for (int i = 0; i < num; ++i)
 	{
 		vec.emplace_back(i);
-
-		auto x = vec[i];
-
-		int a = 5;
 	}
+
+	for (int i = vec.size();; --i)
+	{
+		int l = vec.back();
+		vec.pop_back();
+
+		auto nb = vec.back();
+		if (l != nb + 1)
+			int a = 5;
+	}
+
+	int i = 0;
+	for (auto it = vec.begin(); it != vec.end(); ++it, ++i)
+		if (*it != i)
+			int a = 5;
 
 	vec.pop_back();
 

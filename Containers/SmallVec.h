@@ -15,7 +15,7 @@ public:
 
 	reference operator*()
 	{
-		return ptr;
+		return *ptr;
 	}
 
 	pointer operator->()
@@ -265,6 +265,16 @@ public:
 	size_type capacity() const noexcept
 	{
 		return MyCapacity;
+	}
+
+	reference back()
+	{
+		return *MyLast;
+	}
+
+	const_reference back() const
+	{
+		return back();
 	}
 
 	void clear() noexcept // TODO:
