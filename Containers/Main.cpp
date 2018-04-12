@@ -152,7 +152,7 @@ void testFlat()
 	using Key = int;
 
 	SmallVec<Key, 15> vec;
-	SmallVec<Key, 15> vec2;
+	SmallVec<Key, 13> vec2;
 
 	for (int i = 0; i < num; ++i)
 	{

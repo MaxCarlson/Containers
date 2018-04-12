@@ -115,6 +115,9 @@ public:
 
 	friend iterator;
 	friend const_iterator;
+	
+	template<class, int, class>
+	friend class SmallVec;
 
 private:
 	Allocator alloc;
@@ -150,7 +153,8 @@ public:
 	const_iterator cbegin() const { return const_iterator{ this, MyLast }; }
 	const_iterator cend() const { return const_iterator{ this, MyLast }; }
 
-	SmallVec& operator=(const SmallVec& other)
+	template<class T, int size, class Al>
+	SmallVec& operator=(const SmallVec<T, size, Al>& other)
 	{
 		for (NodePtr n = MyBegin; n <= MyLast; ++n)
 			AlTraits::destroy(alloc, n);
