@@ -164,7 +164,7 @@ struct OBJ
 	*/
 };
 
-void testFlat()
+void testSmallVec()
 {
 	static constexpr int num = 250000000;
 	using Key = OBJ;
@@ -193,7 +193,21 @@ void testFlat()
 
 	//vec13 = vec;
 
+}
+
+void testFlat()
+{
+	static constexpr int num = 250;
+
+	using Key = int;
+
 	Set<Key, FlatTree> set;
+
+	for (int i = 0; i < num; ++i)
+	{
+		set.emplace_back(i);
+
+	}
 }
 
 // Things to implement
@@ -223,6 +237,7 @@ int main()
 	
 	//testMap();
 	//testHash();
+	//testSmallVec();
 	testFlat();
 	return 0;
 }

@@ -9,11 +9,32 @@ template<class NodeType>
 struct FlatTreeNode
 {
 	NodeType data;
-};
 
-template<class Type>
-struct FlatTreeIterator
-{
+	//FlatTreeNode() = default;
+	FlatTreeNode(const NodeType& d) : data(d) {}
+	FlatTreeNode(NodeType&& d) : data(std::move(d)) {}
+
+	/*
+	NodeType& operator*()
+	{
+		return data;
+	}
+	*/
+
+	FlatTreeNode& operator=(const FlatTreeNode& f)
+	{
+		*this = f;
+		return *this;
+	}
+
+	FlatTreeNode& operator=(FlatTreeNode&& f)
+	{
+		*this = std::move(f);
+		return *this;
+	}
+
+	operator NodeType&() { return data; }
+	operator NodeType() const { return data; }
 
 };
 
@@ -28,7 +49,7 @@ public:
 
 	using Node			  = typename BaseTypes::Node;
 	using NodePtr		  = typename BaseTypes::NodePtr;
-	using NodeEqual		  = typename BaseTypes::node_equal;
+	//using NodeEqual		  = typename Traits::node_equal;
 	//using NodeType		  = typename BaseTypes::node_type;
 	using difference_type = typename BaseTypes::difference_type;
 	using value_type	  = typename BaseTypes::value_type;
@@ -51,6 +72,12 @@ public:
 	using iterator = typename Storage::iterator;
 	using const_iterator = typename Storage::const_iterator;
 
+	iterator begin() noexcept { return data.begin(); }
+	iterator end() noexcept { return data.end(); }
+	const_iterator begin() const noexcept { return data.begin(); }
+	const_iterator end() const noexcept { return data.end(); }
+	const_iterator cbegin() const noexcept { return data.cbegin(); }
+	const_iterator cend() const noexcept { return data.cend(); }
 
 private:
 
@@ -83,9 +110,9 @@ public:
 	}
 
 	template<class... Args>
-	void emplace_back(Args&& ...args)
+	const_reference emplace_back(Args&& ...args)
 	{
-		data.emplace_back(std::forward<Args>(args)...);
+		return data.emplace_back(std::forward<Args>(args)...).data;
 	}
 
 	template<class... Args>

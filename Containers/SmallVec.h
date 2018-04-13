@@ -152,12 +152,12 @@ public:
 		}
 	}
 
-	iterator begin() { return iterator{ this, MyBegin }; }
-	iterator end() { return iterator{ this, MyLast }; }
-	const_iterator begin() const { return const_iterator{ this, MyLast }; }
-	const_iterator end() const { return const_iterator{ this, MyLast }; }
-	const_iterator cbegin() const { return const_iterator{ this, MyLast }; }
-	const_iterator cend() const { return const_iterator{ this, MyLast }; }
+	iterator begin() noexcept { return iterator{ this, MyBegin }; }
+	iterator end() noexcept { return iterator{ this, MyLast }; }
+	const_iterator begin() const noexcept { return const_iterator{ this, MyLast }; }
+	const_iterator end() const noexcept { return const_iterator{ this, MyLast }; }
+	const_iterator cbegin() const noexcept { return const_iterator{ this, MyLast }; }
+	const_iterator cend() const noexcept { return const_iterator{ this, MyLast }; }
 
 	template<class T, int Sz, class Al>
 	SmallVec& operator=(const SmallVec<T, Sz, Al>& other)
@@ -223,7 +223,7 @@ private:
 		if (MySize + length >= MyCapacity)
 		{
 			const size_type newCap = calculateGrowth(MySize + length);
-			reserve(newCap) // This can likely be optimized since we know where we're moving elements
+			reserve(newCap); // This can likely be optimized since we know where we're moving elements
 		}
 
 		NodePtr start   = MyBegin + static_cast<difference_type>(idx);
