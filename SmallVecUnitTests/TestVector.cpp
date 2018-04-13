@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 #include "../Containers/SmallVec.h"
+#include <iostream>
 #include <utility>
 #include <array>
 #include <tuple>
@@ -133,6 +134,46 @@ namespace SmallVecUnitTests
 			i = 0;
 			for (auto it = vec1000.begin(); it != vec1000.end(); ++it, ++i)
 				Assert::AreEqual(i, *it, equalError("vec1000", i, *it));
+		}
+
+		TEST_METHOD(SmallVector__OperatorEq)
+		{
+			SmallVec<int, 1> vec1;
+			SmallVec<size_t, 7> vec7;
+			SmallVec<int, 15> vec15;
+			SmallVec<size_t, 80> vec80;
+			SmallVec<int, 301> vec301;
+			SmallVec<size_t, 1300> vec1300;
+
+			fillVectors(vec1, vec15, vec301);
+
+			vec7 = vec1;
+			vec80 = vec15;
+			vec1300 = vec301;
+
+			std::cout << vec1.back() << " " << vec7.back();
+
+			Assert::AreEqual(size_t(vec1.back()), vec7.back());
+			Assert::AreEqual(size_t(vec15.back()), vec80.back());
+			Assert::AreEqual(size_t(vec301.back()), vec1300.back());
+
+			Assert::AreEqual(vec1.size(), vec7.size());
+			Assert::AreEqual(vec15.size(), vec80.size());
+			Assert::AreEqual(vec301.size(), vec1300.size());
+
+			Assert::AreEqual(size_t(vec1.back()), vec7.back());
+			Assert::AreEqual(size_t(vec15.back()), vec80.back());
+			Assert::AreEqual(size_t(vec301.back()), vec1300.back());
+
+			for (int i = 0; i < count; ++i)
+			{
+				Assert::AreEqual(size_t(vec1[i]), vec7[i]);
+				Assert::AreEqual(size_t(vec15[i]), vec80[i]);
+				Assert::AreEqual(size_t(vec301[i]), vec1300[i]);
+			}
+
+
+
 		}
 	};
 }

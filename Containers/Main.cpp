@@ -148,18 +148,31 @@ void testHash()
 
 void testFlat()
 {
-	static constexpr int num = 250000000;
+	static constexpr int num = 250000;
 	using Key = int;
 
-	SmallVec<Key, 15> vec;
-	SmallVec<size_t, 13> vec2;
+	SmallVec<Key, 1> vec;
+	SmallVec<size_t, 13> vec13;
+
+	SmallVec<int, 15> vec15;
+	SmallVec<int, 80> vec80;
+	SmallVec<int, 300> vec300;
+	SmallVec<int, 1000> vec1000;
 
 	for (int i = 0; i < num; ++i)
 	{
 		vec.emplace_back(i);
+		vec15.emplace_back(i);
+		vec80.emplace_back(i);
+		vec300.emplace_back(i);
+		vec1000.emplace_back(i);
 	}
 
-	vec2 = vec;
+	auto ff = vec.back();
+	auto ffr = vec15.back();
+
+
+	vec13 = vec;
 
 	Set<Key, FlatTree> set;
 }

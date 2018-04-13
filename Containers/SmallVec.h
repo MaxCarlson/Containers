@@ -136,9 +136,9 @@ private:
 
 public:
 
-	// In the case aligned size is zero, don't use aligned memory
-	SmallVec() : useAligned(static_cast<bool>(alignedSize)), 
-		   copyFromAligned(!static_cast<bool>(alignedSize)) 
+	// In the case aligned size is <= 1, don't use aligned memory
+	SmallVec() : useAligned(alignedSize > 1), 
+			     copyFromAligned(false) 
 	{
 		if (useAligned)
 		{
@@ -178,6 +178,7 @@ public:
 		}
 
 		MySize = other.size();
+		MyLast = MyBegin + static_cast<difference_type>(MySize - 1);
 
 		NodePtr mb = MyBegin;
 		for(OtherNodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
@@ -227,13 +228,14 @@ private:
 
 		auto[first, last] = allocate(newCapacity);
 
-		copyTo(first);
+		if(MySize - 1)
+			copyTo(first);
 
 		// If we were using AlignedStorage previously (or not!) this is where
 		// MyBegin and MyEnd get switched over out of the AlignedStorage array
 		MyCapacity = newCapacity;
 		MyBegin = first;
-		MyLast = MyBegin + static_cast<difference_type>(MySize);
+		MyLast = MyBegin + static_cast<difference_type>(MySize - 1);
 		MyEnd = last;
 	}
 
@@ -259,27 +261,33 @@ public:
 	reference emplace_back(Args&& ...args)
 	{
 		++MySize;
-		++MyLast;
+
+		if (MySize >= MyCapacity - 1)
+		{
+			if (useAligned)
+			{
+				useAligned = false;
+				copyFromAligned = true;
+			}
+
+			grow();
+		}
+
+		// If this is the first insert
+		// we don't actually want to increment last
+		else
+			if (MySize == 1)
+				;
+			else
+				++MyLast;
 
 		if (useAligned)
-		{
-			//AlTraits::construct(alloc, MyData + MySize, std::forward<Args>(args)...); // TODO: Figure out if we can use allocator construction here
-			new(MyData + MySize) Type(std::forward<Args>(args)...);
-
-			if (MySize > alignedSize - 2)
-			{	// Don't use aligned storage again after this threshold is passed!
-				copyFromAligned = true;
-				grow();
-				useAligned = false;
-			}
-		}
+			new(MyLast) Type(std::forward<Args>(args)...);
+		
 		else	
-			AlTraits::construct(alloc, MyBegin + MySize, std::forward<Args>(args)...);
+			AlTraits::construct(alloc, MyLast, std::forward<Args>(args)...);
 
-		if (MySize > MyCapacity - 2)
-			grow();
-
-		return *(MyLast - 1);
+		return back();
 	}
 
 	void push_back(const Type& t)
@@ -294,10 +302,10 @@ public:
 
 	void pop_back()
 	{	// Don't call with an empty vector!
-		AlTraits::destroy(alloc, MyBegin + (MySize - 1)); // TODO: Make sure this is okay when toDelete is in aligned storage!
+		AlTraits::destroy(alloc, MyLast); // TODO: Make sure this is okay when toDelete is in aligned storage!
 		
 		--MySize;
-		--MyLast; // TODO: Would this just be better to calculate this on the spot for the end() func?
+		--MyLast; 
 	}
 
 	bool empty() const noexcept
@@ -312,7 +320,7 @@ public:
 
 	size_type max_size() const noexcept
 	{
-		return (std::min(static_cast<size_type>((numeric_limits<difference_type>::max)()), AlTraits::max_size(alloc)));
+		return (std::min(static_cast<size_type>((numeric_limits<difference_type>::max)), AlTraits::max_size(alloc)));
 	}
 
 	size_type capacity() const noexcept
@@ -343,13 +351,7 @@ public:
 	void clear() noexcept // TODO:
 	{
 		NodePtr first = MyBegin;
-		NodePtr last = MyBegin + (MySize + 1);
-
-		if (useAligned)
-		{
-			first = reinterpret_cast<NodePtr>(std::addressof(MyData[0]));
-			last  = reinterpret_cast<NodePtr>(std::addressof(MyData[MySize])); // TODO: Is this a safe way to do this from aligned storage?
-		}
+		NodePtr last = MyBegin + MySize;
 
 		for (first; first != last; ++first)
 			AlTraits::destroy(alloc, first);
