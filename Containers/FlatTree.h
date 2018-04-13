@@ -86,7 +86,7 @@ private:
 
 	size_type upperBound(const key_type &k)
 	{
-		size_type size = data.size();
+		size_type size = data.size() - 1;
 		size_type low = 0;
 
 		while (size > 0) 
@@ -113,8 +113,9 @@ public:
 	template<class... Args>
 	void emplace(Args&& ...args)
 	{
-		if (data.capacity() >= data.size() - 1)
-			data.grow(); // TODO: Need to transfer copy from aligned code into SmallVec.grow()
+		++data.MySize;
+		if (data.capacity() <= data.size() - 1)
+			data.grow(); // TODO: data.OldLast on resize appears to be placed one farther than it should be
 
 		// Temporary construction
 		// While we find it a place to sit

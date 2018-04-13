@@ -239,7 +239,6 @@ private:
 	void constructInPlace(size_type idx, Args&& ...args)
 	{
 		AlTraits::construct(alloc, MyBegin + idx, std::forward<Args>(args)...);
-		++MySize;
 	}
 
 	void copyTo(NodePtr first) 
@@ -265,14 +264,22 @@ private:
 		return { first, first + static_cast<difference_type>(sz) };
 	}
 	
-	void grow() // TODO: NEED TO TRANSFER COPY FROM ALIGNED CODE INTO HERE!
+	void grow() 
 	{
 		const size_type newCapacity = MyCapacity + (MyCapacity + 2) / 2; // TODO: Revisit Growth Rates
 
 		auto[first, last] = allocate(newCapacity);
 
+		if (useAligned)
+		{	// Copy out of our aligned storage if we were using it
+			// If this is the case we won't use it after this copy
+			// Except if shrink_to_fit applies
+			useAligned = false;
+			copyFromAligned = true;
+		}
+
 		if(MySize - 1)
-			copyTo(first);
+			copyTo(first); // TODO: This is super ugly here and makes using this function outside of the class ridiculous
 
 		// If we were using AlignedStorage previously (or not!) this is where
 		// MyBegin and MyEnd get switched over out of the AlignedStorage array
@@ -311,15 +318,8 @@ public:
 		++MySize;
 
 		if (MySize >= MyCapacity - 1)
-		{
-			if (useAligned)
-			{
-				useAligned = false;
-				copyFromAligned = true;
-			}
-
 			grow();
-		}
+		
 
 		// If this is the first insert
 		// we don't actually want to increment last
