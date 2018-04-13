@@ -205,7 +205,7 @@ void testFlat()
 
 	for (int i = 0; i < num; ++i)
 	{
-		set.emplace_back(i);
+		set.emplace(i);
 
 	}
 }

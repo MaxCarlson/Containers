@@ -10,9 +10,11 @@ struct FlatTreeNode
 {
 	NodeType data;
 
-	//FlatTreeNode() = default;
+	FlatTreeNode() = default;
 	FlatTreeNode(const NodeType& d) : data(d) {}
 	FlatTreeNode(NodeType&& d) : data(std::move(d)) {}
+	FlatTreeNode(FlatTreeNode&& t) : data(std::move(t.data)) {}
+
 
 	/*
 	NodeType& operator*()
@@ -23,14 +25,12 @@ struct FlatTreeNode
 
 	FlatTreeNode& operator=(const FlatTreeNode& f)
 	{
-		*this = f;
-		return *this;
+		return (*this = f);
 	}
 
-	FlatTreeNode& operator=(FlatTreeNode&& f)
+	FlatTreeNode& operator=(FlatTreeNode&& f) noexcept(std::is_nothrow_move_assignable<NodeType>::value) // TODO: Figure out how to use these noexcept conditions properly
 	{
-		*this = std::move(f);
-		return *this;
+		return (*this = std::move(f));
 	}
 
 	operator NodeType&() { return data; }
@@ -67,7 +67,7 @@ public:
 	using NodeAl	   = typename BaseTypes::NodeAl;
 	using NodeAlTraits = typename BaseTypes::NodeAlTraits;
 
-	using Storage = SmallVec<Node, 1, NodeAl>; // TODO: Revisit preallocated storage size
+	using Storage = SmallVec<Node, 4, NodeAl>; // TODO: Revisit preallocated storage size
 
 	using iterator = typename Storage::iterator;
 	using const_iterator = typename Storage::const_iterator;
@@ -80,15 +80,16 @@ public:
 	const_iterator cend() const noexcept { return data.cend(); }
 
 private:
+	NodeAl nodeAl;
 
 	Storage data;
 
-	NodePtr upperBound(const key_type &k)
+	size_type upperBound(const key_type &k)
 	{
 		size_type size = data.size();
 		size_type low = 0;
 
-		while (size > 0)
+		while (size > 0) 
 		{
 			size_type half = size / 2;
 			size_type ohalf = size - half;
@@ -99,7 +100,7 @@ private:
 			low = key_compare()(get_key()(data[probe]), k) ? olow : low;
 		}
 
-		return &data[low];
+		return low;
 	}
 
 public:
@@ -110,14 +111,17 @@ public:
 	}
 
 	template<class... Args>
-	const_reference emplace_back(Args&& ...args)
+	void emplace(Args&& ...args)
 	{
-		return data.emplace_back(std::forward<Args>(args)...).data;
-	}
+		if (data.capacity() >= data.size() - 1)
+			data.grow(); // TODO: Need to transfer copy from aligned code into SmallVec.grow()
 
-	template<class... Args>
-	void emplace(size_type idx, Args&& ...args)
-	{
-		
+		// Temporary construction
+		// While we find it a place to sit
+		Node n(std::forward<Args>(args)...);
+
+		size_type idx = upperBound(get_key()(n));
+
+		data.constructInPlace(idx, std::move(n));
 	}
 };

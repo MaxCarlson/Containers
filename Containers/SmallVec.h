@@ -239,6 +239,7 @@ private:
 	void constructInPlace(size_type idx, Args&& ...args)
 	{
 		AlTraits::construct(alloc, MyBegin + idx, std::forward<Args>(args)...);
+		++MySize;
 	}
 
 	void copyTo(NodePtr first) 
@@ -264,7 +265,7 @@ private:
 		return { first, first + static_cast<difference_type>(sz) };
 	}
 	
-	void grow()
+	void grow() // TODO: NEED TO TRANSFER COPY FROM ALIGNED CODE INTO HERE!
 	{
 		const size_type newCapacity = MyCapacity + (MyCapacity + 2) / 2; // TODO: Revisit Growth Rates
 
