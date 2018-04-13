@@ -56,13 +56,13 @@
     <ClInclude Include="SkipList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OrderedStructuresHelpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FlatTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SmallVec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OrderedTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

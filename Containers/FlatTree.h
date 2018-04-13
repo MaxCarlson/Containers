@@ -1,12 +1,20 @@
 #pragma once
-#include "OrderedStructuresHelpers.h"
+#include "OrderedTypes.h"
 #include <utility>
 
 
+// Just a wrapper for compatibility with
+// OrderedTypes wrapper
 template<class NodeType>
 struct FlatTreeNode
 {
 	NodeType data;
+};
+
+template<class Type>
+struct FlatTreeIterator
+{
+
 };
 
 // A sorted vector that uses 
@@ -20,6 +28,8 @@ public:
 
 	using Node			  = typename BaseTypes::Node;
 	using NodePtr		  = typename BaseTypes::NodePtr;
+	using NodeEqual		  = typename BaseTypes::node_equal;
+	//using NodeType		  = typename BaseTypes::node_type;
 	using difference_type = typename BaseTypes::difference_type;
 	using value_type	  = typename BaseTypes::value_type;
 	using pointer		  = typename BaseTypes::pointer;
@@ -36,6 +46,51 @@ public:
 	using NodeAl	   = typename BaseTypes::NodeAl;
 	using NodeAlTraits = typename BaseTypes::NodeAlTraits;
 
+	using Storage = SmallVec<Node, 1, NodeAl>; // TODO: Revisit preallocated storage size
+
+	using iterator = typename Storage::iterator;
+	using const_iterator = typename Storage::const_iterator;
+
+
 private:
 
+	Storage data;
+
+	NodePtr upperBound(const key_type &k)
+	{
+		size_type size = data.size();
+		size_type low = 0;
+
+		while (size > 0)
+		{
+			size_type half = size / 2;
+			size_type ohalf = size - half;
+			size_type probe = low + half;
+			size_type olow = low + ohalf;
+			size = half;
+
+			low = key_compare()(get_key()(data[probe]), k) ? olow : low;
+		}
+
+		return &data[low];
+	}
+
+public:
+
+	void reserve(size_type newCap)
+	{
+		data.reserve(newCap);
+	}
+
+	template<class... Args>
+	void emplace_back(Args&& ...args)
+	{
+		data.emplace_back(std::forward<Args>(args)...);
+	}
+
+	template<class... Args>
+	void emplace(size_type idx, Args&& ...args)
+	{
+		
+	}
 };

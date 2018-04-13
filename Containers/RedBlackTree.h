@@ -2,7 +2,7 @@
 #include <functional>
 #include <memory>
 #include "helpers.h"
-#include "OrderedStructuresHelpers.h"
+#include "OrderedTypes.h"
 
 // TODO: Switch to nodes using an is-null flag so we can deallocate memory
 // when tree is destroyed instead of during every erase call(when we may need the mem again!)

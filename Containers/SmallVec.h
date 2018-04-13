@@ -1,6 +1,9 @@
 #pragma once
 #include <memory>
 
+template<class Traits>
+class FlatTree;
+
 template<class VectorType>
 class VecIterator 
 {
@@ -119,6 +122,9 @@ public:
 	template<class, int, class>
 	friend class SmallVec;
 
+	template<class>
+	friend class FlatTree;
+
 private:
 	Allocator alloc;
 
@@ -212,23 +218,27 @@ private:
 		return currentSize + (currentSize + 2) / 2;
 	}
 
-	// Shift all elements >= start to the right by length,
-	// resizing the container if neccesary
-	void shiftRight(NodePtr start, size_type length)
+	void shiftRight(int idx, size_type length)
 	{
 		if (MySize + length >= MyCapacity)
 		{
-			const size_type newSize = calculateGrowth(MySize + length);
-			reserve(newSize) // This can likely be optimized since we know where we're moving elements
+			const size_type newCap = calculateGrowth(MySize + length);
+			reserve(newCap) // This can likely be optimized since we know where we're moving elements
 		}
 
+		NodePtr start   = MyBegin + static_cast<difference_type>(idx);
 		NodePtr newLast = MyBegin + static_cast<difference_type>(MySize + length);
-
 		NodePtr oldLast = MyLast;
 
 		// TODO: Test std::move vs std::swap!
+		for (; oldLast >= start; --oldLast, --newLast)
+			*newLast = std::move(*oldLast);		
+	}
 
-		for()
+	template<class... Args>
+	void constructInPlace(size_type idx, Args&& ...args)
+	{
+		AlTraits::construct(alloc, MyBegin + idx, std::forward<Args>(args)...);
 	}
 
 	void copyTo(NodePtr first) 

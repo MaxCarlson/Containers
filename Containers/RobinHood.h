@@ -144,9 +144,8 @@ private:
 
 	get_hash getHash;
 	get_key  getKey;
-
 	key_equal  keyEqual;
-	node_equal nodeEqual;
+	node_equal nodeEqual; // TODO: ^^ Make Stateless!
 
 	static constexpr short EMPTY = -1;
 
