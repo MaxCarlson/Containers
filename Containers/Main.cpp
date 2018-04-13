@@ -146,12 +146,30 @@ void testHash()
 	int a = 5;
 }
 
+struct OBJ
+{
+
+	OBJ(int z) : f(z), d(z) {}
+	int f;
+	int d;
+
+	//OBJ(OBJ&& o) = delete;
+	/*
+	OBJ& operator=(const OBJ& o)
+	{
+		f = o.f;
+		d = o.d;
+		return *this;
+	}
+	*/
+};
+
 void testFlat()
 {
-	static constexpr int num = 250000;
-	using Key = int;
+	static constexpr int num = 250000000;
+	using Key = OBJ;
 
-	SmallVec<Key, 1> vec;
+	SmallVec<OBJ, 1> vec;
 	SmallVec<size_t, 13> vec13;
 
 	SmallVec<int, 15> vec15;
@@ -159,20 +177,21 @@ void testFlat()
 	SmallVec<int, 300> vec300;
 	SmallVec<int, 1000> vec1000;
 
+	timer<Key>(true);
+
 	for (int i = 0; i < num; ++i)
 	{
 		vec.emplace_back(i);
-		vec15.emplace_back(i);
-		vec80.emplace_back(i);
-		vec300.emplace_back(i);
-		vec1000.emplace_back(i);
+		//vec15.emplace_back(i);
+		//vec80.emplace_back(i);
+		//vec300.emplace_back(i);
+		//vec1000.emplace_back(i);
 	}
 
-	auto ff = vec.back();
-	auto ffr = vec15.back();
+	timer<Key>(false);
 
 
-	vec13 = vec;
+	//vec13 = vec;
 
 	Set<Key, FlatTree> set;
 }

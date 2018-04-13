@@ -156,14 +156,14 @@ public:
 	template<class T, int Sz, class Al>
 	SmallVec& operator=(const SmallVec<T, Sz, Al>& other)
 	{
-		// This is here so we can convert a vector containing ints 
-		// to a vector of size_t's for example
-		using OtherNodePtr = typename SmallVec<T, Sz, Al>::NodePtr;
+		// This is here so we can copy vectors the require only one
+		// type conversion from the compiler
+		using OthersNodePtr = typename SmallVec<T, Sz, Al>::NodePtr;
 
 		for (NodePtr n = MyBegin; n <= MyLast; ++n)
 			AlTraits::destroy(alloc, n);
 
-		if (other.size() >= this->capacity()) // TODO: Include copy instructions if their size doesn't exceed our aligned storage size
+		if (other.size() >= this->capacity()) 
 		{
 			auto nodePair = allocate(other.capacity()); // Should we use size of capacity here?
 
@@ -181,11 +181,19 @@ public:
 		MyLast = MyBegin + static_cast<difference_type>(MySize - 1);
 
 		NodePtr mb = MyBegin;
-		for(OtherNodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
+		for(OthersNodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
 			AlTraits::construct(alloc, mb, *p);
 
 		return *this;
 	}
+
+	// TODO: 
+	// template<class T, class Al>
+	// SmallVec& operator=(const std::vector<T, Al> &other)
+
+	// TODO:
+	// template<class T, int Sz, class Al>
+	// void swapAll(SmallVec<T, Sz, Al>& other)
 
 	reference operator[](const int idx)
 	{
@@ -199,7 +207,31 @@ public:
 
 private:
 
-	void copyTo(NodePtr first) // TODO: More of a reallocate function, split it up so we can use the copy mechanics elsewhere!
+	size_type calculateGrowth(size_type currentSize)
+	{
+		return currentSize + (currentSize + 2) / 2;
+	}
+
+	// Shift all elements >= start to the right by length,
+	// resizing the container if neccesary
+	void shiftRight(NodePtr start, size_type length)
+	{
+		if (MySize + length >= MyCapacity)
+		{
+			const size_type newSize = calculateGrowth(MySize + length);
+			reserve(newSize) // This can likely be optimized since we know where we're moving elements
+		}
+
+		NodePtr newLast = MyBegin + static_cast<difference_type>(MySize + length);
+
+		NodePtr oldLast = MyLast;
+
+		// TODO: Test std::move vs std::swap!
+
+		for()
+	}
+
+	void copyTo(NodePtr first) 
 	{
 		NodePtr oldFirst = MyBegin;
 		NodePtr oldLast = MyLast;		
@@ -224,7 +256,7 @@ private:
 	
 	void grow()
 	{
-		const size_type newCapacity = MyCapacity + (MyCapacity + 1) / 2; // TODO: Revisit Growth Rates
+		const size_type newCapacity = MyCapacity + (MyCapacity + 2) / 2; // TODO: Revisit Growth Rates
 
 		auto[first, last] = allocate(newCapacity);
 
@@ -248,13 +280,18 @@ public:
 
 		auto[first, last] = allocate(newCap);
 
-		if (useAligned && newCap > alignedSize)
+		if (useAligned) // && newCap > alignedSize -- Is implicit
 		{
 			copyFromAligned = true;
 			useAligned = false;
 		}
 
 		copyTo(first);
+
+		MyCapacity = newCap;
+		MyBegin = first;
+		MyLast = MyBegin + static_cast<difference_type>(MySize - 1);
+		MyEnd = last;
 	}
 
 	template<class... Args>

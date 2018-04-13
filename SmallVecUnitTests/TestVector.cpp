@@ -24,13 +24,12 @@ namespace SmallVecUnitTests
 
 		// Fill variable number of vectors with a sequence up to count
 		template<class... Args>
-		void fillVectors(Args&& ...args)
+		void fillVectors(int cnt, Args&& ...args)
 		{
-			constexpr int ccc = sizeof...(Args);
 			using seq = std::index_sequence_for<Args...>;
 			auto arguments = std::forward_as_tuple<Args...>(args...);
 
-			for (int i = 0; i < count; ++i)
+			for (int i = 0; i < cnt; ++i)
 				getFromPack(arguments, i, seq{});
 		}
 
@@ -82,7 +81,7 @@ namespace SmallVecUnitTests
 			SmallVec<int, 300> vec300;
 			SmallVec<int, 1000> vec1000;
 
-			fillVectors(vec, vec15, vec80, vec300, vec1000);
+			fillVectors(count, vec, vec15, vec80, vec300, vec1000);
 
 			for (int i = count - 1; i > 0; --i)
 			{
@@ -117,7 +116,7 @@ namespace SmallVecUnitTests
 			SmallVec<int, 300> vec300;
 			SmallVec<int, 1000> vec1000;
 
-			fillVectors(vec, vec15, vec80, vec300, vec1000);
+			fillVectors(count, vec, vec15, vec80, vec300, vec1000);
 
 			int i = 0;
 			for (auto it = vec.begin(); it != vec.end(); ++it, ++i)
@@ -145,7 +144,7 @@ namespace SmallVecUnitTests
 			SmallVec<int, 301> vec301;
 			SmallVec<size_t, 1300> vec1300;
 
-			fillVectors(vec1, vec15, vec301);
+			fillVectors(count, vec1, vec15, vec301);
 
 			vec7 = vec1;
 			vec80 = vec15;
@@ -161,9 +160,9 @@ namespace SmallVecUnitTests
 			Assert::AreEqual(vec15.size(), vec80.size());
 			Assert::AreEqual(vec301.size(), vec1300.size());
 
-			Assert::AreEqual(size_t(vec1.back()), vec7.back());
-			Assert::AreEqual(size_t(vec15.back()), vec80.back());
-			Assert::AreEqual(size_t(vec301.back()), vec1300.back());
+			Assert::AreEqual(vec1.capacity(), vec7.capacity());
+			Assert::AreEqual(vec15.capacity(), vec80.capacity());
+			Assert::AreEqual(vec301.capacity(), vec1300.capacity());
 
 			for (int i = 0; i < count; ++i)
 			{
@@ -171,9 +170,42 @@ namespace SmallVecUnitTests
 				Assert::AreEqual(size_t(vec15[i]), vec80[i]);
 				Assert::AreEqual(size_t(vec301[i]), vec1300[i]);
 			}
+		}
 
+		TEST_METHOD(SmallVector__SmallSizeCopy)
+		{
+			// Test small copies that are within the bounds of
+			// aligned storage in the small vectors
+			static constexpr int count = 65;
 
+			SmallVec<int, 1> vec1;
+			SmallVec<int, 70> vec70;
 
+			SmallVec<int, 75> vec75;
+			SmallVec<int, 150> vec150;
+
+			fillVectors(count, vec70, vec150);
+
+			vec1 = vec70;
+			vec75 = vec150;
+
+			Assert::AreEqual(vec70.back(), vec1.back());
+			Assert::AreEqual(vec75.back(), vec150.back());
+
+			Assert::AreEqual(vec70.size(), vec1.size());
+			Assert::AreEqual(vec75.size(), vec150.size());
+
+			// This is not guarenteed by the container if we wish to preserve the ability
+			// to not allocate more storage if our aligned storage is sufficient
+			//
+			//Assert::AreEqual(vec70.capacity(), vec1.capacity()); 
+			//Assert::AreEqual(vec75.capacity(), vec150.capacity()); 
+
+			for (int i = 0; i < count; ++i)
+			{
+				Assert::AreEqual(vec70[i], vec1[i]);
+				Assert::AreEqual(vec75[i], vec150[i]);
+			}
 		}
 	};
 }
