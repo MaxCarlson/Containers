@@ -5,36 +5,33 @@
 
 // Just a wrapper for compatibility with
 // OrderedTypes wrapper
+//
+// use std::remove_const on NodeType if this wrapper causes perf penalty
 template<class NodeType>
 struct FlatTreeNode
 {
-	NodeType data;
+	using MyNodeType = typename std::remove_cv<NodeType>::type;
+	MyNodeType data;
 
 	FlatTreeNode() = default;
 	FlatTreeNode(const NodeType& d) : data(d) {}
-	FlatTreeNode(NodeType&& d) : data(std::move(d)) {}
+	FlatTreeNode(MyNodeType&& d) : data(std::move(d.data)) {}
 	FlatTreeNode(FlatTreeNode&& t) : data(std::move(t.data)) {}
 
-
-	/*
-	NodeType& operator*()
-	{
-		return data;
-	}
-	*/
+	operator NodeType&() noexcept { return data; } // TODO: This can be const, since NodeType will always be const ?
+	operator NodeType() const noexcept { return data; }
 
 	FlatTreeNode& operator=(const FlatTreeNode& f)
 	{
-		return (*this = f);
+		data = f.data;
+		return *this;
 	}
 
 	FlatTreeNode& operator=(FlatTreeNode&& f) noexcept(std::is_nothrow_move_assignable<NodeType>::value) // TODO: Figure out how to use these noexcept conditions properly
 	{
-		return (*this = std::move(f));
+		data = std::move(f.data);
+		return *this;
 	}
-
-	operator NodeType&() { return data; }
-	operator NodeType() const { return data; }
 
 };
 
@@ -69,24 +66,24 @@ public:
 
 	using Storage = SmallVec<Node, 4, NodeAl>; // TODO: Revisit preallocated storage size
 
-	using iterator = typename Storage::iterator;
+	using iterator = typename Storage::iterator;			 // TODO: Need to specialize non-const iterator for map types so value can be changed but not key!
 	using const_iterator = typename Storage::const_iterator;
 
-	iterator begin() noexcept { return data.begin(); }
-	iterator end() noexcept { return data.end(); }
-	const_iterator begin() const noexcept { return data.begin(); }
-	const_iterator end() const noexcept { return data.end(); }
-	const_iterator cbegin() const noexcept { return data.cbegin(); }
-	const_iterator cend() const noexcept { return data.cend(); }
+	iterator begin() noexcept { return MyData.begin(); }
+	iterator end() noexcept { return MyData.end(); }
+	const_iterator begin() const noexcept { return MyData.begin(); }
+	const_iterator end() const noexcept { return MyData.end(); }
+	const_iterator cbegin() const noexcept { return MyData.cbegin(); }
+	const_iterator cend() const noexcept { return MyData.cend(); }
 
 private:
 	NodeAl nodeAl;
 
-	Storage data;
+	Storage MyData;
 
 	size_type upperBound(const key_type &k)
 	{
-		size_type size = data.size() - 1;
+		size_type size = MyData.size() - 1;
 		size_type low = 0;
 
 		while (size > 0) 
@@ -97,7 +94,7 @@ private:
 			size_type olow = low + ohalf;
 			size = half;
 
-			low = key_compare()(get_key()(data[probe]), k) ? olow : low;
+			low = key_compare()(get_key()(MyData[probe]), k) ? olow : low;
 		}
 
 		return low;
@@ -107,22 +104,27 @@ public:
 
 	void reserve(size_type newCap)
 	{
-		data.reserve(newCap);
+		MyData.reserve(newCap);
 	}
 
 	template<class... Args>
 	void emplace(Args&& ...args)
 	{
-		++data.MySize;
-		if (data.capacity() <= data.size() - 1)
-			data.grow(); // TODO: data.OldLast on resize appears to be placed one farther than it should be
+		++MyData.MySize;
+		if (MyData.capacity() <= MyData.size() - 1)
+			MyData.grow(); // TODO: MyData.OldLast on resize appears to be placed one farther than it should be
 
 		// Temporary construction
 		// While we find it a place to sit
 		Node n(std::forward<Args>(args)...);
 
+		// Find idx of arg
 		size_type idx = upperBound(get_key()(n));
 
-		data.constructInPlace(idx, std::move(n));
+		// Shift elements over
+		if (idx < MyData.size())
+			MyData.shiftRight(idx, MyData.size() - 1, 1);
+
+		MyData.constructInPlace(idx, std::move(n));
 	}
 };

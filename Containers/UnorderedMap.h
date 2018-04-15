@@ -35,7 +35,11 @@ template<class Key, class Value,
 	};
 };
 
-
+// UnorderedMap is just a wrapper for differerent unordered class templates
+// Default is the Open Address Robinhood hash table at the moment.
+// 
+// TODO: Write copy and move constructors that are compatible
+// between base template classes
 template<class Key, class Value,
 	template<class, bool> class MyBase = RobinhoodHash,
 	class Hash = std::hash<Key>,
@@ -43,9 +47,5 @@ template<class Key, class Value,
 	class Allocator = std::allocator<std::pair<const Key, Value>>> 
 	class UnorderedMap : public MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, false>
 {
-public:
 
-	//using Base = MyBase<UMapTraits<Key, Value, Hash, KeyEqual, Allocator>, false>;
-	//using iterator = typename Base::iterator;
-	//using const_iterator = typename Base::const_iterator;
 };

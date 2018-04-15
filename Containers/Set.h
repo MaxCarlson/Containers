@@ -33,6 +33,11 @@ template<class Key,
 
 };
 
+// Set is just a wrapper for differerent ordered class templates
+// Default is red-black tree at the moment.
+// 
+// TODO: Write copy and move constructors that are compatible
+// between base template classes
 template<class Key,
 	template<class> class MyBase = RedBlackTree,
 	class Compare = std::less<Key>,

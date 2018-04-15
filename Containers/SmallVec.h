@@ -218,16 +218,13 @@ private:
 		return currentSize + (currentSize + 2) / 2;
 	}
 
-	void shiftRight(int idx, size_type length)
+	void shiftRight(int idx, size_type currentSize, size_type length)
 	{
-		if (MySize + length >= MyCapacity)
-		{
-			const size_type newCap = calculateGrowth(MySize + length);
-			reserve(newCap); // This can likely be optimized since we know where we're moving elements
-		}
+		if (currentSize + length >= MyCapacity) // This can likely be optimized since we know where we're moving elements
+			reserve(calculateGrowth(currentSize + length));
 
 		NodePtr start   = MyBegin + static_cast<difference_type>(idx);
-		NodePtr newLast = MyBegin + static_cast<difference_type>(MySize + length);
+		NodePtr newLast = MyBegin + static_cast<difference_type>(currentSize + length);
 		NodePtr oldLast = MyLast;
 
 		// TODO: Test std::move vs std::swap!
@@ -279,7 +276,7 @@ private:
 		}
 
 		if(MySize - 1)
-			copyTo(first); // TODO: This is super ugly here and makes using this function outside of the class ridiculous
+			copyTo(first); // TODO: This is super ugly here and makes using this function outside of the class unituative
 
 		// If we were using AlignedStorage previously (or not!) this is where
 		// MyBegin and MyEnd get switched over out of the AlignedStorage array

@@ -32,11 +32,16 @@ template<class Key, class Type,
 	};
 };
 
+// Map is just a wrapper for differerent ordered class templates
+// Default is red-black tree at the moment.
+// 
+// TODO: Write copy and move constructors that are compatible
+// between base template classes
 template<class Key, class Type,
 	template<class> class MyBase = RedBlackTree,
 	class Compare = std::less<Key>,
 	class Allocator = std::allocator<std::pair<const Key, Type>>> 
 	class Map : public MyBase<MapTraits<Key, Type, Compare, Allocator>>
 {
-	//using MyBase = MyBase<MapTraits<Key, Type, Compare, Allocator>>;
+
 };

@@ -36,6 +36,11 @@ template<class Key,
 };
 
 
+// UnorderedSet is just a wrapper for differerent unordered class templates
+// Default is the Open Address Robinhood hash table at the moment.
+// 
+// TODO: Write copy and move constructors that are compatible
+// between base template classes
 template<class Key,
 	template<class, bool> class MyBase = RobinhoodHash,
 	class Hash = std::hash<Key>,
@@ -43,9 +48,5 @@ template<class Key,
 	class Allocator = std::allocator<Key>>
 	class UnorderedSet : public MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>
 {
-public:
 
-	//using Base = MyBase<USetTraits<Key, Hash, KeyEqual, Allocator>, false>;
-	// iterator = typename Base::iterator;
-	//using const_iterator = typename Base::const_iterator;
 };
