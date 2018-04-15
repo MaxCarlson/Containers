@@ -116,15 +116,11 @@ public:
 
 		// Temporary construction
 		// While we find it a place to sit
-		Node n(std::forward<Args>(args)...);
+		Node&& n(std::forward<Args>(args)...);
 
 		// Find idx of arg
 		size_type idx = upperBound(get_key()(n));
 
-		// Shift elements over
-		if (idx < MyData.size())
-			MyData.shiftRight(idx, MyData.size() - 1, 1);
-
-		MyData.constructInPlace(idx, std::move(n));
+		MyData.emplace(idx, std::move(n)); // TODO : Fix issues with MySize
 	}
 };

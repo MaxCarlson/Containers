@@ -4,13 +4,14 @@
 template<class Traits>
 class FlatTree;
 
-template<class VectorType>
-class VecIterator 
+template<class VectorType> // TODO: Create common base so iterators/const_iterators can be added and subtracted with eachother
+struct VecIterator 
 {
 public:
-	using NodePtr = typename VectorType::NodePtr;
-	using reference = typename VectorType::reference;
-	using pointer = typename VectorType::pointer;
+	using NodePtr		  = typename VectorType::NodePtr;
+	using difference_type = typename VectorType::difference_type;
+	using reference		  = typename VectorType::reference;
+	using pointer		  = typename VectorType::pointer;
 
 	VecIterator() = default;
 	VecIterator(VectorType *MyVec) : MyVec(MyVec) {}
@@ -56,6 +57,18 @@ public:
 		return tmp;
 	}
 
+	/*
+	difference_type operator+(const VecIterator& it) const
+	{
+		return this->ptr + *it;
+	}
+
+	difference_type operator-(const VecIterator& it) const
+	{
+		return this->ptr - *it;
+	}
+	*/
+
 	bool operator==(const VecIterator& other) const
 	{
 		return this->ptr == other.ptr;
@@ -66,7 +79,6 @@ public:
 		return !(this->ptr == other.ptr);
 	}
 
-private:
 	NodePtr ptr;
 	const VectorType *MyVec;
 };
@@ -310,6 +322,44 @@ public:
 	}
 
 	template<class... Args>
+	iterator emplace(size_type idx, Args&& ...args)
+	{
+		const_iterator it(this, MyBegin + static_cast<difference_type>(idx));
+		return emplace(it, std::forward<Args>(args)...);
+	}
+
+	template<class... Args>
+	iterator emplace(const_iterator it, Args&& ...args)
+	{
+		++MySize;
+
+		if (MySize >= MyCapacity - 1)
+			grow();
+
+		const difference_type idx = it.ptr - MyBegin;
+		
+		NodePtr place = MyBegin + idx;
+		if (place > MyLast)
+			 place = MyLast;
+		else
+		{
+			place = MyBegin + idx;
+			NodePtr newLast = MyBegin + static_cast<difference_type>(MySize);
+
+			// TODO: Test std::move vs std::swap!
+			for (NodePtr oldLast = MyLast; oldLast >= place; --oldLast, --newLast)
+				*newLast = std::move(*oldLast);
+		}
+
+		AlTraits::construct(alloc, place, std::forward<Args>(args)...);
+
+		if (MySize - 1)
+			++MyLast;
+
+		return iterator{ this, place };
+	}
+
+	template<class... Args>
 	reference emplace_back(Args&& ...args)
 	{
 		++MySize;
@@ -317,7 +367,6 @@ public:
 		if (MySize >= MyCapacity - 1)
 			grow();
 		
-
 		// If this is the first insert
 		// we don't actually want to increment last
 		else

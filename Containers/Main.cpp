@@ -207,6 +207,8 @@ void testFlat()
 	{
 		set.emplace(i);
 
+		for (int j = num; j > num / 20; --j)
+			set.emplace(j);
 	}
 }
 
