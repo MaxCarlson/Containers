@@ -48,7 +48,7 @@ public:
 	using Node			  = typename BaseTypes::Node;
 	using NodePtr		  = typename BaseTypes::NodePtr;
 	//using NodeEqual		  = typename Traits::node_equal;
-	//using NodeType		  = typename BaseTypes::node_type;
+	using NodeType		  = typename BaseTypes::node_type;
 	using difference_type = typename BaseTypes::difference_type;
 	using value_type	  = typename BaseTypes::value_type;
 	using pointer		  = typename BaseTypes::pointer;
@@ -82,7 +82,7 @@ private:
 
 	Storage MyData;
 
-	size_type upperBound(const key_type &k)
+	size_type upperBound(const key_type &k) const // TODO: Benchmark against std::upperbound()!
 	{
 		size_type size = MyData.size();
 		size_type low = 0;
@@ -103,6 +103,11 @@ private:
 
 public:
 
+	NodeType & operator[](const key_type& k) 
+	{
+		
+	}
+
 	void reserve(size_type newCap)
 	{
 		MyData.reserve(newCap);
@@ -111,16 +116,27 @@ public:
 	template<class... Args>
 	void emplace(Args&& ...args)
 	{
-		// Temporary construction
+		// Temporary construction of a possible rvalue to lvalue
 		// While we find it a place to sit
 		Node&& n(std::forward<Args>(args)...);
 
-		// Find idx of arg
 		size_type idx = upperBound(get_key()(n));
 
 		if (MyData[idx] == n && idx < MyData.size()) // TODO: Add template parameter to allow Multiples
 			return;
 
 		MyData.emplace(idx, std::move(n)); // TODO : Fix issues with MySize
+	}
+
+	const_iterator find(const key_type &k) 
+	{
+		const size_type idx = upperBound(k);
+
+		auto& kk = MyData[idx];
+
+		if (get_key()(MyData[idx]) == k)
+			return const_iterator{ &MyData, &MyData[idx] };
+
+		return MyData.cend();
 	}
 };

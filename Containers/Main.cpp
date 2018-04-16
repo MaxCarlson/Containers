@@ -210,6 +210,8 @@ void testFlat()
 	using Key = int;
 
 	Set<Key, FlatTree> set;
+	Map<Key, Key, FlatTree> map;
+
 
 	for (int i = 0; i < num; ++i)
 	{
@@ -217,6 +219,8 @@ void testFlat()
 
 		for (int j = num; j > num / 20; --j)
 			set.emplace(j);
+
+		set.find(i);
 	}
 }
 

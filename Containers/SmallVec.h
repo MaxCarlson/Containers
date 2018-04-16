@@ -14,8 +14,7 @@ public:
 	using pointer		  = typename VectorType::pointer;
 
 	VecIterator() = default;
-	VecIterator(VectorType *MyVec) : MyVec(MyVec) {}
-	VecIterator(VectorType *MyVec, NodePtr ptr) : MyVec(MyVec), ptr(ptr) {}
+	VecIterator(const VectorType *MyVec, NodePtr ptr) : MyVec(MyVec), ptr(ptr) {}
 
 	reference operator*()
 	{
@@ -78,23 +77,22 @@ public:
 	{
 		return !(this->ptr == other.ptr);
 	}
-
+//private:
 	NodePtr ptr;
 	const VectorType *MyVec;
 };
 
 template<class VectorType>
-class ConstVecIterator : public VecIterator<VectorType>
+struct ConstVecIterator : public VecIterator<VectorType>
 {
-public:
 	using MyBase = VecIterator<VectorType>;
 	using NodePtr = typename VectorType::NodePtr;
 	using reference = typename VectorType::const_reference;
 	using pointer = typename VectorType::const_pointer;
 
-	ConstVecIterator() = default;
-	ConstVecIterator(VectorType *MyVec) : MyBase(MyVec) {}
-	ConstVecIterator(VectorType *MyVec, NodePtr ptr) : MyBase(MyVec, ptr) {}
+	ConstVecIterator() : MyBase() {};
+	ConstVecIterator(const MyBase &b) : MyBase(b) {};
+	ConstVecIterator(const VectorType *MyVec, NodePtr ptr) : MyBase(MyVec, ptr) {}
 
 	reference operator*() const
 	{
@@ -167,10 +165,10 @@ public:
 
 	iterator begin() noexcept { return iterator{ this, MyBegin }; }
 	iterator end() noexcept { return iterator{ this, MyLast + 1 }; }
-	const_iterator begin() const noexcept { return const_iterator{ this, MyBegin}; }
-	const_iterator end() const noexcept { return const_iterator{ this, MyLast + 1}; }
-	const_iterator cbegin() const noexcept { return const_iterator{ this, MyBegin }; }
-	const_iterator cend() const noexcept { return const_iterator{ this, MyLast + 1}; }
+	const_iterator begin() const noexcept { return const_iterator{ this, MyBegin }; }
+	const_iterator end() const noexcept { return const_iterator{ this, MyLast + 1 }; }
+	const_iterator cbegin() const noexcept { return begin(); }
+	const_iterator cend() const noexcept { return end(); }
 
 	template<class T, int Sz, class Al>
 	SmallVec& operator=(const SmallVec<T, Sz, Al>& other)
