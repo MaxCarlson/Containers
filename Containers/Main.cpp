@@ -1,5 +1,3 @@
-
-#include "Vector.h"
 #include "BinaryTree.h"
 #include "RedBlackTree.h"
 #include "UnorderedSet.h"
@@ -216,11 +214,12 @@ void testFlat()
 	for (int i = 0; i < num; ++i)
 	{
 		set.emplace(i);
+		map.emplace(i, i);
 
-		for (int j = num; j > num / 20; --j)
-			set.emplace(j);
+		//for (int j = num; j > num / 20; --j)
+		//	set.emplace(j);
 
-		set.find(i);
+		//set.find(i);
 	}
 }
 

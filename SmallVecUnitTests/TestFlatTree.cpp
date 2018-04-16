@@ -15,7 +15,7 @@ namespace FlatTreeUnitTests
 
 		TEST_METHOD(FlatTree__Emplace)
 		{
-			std::set<int> test;
+			std::vector<int> test;
 
 			Set<int, FlatTree> set;
 			Map<int, int, FlatTree> map;
@@ -24,12 +24,21 @@ namespace FlatTreeUnitTests
 			{
 				const int v = rand();
 
-				test.emplace(v);
+				test.emplace_back(v);
 				set.emplace(v);
 				map.emplace(v, v);
 			}
 
-			
+			std::sort(test.begin(), test.end(), test.end());
+
+			int idx = 0;
+
+			auto sit = set.begin();
+			auto mit = map.begin();
+			for (auto it = test.begin(); it != test.end(); ++it, ++sit, ++mit)
+			{
+				Assert::AreEqual(*it, *sit); 
+			}
 		}
 
 

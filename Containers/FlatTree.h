@@ -1,7 +1,7 @@
 #pragma once
 #include "OrderedTypes.h"
+#include "SmallVec.h"
 #include <utility>
-
 
 // Just a wrapper for compatibility with
 // OrderedTypes wrapper
@@ -10,6 +10,7 @@
 template<class NodeType>
 struct FlatTreeNode
 {
+	// Make the data we're holding non-const so we can swap/move
 	using MyNodeType = typename std::remove_cv<NodeType>::type;
 	MyNodeType data;
 
@@ -17,6 +18,9 @@ struct FlatTreeNode
 	FlatTreeNode(const NodeType& d) : data(d) {}
 	FlatTreeNode(MyNodeType&& d) : data(std::move(d.data)) {}
 	FlatTreeNode(FlatTreeNode&& t) : data(std::move(t.data)) {}
+
+	template<class... Args>
+	FlatTreeNode(Args&& ...args) : data(std::forward<Args>(args)...) {}
 
 	operator NodeType&() noexcept { return data; } // TODO: This can be const, since NodeType will always be const ?
 	operator NodeType() const noexcept { return data; }
@@ -35,6 +39,12 @@ struct FlatTreeNode
 
 };
 
+template<class It>
+struct FlatTreeIterator
+{
+
+};
+
 // A sorted vector that uses 
 // binary search when finding elements
 // TODO: Add a Multi bool template param to allow for duplicates
@@ -43,11 +53,13 @@ class FlatTree
 {
 public:
 	using MyBase = FlatTree<Traits>;
-	using BaseTypes = OrderedTypes<Traits, FlatTreeNode>;
+
+	using NonCvType = typename std::remove_cv<typename Traits::node_type>::type;
+	using BaseTypes = OrderedTypesNoNodeWrapper<Traits, NonCvType>;
+	//using BaseTypes = OrderedTypes<Traits, FlatTreeNode>;
 
 	using Node			  = typename BaseTypes::Node;
 	using NodePtr		  = typename BaseTypes::NodePtr;
-	//using NodeEqual		  = typename Traits::node_equal;
 	using NodeType		  = typename BaseTypes::node_type;
 	using difference_type = typename BaseTypes::difference_type;
 	using value_type	  = typename BaseTypes::value_type;
@@ -103,7 +115,7 @@ private:
 
 public:
 
-	NodeType & operator[](const key_type& k) 
+	const NodeType & operator[](const key_type& k) 
 	{
 		
 	}
@@ -118,21 +130,19 @@ public:
 	{
 		// Temporary construction of a possible rvalue to lvalue
 		// While we find it a place to sit
-		Node&& n(std::forward<Args>(args)...);
+		Node n(std::forward<Args>(args)...);
 
 		size_type idx = upperBound(get_key()(n));
 
-		if (MyData[idx] == n && idx < MyData.size()) // TODO: Add template parameter to allow Multiples
+		if (get_key()(MyData[idx]) == get_key()(n) && idx < MyData.size()) // TODO: Add template parameter to allow Multiples
 			return;
 
 		MyData.emplace(idx, std::move(n)); // TODO : Fix issues with MySize
 	}
 
-	const_iterator find(const key_type &k) 
+	const_iterator find(const key_type &k) const
 	{
 		const size_type idx = upperBound(k);
-
-		auto& kk = MyData[idx];
 
 		if (get_key()(MyData[idx]) == k)
 			return const_iterator{ &MyData, &MyData[idx] };
