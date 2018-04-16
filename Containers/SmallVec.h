@@ -166,11 +166,11 @@ public:
 	}
 
 	iterator begin() noexcept { return iterator{ this, MyBegin }; }
-	iterator end() noexcept { return iterator{ this, MyLast }; }
-	const_iterator begin() const noexcept { return const_iterator{ this, MyLast }; }
-	const_iterator end() const noexcept { return const_iterator{ this, MyLast }; }
-	const_iterator cbegin() const noexcept { return const_iterator{ this, MyLast }; }
-	const_iterator cend() const noexcept { return const_iterator{ this, MyLast }; }
+	iterator end() noexcept { return iterator{ this, MyLast + 1 }; }
+	const_iterator begin() const noexcept { return const_iterator{ this, MyBegin}; }
+	const_iterator end() const noexcept { return const_iterator{ this, MyLast + 1}; }
+	const_iterator cbegin() const noexcept { return const_iterator{ this, MyBegin }; }
+	const_iterator cend() const noexcept { return const_iterator{ this, MyLast + 1}; }
 
 	template<class T, int Sz, class Al>
 	SmallVec& operator=(const SmallVec<T, Sz, Al>& other)
@@ -332,20 +332,23 @@ public:
 	template<class... Args>
 	iterator emplace(const_iterator it, Args&& ...args)
 	{
-		++MySize;
+		const size_type idx = it.ptr - MyBegin;
 
-		if (MySize >= MyCapacity - 1)
+		if (MySize >= MyCapacity)
 			grow();
 
-		const difference_type idx = it.ptr - MyBegin;
+		else if (MySize)
+			++MyLast;
+
+		++MySize;
 		
-		NodePtr place = MyBegin + idx;
-		if (place > MyLast)
-			 place = MyLast;
+		NodePtr place = MyBegin + static_cast<difference_type>(idx);
+		if (place > MyLast || (MySize == 1 && place == MyBegin))
+			 ;
 		else
 		{
 			place = MyBegin + idx;
-			NodePtr newLast = MyBegin + static_cast<difference_type>(MySize);
+			NodePtr newLast = MyBegin + static_cast<difference_type>(MySize - 1);
 
 			// TODO: Test std::move vs std::swap!
 			for (NodePtr oldLast = MyLast; oldLast >= place; --oldLast, --newLast)
@@ -353,9 +356,6 @@ public:
 		}
 
 		AlTraits::construct(alloc, place, std::forward<Args>(args)...);
-
-		if (MySize - 1)
-			++MyLast;
 
 		return iterator{ this, place };
 	}
@@ -372,7 +372,6 @@ public:
 			++MyLast;
 		
 		++MySize;
-
 
 		AlTraits::construct(alloc, MyLast, std::forward<Args>(args)...);
 

@@ -37,6 +37,7 @@ struct FlatTreeNode
 
 // A sorted vector that uses 
 // binary search when finding elements
+// TODO: Add a Multi bool template param to allow for duplicates
 template<class Traits>
 class FlatTree
 {
@@ -83,7 +84,7 @@ private:
 
 	size_type upperBound(const key_type &k)
 	{
-		size_type size = MyData.size() - 1;
+		size_type size = MyData.size();
 		size_type low = 0;
 
 		while (size > 0) 
@@ -110,16 +111,15 @@ public:
 	template<class... Args>
 	void emplace(Args&& ...args)
 	{
-		++MyData.MySize;
-		if (MyData.capacity() <= MyData.size() - 1)
-			MyData.grow(); // TODO: MyData.OldLast on resize appears to be placed one farther than it should be
-
 		// Temporary construction
 		// While we find it a place to sit
 		Node&& n(std::forward<Args>(args)...);
 
 		// Find idx of arg
 		size_type idx = upperBound(get_key()(n));
+
+		if (MyData[idx] == n && idx < MyData.size()) // TODO: Add template parameter to allow Multiples
+			return;
 
 		MyData.emplace(idx, std::move(n)); // TODO : Fix issues with MySize
 	}

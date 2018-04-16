@@ -207,5 +207,24 @@ namespace SmallVecUnitTests
 				Assert::AreEqual(vec75[i], vec150[i]);
 			}
 		}
+
+		TEST_METHOD(SmallVector__Emplace)
+		{
+			SmallVec<int, 1> vec1;
+			SmallVec<int, 12> vec12;
+
+			vec1.emplace(0, 2);
+			vec1.emplace(1, 3);
+			vec1.emplace(0, 1);
+			vec1.emplace(0, 0);
+			vec1.emplace(4, 4);
+
+			Assert::AreEqual(0, vec1[0]);
+			Assert::AreEqual(1, vec1[1]);
+			Assert::AreEqual(2, vec1[2]);
+			Assert::AreEqual(3, vec1[3]);
+			Assert::AreEqual(4, vec1[4]);
+
+		}
 	};
 }

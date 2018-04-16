@@ -195,11 +195,33 @@ void testSmallVec()
 
 }
 
+void printOutSmallVec(SmallVec<int, 1> &v)
+{
+	for (auto i : v)
+		std::cout << i << " ";
+
+	std::cout << "\n";
+}
+
 void testFlat()
 {
 	static constexpr int num = 250;
 
 	using Key = int;
+
+	SmallVec<int, 1> vec1;
+	SmallVec<int, 12> vec12;
+
+	vec1.emplace(0, 2);
+	printOutSmallVec(vec1);
+	vec1.emplace(1, 3);
+	printOutSmallVec(vec1);
+	vec1.emplace(0, 1);
+	printOutSmallVec(vec1);
+	vec1.emplace(0, 0);
+	printOutSmallVec(vec1);
+	vec1.emplace(4, 4);
+	printOutSmallVec(vec1);
 
 	Set<Key, FlatTree> set;
 
@@ -239,7 +261,7 @@ int main()
 	
 	//testMap();
 	//testHash();
-	testSmallVec();
-	//testFlat();
+	//testSmallVec();
+	testFlat();
 	return 0;
 }
