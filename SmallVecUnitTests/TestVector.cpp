@@ -225,6 +225,12 @@ namespace SmallVecUnitTests
 			Assert::AreEqual(3, vec1[3]);
 			Assert::AreEqual(4, vec1[4]);
 
+			int idx = 0;
+			for (int i = 0; i <= 25; ++i)
+				vec12.emplace(i, i);
+
+			for (int i = 0; i <= 25; ++i)
+				Assert::AreEqual(i, vec12[i]);
 		}
 	};
 }

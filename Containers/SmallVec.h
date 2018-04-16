@@ -347,11 +347,9 @@ public:
 			 ;
 		else
 		{
-			place = MyBegin + idx;
-			NodePtr newLast = MyBegin + static_cast<difference_type>(MySize - 1);
-
+			NodePtr newLast = MyLast;
 			// TODO: Test std::move vs std::swap!
-			for (NodePtr oldLast = MyLast; oldLast >= place; --oldLast, --newLast)
+			for (NodePtr oldLast = MyLast - 1; oldLast >= place; --oldLast, --newLast)
 				*newLast = std::move(*oldLast);
 		}
 

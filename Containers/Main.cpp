@@ -209,20 +209,6 @@ void testFlat()
 
 	using Key = int;
 
-	SmallVec<int, 1> vec1;
-	SmallVec<int, 12> vec12;
-
-	vec1.emplace(0, 2);
-	printOutSmallVec(vec1);
-	vec1.emplace(1, 3);
-	printOutSmallVec(vec1);
-	vec1.emplace(0, 1);
-	printOutSmallVec(vec1);
-	vec1.emplace(0, 0);
-	printOutSmallVec(vec1);
-	vec1.emplace(4, 4);
-	printOutSmallVec(vec1);
-
 	Set<Key, FlatTree> set;
 
 	for (int i = 0; i < num; ++i)
