@@ -54,13 +54,18 @@ class FlatTree
 public:
 	using MyBase = FlatTree<Traits>;
 
-	using NonCvType = typename std::remove_cv<typename Traits::node_type>::type;
-	using BaseTypes = OrderedTypesNoNodeWrapper<Traits, NonCvType>;
+	using vtype = typename Traits::value_type;
+	using ktypet = typename Traits::key_type;
+	using ktype = typename std::remove_cv<ktypet>::type;
+
+	using NodeType = std::conditional_t<std::is_same_v<vtype, ktypet>, std::pair<ktype, vtype>, typename Traits::key_type>;
+
+	using BaseTypes = OrderedTypesNoNodeWrapper<Traits, NodeType>;
 	//using BaseTypes = OrderedTypes<Traits, FlatTreeNode>;
 
 	using Node			  = typename BaseTypes::Node;
 	using NodePtr		  = typename BaseTypes::NodePtr;
-	using NodeType		  = typename BaseTypes::node_type;
+	//using NodeType		  = typename BaseTypes::node_type;
 	using difference_type = typename BaseTypes::difference_type;
 	using value_type	  = typename BaseTypes::value_type;
 	using pointer		  = typename BaseTypes::pointer;
@@ -130,7 +135,7 @@ public:
 	{
 		// Temporary construction of a possible rvalue to lvalue
 		// While we find it a place to sit
-		Node n(std::forward<Args>(args)...);
+		Node n = Node{ std::forward<Args>(args)... };
 
 		size_type idx = upperBound(get_key()(n));
 

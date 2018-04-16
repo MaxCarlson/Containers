@@ -29,6 +29,11 @@ template<class Key, class Type,
 		{
 			return n.first;
 		}
+
+		const key_type operator()(const std::pair<key_type, value_type>& n) const
+		{	// Overload for containers that can't have a const key
+			return n.first;
+		}
 	};
 };
 

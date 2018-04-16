@@ -30,7 +30,7 @@ struct OrderedTypesNoNodeWrapper
 	using Alloc = typename Traits::allocator_type;
 	using key_type = typename Traits::key_type;
 	using key_compare = typename Traits::key_compare;
-	using node_type = typename Traits::node_type;
+	//using node_type = typename Traits::node_type;
 
 	using Node = NodeType;
 
