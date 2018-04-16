@@ -155,12 +155,13 @@ private:
 public:
 
 	// In the case aligned size is <= 1, don't use aligned memory
-	SmallVec() : useAligned(alignedSize > 1), 
+	SmallVec() : useAligned(alignedSize > 0), 
 			     copyFromAligned(false) 
 	{
 		if (useAligned)
 		{
 			MyBegin = MyLast = reinterpret_cast<NodePtr>(std::addressof(MyData[0]));
+			MyEnd = reinterpret_cast<NodePtr>(std::addressof(MyData[alignedSize]));
 		}
 	}
 
@@ -287,14 +288,14 @@ private:
 			copyFromAligned = true;
 		}
 
-		if(MySize - 1)
-			copyTo(first); // TODO: This is super ugly here and makes using this function outside of the class unituative
+		if(MySize)
+			copyTo(first); 
 
 		// If we were using AlignedStorage previously (or not!) this is where
 		// MyBegin and MyEnd get switched over out of the AlignedStorage array
 		MyCapacity = newCapacity;
 		MyBegin = first;
-		MyLast = MyBegin + static_cast<difference_type>(MySize - 1);
+		MyLast = MyBegin + static_cast<difference_type>(MySize);
 		MyEnd = last;
 	}
 
@@ -362,24 +363,18 @@ public:
 	template<class... Args>
 	reference emplace_back(Args&& ...args)
 	{
-		++MySize;
-
-		if (MySize >= MyCapacity - 1)
+		if (MyLast >= MyEnd - 1)
 			grow();
 		
-		// If this is the first insert
+		// If this is the first insert or we're growing
 		// we don't actually want to increment last
-		else
-			if (MySize == 1)
-				;
-			else
-				++MyLast;
-
-		if (useAligned)
-			new(MyLast) Type(std::forward<Args>(args)...);
+		else if(MySize > 0)
+			++MyLast;
 		
-		else	
-			AlTraits::construct(alloc, MyLast, std::forward<Args>(args)...);
+		++MySize;
+
+
+		AlTraits::construct(alloc, MyLast, std::forward<Args>(args)...);
 
 		return back();
 	}

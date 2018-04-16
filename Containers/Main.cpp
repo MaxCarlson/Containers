@@ -167,9 +167,9 @@ struct OBJ
 void testSmallVec()
 {
 	static constexpr int num = 250000000;
-	using Key = OBJ;
+	using Key = int;
 
-	SmallVec<OBJ, 1> vec;
+	SmallVec<Key, 1> vec;
 	SmallVec<size_t, 13> vec13;
 
 	SmallVec<int, 15> vec15;
@@ -239,7 +239,7 @@ int main()
 	
 	//testMap();
 	//testHash();
-	//testSmallVec();
-	testFlat();
+	testSmallVec();
+	//testFlat();
 	return 0;
 }
