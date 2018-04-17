@@ -96,7 +96,7 @@ struct ConstVecIterator : public VecIterator<VectorType>
 
 	reference operator*() const
 	{
-		return ptr;
+		return this->ptr;
 	}
 
 	pointer operator->() const

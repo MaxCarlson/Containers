@@ -3,12 +3,11 @@
 #include "../Containers/SmallVec.h"
 #include <iostream>
 #include <utility>
-#include <array>
 #include <tuple>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace SmallVecUnitTests
+namespace TestSmallVec
 {
 	TEST_CLASS(TestVector)
 	{
@@ -17,7 +16,7 @@ namespace SmallVecUnitTests
 		static constexpr size_t sc = count;
 
 		template<class Arg, int... idx>
-		void getFromPack(Arg& arg, int val, std::index_sequence<idx...>)
+		void fillInPack(Arg& arg, int val, std::index_sequence<idx...>)
 		{
 			auto f = { std::get<idx>(arg).emplace_back(val)... };
 		}
@@ -30,7 +29,7 @@ namespace SmallVecUnitTests
 			auto arguments = std::forward_as_tuple<Args...>(args...);
 
 			for (int i = 0; i < cnt; ++i)
-				getFromPack(arguments, i, seq{});
+				fillInPack(arguments, i, seq{});
 		}
 
 		const wchar_t* equalError(std::string name, int expected, int real)

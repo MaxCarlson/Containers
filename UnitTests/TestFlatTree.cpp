@@ -4,19 +4,20 @@
 #include "../Containers/Map.h"
 #include <set>
 #include <random>
+#include <utility>
+#include <tuple>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace FlatTreeUnitTests
+namespace TestFlatTree
 {
 	TEST_CLASS(TestFlatTree)
 	{
 		const int num = 10000;
 
-		TEST_METHOD(FlatTree__EmplaceAndIt)
+		TEST_METHOD(FlatTree__EmplaceAndIterate)
 		{
-			std::vector<int> test;
-
+			std::set<int> test;
 			Set<int, FlatTree> set;
 			Map<int, int, FlatTree> map;
 
@@ -24,15 +25,19 @@ namespace FlatTreeUnitTests
 			{
 				const int v = rand();
 
-				test.emplace_back(v);
-				set.emplace(v);
-				map.emplace(v, v);
+				auto it = test.emplace(v);
+				auto sit = set.emplace(v);
+				auto mit = map.emplace(v, v);
+
+				// Check the values
+				Assert::AreEqual(*it.first, *sit.first, L"Set Error");
+				Assert::AreEqual(*it.first, mit.first->first, L"Set Error");
+				// Check the bools
+				Assert::AreEqual(it.second, sit.second, L"Set Error");
+				Assert::AreEqual(it.second, mit.second, L"Set Error");
 			}
 
-			std::sort(test.begin(), test.end());
-
 			int idx = 0;
-
 			auto sit = set.begin();
 			auto mit = map.begin();
 			for (auto it = test.begin(); it != test.end(); ++it, ++sit, ++mit)
@@ -42,10 +47,25 @@ namespace FlatTreeUnitTests
 			}
 		}
 
+		TEST_METHOD(FlatTree__Find)
+		{
+			Set<int, FlatTree> set;
+			Map<int, int, FlatTree> map;
 
+			for (int i = 0; i < num; ++i)
+			{
+				set.emplace(i);
+				map.emplace(i, i);
+			}
 
+			for (int i = 0; i < num; ++i)
+			{
+				auto sit = set.find(i);
+				auto mit = map.find(i);
 
-
-
+				Assert::AreEqual(true, sit != set.end(), L"Set Find Error");
+				Assert::AreEqual(true, mit != map.end(), L"Map Find Error");
+			}
+		}
 	};
 }

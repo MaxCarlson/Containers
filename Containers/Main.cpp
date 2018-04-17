@@ -203,13 +203,12 @@ void printOutSmallVec(SmallVec<int, 1> &v)
 
 void testFlat()
 {
-	static constexpr int num = 250;
+	static constexpr int num = 10000;
 
 	using Key = int;
 
 	Set<Key, FlatTree> set;
 	Map<Key, Key, FlatTree> map;
-
 
 	for (int i = 0; i < num; ++i)
 	{

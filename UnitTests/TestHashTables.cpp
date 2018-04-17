@@ -11,7 +11,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "../Containers/UnorderedSet.h"
 
 
-namespace UnitTestHashTables
+namespace TestHashTables
 {
 	TEST_CLASS(TestHashTables)
 	{
