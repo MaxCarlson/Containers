@@ -1,4 +1,5 @@
 #pragma once
+#include "helpers.h"
 
 // Wrapper for types needed by tree and iterators
 template<class Traits, template<class> class NodeType>

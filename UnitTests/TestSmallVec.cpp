@@ -9,7 +9,7 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace SmallVecUnitTests
-{		
+{
 	TEST_CLASS(TestVector)
 	{
 	public:
@@ -45,7 +45,7 @@ namespace SmallVecUnitTests
 		}
 
 		TEST_METHOD(SmallVector__TestInsert)
-		{		
+		{
 			SmallVec<int, 1> vec;
 			SmallVec<int, 15> vec15;
 			SmallVec<int, 80> vec80;

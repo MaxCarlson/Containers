@@ -57,6 +57,7 @@ public:
 	using value_type = typename Traits::value_type;
 	using key_type   = typename Traits::key_type;
 
+	// Are we a set or are we a map? Figure out what data type to use
 	using NodeType = std::conditional_t<std::is_same_v<typename Traits::node_type, const key_type>, 
 		typename Traits::key_type,
 		std::pair<key_type, value_type>>;
@@ -90,6 +91,8 @@ public:
 	const_iterator end() const noexcept { return MyData.end(); }
 	const_iterator cbegin() const noexcept { return MyData.cbegin(); }
 	const_iterator cend() const noexcept { return MyData.cend(); }
+
+	using PairIb = std::pair<iterator, bool>;
 
 private:
 	NodeAl nodeAl;
@@ -128,7 +131,7 @@ public:
 	}
 
 	template<class... Args>
-	void emplace(Args&& ...args)
+	PairIb emplace(Args&& ...args)
 	{
 		// Temporary construction of a possible rvalue to lvalue
 		// While we find it a place to sit
@@ -137,17 +140,17 @@ public:
 		size_type idx = upperBound(get_key()(n));
 
 		if (get_key()(MyData[idx]) == get_key()(n) && idx < MyData.size()) // TODO: Add template parameter to allow Multiples
-			return;
+			return PairIb{ iterator{ &MyData, &MyData[idx] }, false };
 
-		MyData.emplace(idx, std::move(n)); // TODO : Fix issues with MySize
+		return PairIb{ MyData.emplace(idx, std::move(n)), true }; // TODO : Fix issues with MySize
 	}
 
-	const_iterator find(const key_type &k) const
+	iterator find(const key_type &k)
 	{
 		const size_type idx = upperBound(k);
 
 		if (get_key()(MyData[idx]) == k)
-			return const_iterator{ &MyData, &MyData[idx] };
+			return iterator{ &MyData, &MyData[idx] };
 
 		return MyData.cend();
 	}

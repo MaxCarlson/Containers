@@ -13,7 +13,7 @@ namespace FlatTreeUnitTests
 	{
 		const int num = 10000;
 
-		TEST_METHOD(FlatTree__Emplace)
+		TEST_METHOD(FlatTree__EmplaceAndIt)
 		{
 			std::vector<int> test;
 
@@ -29,7 +29,7 @@ namespace FlatTreeUnitTests
 				map.emplace(v, v);
 			}
 
-			std::sort(test.begin(), test.end(), test.end());
+			std::sort(test.begin(), test.end());
 
 			int idx = 0;
 
@@ -37,7 +37,8 @@ namespace FlatTreeUnitTests
 			auto mit = map.begin();
 			for (auto it = test.begin(); it != test.end(); ++it, ++sit, ++mit)
 			{
-				Assert::AreEqual(*it, *sit); 
+				Assert::AreEqual(*it, *sit, L"Set Error");
+				Assert::AreEqual(*it, mit->first, L"Map Error");
 			}
 		}
 
