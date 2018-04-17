@@ -120,9 +120,20 @@ private:
 
 public:
 
+	// Emplace if no key exists
 	const NodeType & operator[](const key_type& k) 
 	{
 		
+	}
+
+	size_type size() const noexcept
+	{
+		return MyData.size();
+	}
+
+	size_type capacity() const noexcept
+	{
+		return MyData.capacity();
 	}
 
 	void reserve(size_type newCap)
@@ -133,7 +144,7 @@ public:
 	template<class... Args>
 	PairIb emplace(Args&& ...args)
 	{
-		// Temporary construction of a possible rvalue to lvalue
+		// Temporary construction of a node to possibly emplace
 		// While we find it a place to sit
 		Node n = Node{ std::forward<Args>(args)... };
 
@@ -142,7 +153,21 @@ public:
 		if (get_key()(MyData[idx]) == get_key()(n) && idx < MyData.size()) // TODO: Add template parameter to allow Multiples
 			return PairIb{ iterator{ &MyData, &MyData[idx] }, false };
 
-		return PairIb{ MyData.emplace(idx, std::move(n)), true }; // TODO : Fix issues with MySize
+		return PairIb{ MyData.emplace(idx, std::move(n)), true }; 
+	}
+
+	template<class... Args>
+	iterator emplace_hint(iterator it, Args&& ...args) // TODO: Use const_iterator here
+	{
+		Node n = Node{ std::forward<Args>(args)... };
+
+		if (it == end() && !key_compare()(get_key()(n), get_key()(MyData.back())))
+		{
+			MyData.emplace_back(n);
+			return iterator{ &MyData, &MyData.back() };
+		}
+		
+		return emplace(std::move(n)).first;
 	}
 
 	iterator find(const key_type &k)

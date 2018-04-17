@@ -203,23 +203,27 @@ void printOutSmallVec(SmallVec<int, 1> &v)
 
 void testFlat()
 {
-	static constexpr int num = 10000;
+	//static constexpr int num = 10000;
+	static constexpr int num = 100000000;
 
 	using Key = int;
 
 	Set<Key, FlatTree> set;
 	Map<Key, Key, FlatTree> map;
 
+	timer<int>(true);
+
 	for (int i = 0; i < num; ++i)
 	{
-		set.emplace(i);
-		map.emplace(i, i);
+		//set.emplace(i);
+		//map.emplace(i, i);
 
-		//for (int j = num; j > num / 20; --j)
-		//	set.emplace(j);
-
-		//set.find(i);
+		set.emplace_hint(set.end(), i);
 	}
+
+	timer<int>(false);
+
+	int a = 5;
 }
 
 // Things to implement
