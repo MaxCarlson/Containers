@@ -67,5 +67,54 @@ namespace TestFlatTree
 				Assert::AreEqual(true, mit != map.end(), L"Map Find Error");
 			}
 		}
+
+		TEST_METHOD(FlatTree__EmplaceHint)
+		{
+			Set<int, FlatTree> set;
+			Map<int, int, FlatTree> map;
+			std::set<int> test;
+
+			int i = 0;
+			for (i; i < 150; ++i)
+			{
+				test.emplace(i);
+				set.emplace_hint(set.end(), i);
+				map.emplace_hint(map.end(), i, i);
+			}
+
+			for (i; i < 300; ++i)
+			{
+				test.emplace(i);
+				set.emplace_hint(set.begin(), i);
+				map.emplace_hint(map.begin(), i, i);
+			}
+
+			for (i; i < num; ++i)
+			{
+				int r = rand();
+				int low = r - 1;
+				int high = r + 1;
+
+				test.emplace(r);
+				test.emplace(r - 1);
+				test.emplace(r + 1);
+
+				auto sit = set.emplace_hint(set.begin(), r);
+				set.emplace_hint(sit, low);
+				set.emplace_hint(set.end(), high);
+
+				auto mit = map.emplace_hint(map.begin(), r, r);
+				map.emplace_hint(mit, low, low);
+				map.emplace_hint(map.end(), high, high);
+			}
+
+			auto sit = set.begin();
+			auto mit = map.begin();
+			for (auto it = test.begin(); it != test.end(); ++it, ++sit, ++mit)
+			{
+				Assert::AreEqual(*it, *sit);
+				Assert::AreEqual(*it, mit->first);
+			}
+		}
 	};
 }
