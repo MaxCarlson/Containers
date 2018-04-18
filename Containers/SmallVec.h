@@ -109,6 +109,11 @@ public:
 		return !(this->ptr == other.ptr);
 	}
 
+	bool operator<(const VecIterator& other) const
+	{
+		return ptr < other.ptr;
+	}
+
 	NodePtr ptr;
 	const VectorType *MyVec;
 };
@@ -416,8 +421,8 @@ public:
 		if (start != end)
 		{
 			const size_type size = end.ptr - start.ptr;
-			const NodePtr newLast = uncheckedMove(end.ptr, MyLast, start.ptr);
-			destroyRange(alloc, newLast + 1, MyLast);
+			const NodePtr newLast = uncheckedMove(end.ptr, MyLast + 1, start.ptr);
+			destroyRange(alloc, newLast, MyLast);
 			MyLast = newLast;
 			MySize -= size;
 		}

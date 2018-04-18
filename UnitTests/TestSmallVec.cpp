@@ -302,13 +302,13 @@ namespace TestSmallVec
 
 				// Range deletions
 				
-				if (r + r2 < test.size())
+				if (r2 < test.size())
 				{
 					std::vector<int>::iterator itf = test.begin() + r;
 					std::vector<int>::iterator ite = test.begin() + r2;
 
 					SmallVec<int, 1>::iterator v1f = vec1.begin() + r;
-					SmallVec<int, 1>::iterator v1e = vec1.begin() + r;
+					SmallVec<int, 1>::iterator v1e = vec1.begin() + r2;
 
 					itf = test.erase(itf, ite);
 					v1f = vec1.erase(v1f, v1e);
