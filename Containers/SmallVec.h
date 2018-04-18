@@ -9,10 +9,15 @@ template<class VectorType> // TODO: Create common base so iterators/const_iterat
 struct VecIterator 
 {
 public:
-	using NodePtr		  = typename VectorType::NodePtr;
-	using difference_type = typename VectorType::difference_type;
-	using reference		  = typename VectorType::reference;
-	using pointer		  = typename VectorType::pointer;
+	using NodePtr		    = typename VectorType::NodePtr;
+	using size_type			= typename VectorType::size_type;
+	using difference_type   = typename VectorType::difference_type;
+	using reference		    = typename VectorType::reference;
+	using const_reference   = typename VectorType::const_reference;
+	using pointer		    = typename VectorType::pointer;
+	using const_pointer		= typename VectorType::const_pointer;
+	using value_type	    = typename VectorType::value_type;
+	using iterator_category = std::random_access_iterator_tag;
 
 	VecIterator() = default;
 	VecIterator(const VectorType *MyVec, NodePtr ptr) : MyVec(MyVec), ptr(ptr) {}
@@ -22,7 +27,17 @@ public:
 		return *ptr;
 	}
 
+	const_reference operator*() const
+	{
+		return *ptr;
+	}
+
 	pointer operator->()
+	{
+		return std::pointer_traits<pointer>::pointer_to(**this);
+	}
+
+	const_pointer operator->() const
 	{
 		return std::pointer_traits<pointer>::pointer_to(**this);
 	}
@@ -57,17 +72,32 @@ public:
 		return tmp;
 	}
 
-	/*
-	difference_type operator+(const VecIterator& it) const
+	VecIterator& operator+=(size_type dif)
 	{
-		return this->ptr + *it;
+		ptr += dif;
+		return *this;
+	}
+
+	VecIterator& operator-=(size_type dif)
+	{
+		ptr -= dif;
+		return *this;
+	}
+
+	VecIterator operator+(size_type sz) const
+	{
+		return VecIterator{ MyVec, ptr + sz };
+	}
+
+	VecIterator operator-(size_type sz) const
+	{
+		return VecIterator{ MyVec, ptr - sz };
 	}
 
 	difference_type operator-(const VecIterator& it) const
 	{
-		return this->ptr - *it;
+		return static_cast<difference_type>(ptr - it.ptr);
 	}
-	*/
 
 	bool operator==(const VecIterator& other) const
 	{
@@ -78,7 +108,7 @@ public:
 	{
 		return !(this->ptr == other.ptr);
 	}
-//private:
+
 	NodePtr ptr;
 	const VectorType *MyVec;
 };
@@ -114,16 +144,16 @@ public:
 	using AlTraits = std::allocator_traits<Allocator>;
 	using AlignedStorage = typename std::aligned_storage<sizeof(Type), alignof(Type)>::type;
 
-	using size_type = size_t;
+	using size_type		  = size_t;
 	using difference_type = typename AlTraits::difference_type;
-	using pointer = typename AlTraits::pointer;
-	using reference = Type&;
+	using value_type      = typename AlTraits::value_type;
+	using pointer		  = typename AlTraits::pointer;
+	using reference		  = Type&;
 	using const_reference = const reference;
-	using const_pointer = const pointer;
+	using const_pointer   = const pointer;
+	using NodePtr		  = Type *;
 
-	using NodePtr = Type *;
-
-	using iterator = VecIterator<MyBase>;
+	using iterator		 = VecIterator<MyBase>;
 	using const_iterator = ConstVecIterator<MyBase>;
 
 	friend iterator;
@@ -234,16 +264,10 @@ private:
 									||  std::is_nothrow_move_assignable_v<Type>))
 	{
 		NodePtr oldFirst = MyBegin;
-		NodePtr oldLast = MyLast;		
+		NodePtr oldLast = MyLast + 1;		
 
-		///*
-		for (oldFirst; oldFirst <= oldLast; ++oldFirst, ++first)
-		{
-			*first = std::move_if_noexcept(*oldFirst);
-			AlTraits::destroy(alloc, oldFirst);
-		}
-		//*/
-		//uncheckedMove(oldFirst, oldLast + 1, first);
+		uncheckedMove(oldFirst, oldLast, first);
+		destroyRange(alloc, oldFirst, oldLast);
 
 		if (copyFromAligned)
 			copyFromAligned = false;
@@ -380,8 +404,10 @@ public:
 	iterator erase(iterator pos) // TODO: use const_iterator
 	{
 		uncheckedMove(pos.ptr + 1, MyLast + 1, pos.ptr);
+		AlTraits::destroy(alloc, MyLast - 1); // TODO: Does this make sense?
+		--MyLast;
 
-		return pos;
+		return iterator{ this, pos.ptr };
 	}
 
 	bool empty() const noexcept

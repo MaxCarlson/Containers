@@ -4,6 +4,9 @@
 #include <iostream>
 #include <utility>
 #include <tuple>
+#include <vector>
+#include <algorithm>
+
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -119,19 +122,19 @@ namespace TestSmallVec
 
 			int i = 0;
 			for (auto it = vec.begin(); it != vec.end(); ++it, ++i)
-				Assert::AreEqual(i, *it, equalError("vec1", i, *it));
+				Assert::AreEqual(i, *it, L"vec1");
 			i = 0;
 			for (auto it = vec15.begin(); it != vec15.end(); ++it, ++i)
-				Assert::AreEqual(i, *it, equalError("vec15", i, *it));
+				Assert::AreEqual(i, *it, L"vec15");
 			i = 0;
 			for (auto it = vec80.begin(); it != vec80.end(); ++it, ++i)
-				Assert::AreEqual(i, *it, equalError("vec80", i, *it));
+				Assert::AreEqual(i, *it, L"vec80");
 			i = 0;
 			for (auto it = vec300.begin(); it != vec300.end(); ++it, ++i)
-				Assert::AreEqual(i, *it, equalError("vec300", i, *it));
+				Assert::AreEqual(i, *it, L"vec300");
 			i = 0;
 			for (auto it = vec1000.begin(); it != vec1000.end(); ++it, ++i)
-				Assert::AreEqual(i, *it, equalError("vec1000", i, *it));
+				Assert::AreEqual(i, *it, L"vec1000");
 		}
 
 		TEST_METHOD(SmallVector__OperatorEq)
@@ -230,6 +233,78 @@ namespace TestSmallVec
 
 			for (int i = 0; i <= 25; ++i)
 				Assert::AreEqual(i, vec12[i]);
+		}
+
+		TEST_METHOD(SmallVector__EraseIt)
+		{
+			std::vector<int> test;
+			SmallVec<int, 1> vec1;
+			SmallVec<int, 7> vec7;
+			SmallVec<int, 15> vec15;
+			SmallVec<int, 80> vec80;
+			SmallVec<int, 301> vec301;
+			SmallVec<int, 1300> vec1300;
+
+			fillVectors(count / 3, test, vec1, vec7, vec15, vec80, vec301, vec1300);
+
+			const int num = count / 6;
+
+			for (int i = 0; i < num; ++i)
+			{
+				const int r = rand() % (count / 3);
+				auto it = std::lower_bound(test.begin(), test.end(), r);
+
+				bool found = it != test.end();
+
+				if (found)
+				{
+					size_t dif = it - test.begin();
+
+					// Test iterator use as well as random numbers being in the same places in all vectors
+					auto v1i = std::lower_bound(vec1.begin(), vec1.end(), r);
+					auto v7i = std::lower_bound(vec7.begin(), vec7.end(), r);
+					auto v15i = std::lower_bound(vec15.begin(), vec15.end(), r);
+					auto v80i = std::lower_bound(vec80.begin(), vec80.end(), r);
+					auto v301i = std::lower_bound(vec301.begin(), vec301.end(), r);
+					auto v1300i = std::lower_bound(vec1300.begin(), vec1300.end(), r);
+
+					size_t v1 = v1i - vec1.begin();
+					size_t v7 = v7i - vec7.begin();
+					size_t v15 = v15i - vec15.begin();
+					size_t v80 = v80i - vec80.begin();
+					size_t v301 = v301i - vec301.begin();
+					size_t v1300 = v1300i - vec1300.begin();
+
+					Assert::AreEqual(dif, v1, L"vec1");
+					Assert::AreEqual(dif, v7, L"vec7");
+					Assert::AreEqual(dif, v15, L"vec15");
+					Assert::AreEqual(dif, v80, L"vec80");
+					Assert::AreEqual(dif, v301, L"vec301");
+					Assert::AreEqual(dif, v1300, L"vec1300");
+
+					it = test.erase(it);
+					v1i = vec1.erase(v1i);
+					v7i = vec7.erase(v7i);
+					v15i = vec15.erase(v15i);
+					v80i = vec80.erase(v80i);
+					v301i = vec301.erase(v301i);
+					v1300i = vec1300.erase(v1300i);
+
+					if (it == test.end())
+						continue;
+					
+					Assert::AreEqual(*it, *v1i);
+					Assert::AreEqual(*it, *v7i);
+					Assert::AreEqual(*it, *v15i);
+					Assert::AreEqual(*it, *v80i);
+					Assert::AreEqual(*it, *v301i);
+					Assert::AreEqual(*it, *v1300i);
+				}
+				else
+				{
+
+				}
+			}
 		}
 	};
 }

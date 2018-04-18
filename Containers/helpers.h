@@ -11,10 +11,10 @@ using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_a
 template<class Ptr>
 using PtrType = typename std::remove_reference<decltype(*std::declval<Ptr>())>::type;
 
-// Move elements first - last to dest,
-// with first getting placed on dest
+// Move elements between (first, end]
+// to dest through dest + (end - first)
 template<class PtrIn, class PtrOut>
-inline PtrOut uncheckedMove(PtrIn first, PtrIn last, PtrOut dest)
+inline PtrOut uncheckedMove(PtrIn first, PtrIn end, PtrOut dest) noexcept
 {
 	using Type1 = PtrType<PtrIn >;
 	using Type2 = PtrType<PtrOut>;
@@ -26,7 +26,7 @@ inline PtrOut uncheckedMove(PtrIn first, PtrIn last, PtrOut dest)
 		&& std::is_same_v<Type1, bool> == std::is_same_v<Type2, bool>))
 	{
 		const char * const firstCh = const_cast<const char *>(reinterpret_cast<const volatile char *>(first));
-		const char * const lastCh  = const_cast<const char *>(reinterpret_cast<const volatile char *>(last ));
+		const char * const lastCh  = const_cast<const char *>(reinterpret_cast<const volatile char *>(end  ));
 		      char * const destCh  = const_cast<char       *>(reinterpret_cast<      volatile char *>(dest ));
 
 		const size_t numBytes = lastCh - firstCh;
@@ -36,23 +36,24 @@ inline PtrOut uncheckedMove(PtrIn first, PtrIn last, PtrOut dest)
 	}
 	else
 	{
-		for (first; first != last; ++first, ++last)
-			*dest = std::move(*first);
+		for (first; first != end; ++first, ++dest)
+			*dest = std::move_if_noexcept(*first);
 	}
 
 	return dest;
 }
 
-template<class Ptr>
-void destroyRange(Ptr first, Ptr end)
+// Call destructor for elements between pointers
+// [first, end)
+template<class Alloc, class Ptr>
+void destroyRange(Alloc al, Ptr first, Ptr end)
 {
-	if constexpr(std::is_trivially_destructible<PtrType<Ptr>>)
-	{
-
-	}
+	if constexpr(std::is_trivially_destructible<PtrType<Ptr>>::value)
+		;
 	else
 	{
-
+		for (first; first != end; ++first)
+			al.destroy(first);
 	}
 }
 
