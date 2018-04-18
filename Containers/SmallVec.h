@@ -406,8 +406,23 @@ public:
 		uncheckedMove(pos.ptr + 1, MyLast + 1, pos.ptr);
 		AlTraits::destroy(alloc, MyLast - 1); // TODO: Does this make sense?
 		--MyLast;
+		--MySize;
 
 		return iterator{ this, pos.ptr };
+	}
+
+	iterator erase(iterator start, iterator end)
+	{
+		if (start != end)
+		{
+			const size_type size = end.ptr - start.ptr;
+			const NodePtr newLast = uncheckedMove(end.ptr, MyLast, start.ptr);
+			destroyRange(alloc, newLast + 1, MyLast);
+			MyLast = newLast;
+			MySize -= size;
+		}
+
+		return iterator{ this, start.ptr };
 	}
 
 	bool empty() const noexcept
