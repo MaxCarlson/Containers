@@ -161,6 +161,18 @@ struct OBJ
 	}
 	*/
 };
+#include <utility>
+template<class T>
+void isIntegralP(T t)
+{
+	using t1 = std::remove_cv_t<decltype(*t)>;
+	typedef typename std::remove_reference<decltype(*std::declval<T>())>::type F;
+
+	std::cout << typeid(t1).name() << '\n';   // Prints out int
+	std::cout << std::is_integral<t1>::value << '\n'; // Prints false(0)
+	std::cout << typeid(F).name() << '\n';   // Prints out int
+	std::cout << std::is_integral<F>::value << '\n'; // Prints false(0)
+}
 
 void testSmallVec()
 {
@@ -177,9 +189,18 @@ void testSmallVec()
 
 	timer<Key>(true);
 
+	int base = 0;
+	int* p = &base;
+	isIntegralP(p);
+	uncheckedMove(p, p, p);
+
 	for (int i = 0; i < num; ++i)
 	{
-		vec.emplace_back(i);
+		auto it = vec.emplace_back(i);
+
+		if(i % 100 == 0 && i != 0) 
+		vec.erase(vec.begin());
+
 		//vec15.emplace_back(i);
 		//vec80.emplace_back(i);
 		//vec300.emplace_back(i);
@@ -215,8 +236,9 @@ void testFlat()
 
 	for (int i = 0; i < num; ++i)
 	{
-		//set.emplace(i);
+		auto it = set.emplace(i);
 		//map.emplace(i, i);
+
 
 		set.emplace_hint(set.end(), i);
 	}
@@ -224,6 +246,7 @@ void testFlat()
 	timer<int>(false);
 
 	int a = 5;
+	//std::vector<int> ff; ff.clear();
 }
 
 // Things to implement
@@ -253,7 +276,7 @@ int main()
 	
 	//testMap();
 	//testHash();
-	//testSmallVec();
-	testFlat();
+	testSmallVec();
+	//testFlat();
 	return 0;
 }

@@ -105,7 +105,6 @@ struct ConstVecIterator : public VecIterator<VectorType>
 	}
 };
 
-
 template<class Type, int alignedSize, class Allocator = std::allocator<Type>>
 class SmallVec
 {
@@ -229,34 +228,16 @@ private:
 		return currentSize + (currentSize + 2) / 2;
 	}
 
-	void shiftRight(int idx, size_type currentSize, size_type length)
-	{
-		if (currentSize + length >= MyCapacity) // This can likely be optimized since we know where we're moving elements
-			reserve(calculateGrowth(currentSize + length));
-
-		NodePtr start   = MyBegin + static_cast<difference_type>(idx);
-		NodePtr newLast = MyBegin + static_cast<difference_type>(currentSize + length);
-		NodePtr oldLast = MyLast;
-
-		// TODO: Test std::move vs std::swap!
-		for (; oldLast >= start; --oldLast, --newLast)
-			*newLast = std::move(*oldLast);		
-	}
-
-	template<class... Args>
-	void constructInPlace(size_type idx, Args&& ...args)
-	{
-		AlTraits::construct(alloc, MyBegin + idx, std::forward<Args>(args)...);
-	}
-
-	void copyTo(NodePtr first) 
+	void copyTo(NodePtr first) noexcept(std::is_nothrow_destructible_v<Type> 
+							        && (std::is_nothrow_copy_assignable_v<Type> 
+									||  std::is_nothrow_move_assignable_v<Type>))
 	{
 		NodePtr oldFirst = MyBegin;
 		NodePtr oldLast = MyLast;		
 
 		for (oldFirst; oldFirst <= oldLast; ++oldFirst, ++first)
 		{
-			*first = std::move(*oldFirst);
+			*first = std::move_if_noexcept(*oldFirst);
 			AlTraits::destroy(alloc, oldFirst);
 		}
 
@@ -384,12 +365,19 @@ public:
 		emplace_back(std::move(t));
 	}
 
-	void pop_back()
+	void pop_back() 
 	{	// Don't call with an empty vector!
 		AlTraits::destroy(alloc, MyLast); // TODO: Make sure this is okay when toDelete is in aligned storage!
 		
 		--MySize;
 		--MyLast; 
+	}
+
+	iterator erase(iterator pos) // TODO: use const_iterator
+	{
+		uncheckedMove(pos.ptr + 1, MyLast + 1, pos.ptr);
+
+		return pos;
 	}
 
 	bool empty() const noexcept
@@ -432,7 +420,7 @@ public:
 		return MyBegin;
 	}
 
-	void clear() noexcept // TODO:
+	void clear() 
 	{
 		NodePtr first = MyBegin;
 		NodePtr last = MyBegin + MySize;

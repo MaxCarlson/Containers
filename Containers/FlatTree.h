@@ -120,12 +120,6 @@ private:
 
 public:
 
-	// Emplace if no key exists
-	const NodeType & operator[](const key_type& k) 
-	{
-		
-	}
-
 	size_type size() const noexcept
 	{
 		return MyData.size();
