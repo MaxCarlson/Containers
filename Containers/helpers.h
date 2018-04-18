@@ -8,13 +8,16 @@
 template<class Alloc, class Type>
 using RebindAllocator = typename std::allocator_traits<Alloc>::template rebind_alloc<Type>;
 
+template<class Ptr>
+using PtrType = typename std::remove_reference<decltype(*std::declval<Ptr>())>::type;
+
 // Move elements first - last to dest,
 // with first getting placed on dest
 template<class PtrIn, class PtrOut>
 inline PtrOut uncheckedMove(PtrIn first, PtrIn last, PtrOut dest)
 {
-	using Type1 = typename std::remove_reference<decltype(*std::declval<PtrIn >())>::type;
-	using Type2 = typename std::remove_reference<decltype(*std::declval<PtrOut>())>::type;
+	using Type1 = PtrType<PtrIn >;
+	using Type2 = PtrType<PtrOut>;
 
 	if constexpr(std::is_trivially_assignable_v<PtrOut&, PtrIn>
 		&& (sizeof(Type1) == sizeof(Type2)
@@ -38,6 +41,19 @@ inline PtrOut uncheckedMove(PtrIn first, PtrIn last, PtrOut dest)
 	}
 
 	return dest;
+}
+
+template<class Ptr>
+void destroyRange(Ptr first, Ptr end)
+{
+	if constexpr(std::is_trivially_destructible<PtrType<Ptr>>)
+	{
+
+	}
+	else
+	{
+
+	}
 }
 
 template<class C>

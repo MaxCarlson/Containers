@@ -161,18 +161,6 @@ struct OBJ
 	}
 	*/
 };
-#include <utility>
-template<class T>
-void isIntegralP(T t)
-{
-	using t1 = std::remove_cv_t<decltype(*t)>;
-	typedef typename std::remove_reference<decltype(*std::declval<T>())>::type F;
-
-	std::cout << typeid(t1).name() << '\n';   // Prints out int
-	std::cout << std::is_integral<t1>::value << '\n'; // Prints false(0)
-	std::cout << typeid(F).name() << '\n';   // Prints out int
-	std::cout << std::is_integral<F>::value << '\n'; // Prints false(0)
-}
 
 void testSmallVec()
 {
@@ -189,17 +177,12 @@ void testSmallVec()
 
 	timer<Key>(true);
 
-	int base = 0;
-	int* p = &base;
-	isIntegralP(p);
-	uncheckedMove(p, p, p);
-
 	for (int i = 0; i < num; ++i)
 	{
 		auto it = vec.emplace_back(i);
 
-		if(i % 100 == 0 && i != 0) 
-		vec.erase(vec.begin());
+		//if(i % 100 == 0 && i != 0) 
+		//	vec.erase(vec.begin());
 
 		//vec15.emplace_back(i);
 		//vec80.emplace_back(i);
@@ -211,7 +194,7 @@ void testSmallVec()
 
 
 	//vec13 = vec;
-
+	int a = 5;
 }
 
 void printOutSmallVec(SmallVec<int, 1> &v)

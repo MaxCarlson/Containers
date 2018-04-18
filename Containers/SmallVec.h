@@ -1,4 +1,5 @@
 #pragma once
+#include "helpers.h"
 #include <memory>
 
 template<class Traits>
@@ -235,11 +236,14 @@ private:
 		NodePtr oldFirst = MyBegin;
 		NodePtr oldLast = MyLast;		
 
+		///*
 		for (oldFirst; oldFirst <= oldLast; ++oldFirst, ++first)
 		{
 			*first = std::move_if_noexcept(*oldFirst);
 			AlTraits::destroy(alloc, oldFirst);
 		}
+		//*/
+		//uncheckedMove(oldFirst, oldLast + 1, first);
 
 		if (copyFromAligned)
 			copyFromAligned = false;
