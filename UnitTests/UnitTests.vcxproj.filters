@@ -35,5 +35,8 @@
     <ClCompile Include="TestHashTables.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MapSetOverloads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

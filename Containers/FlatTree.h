@@ -101,7 +101,7 @@ private:
 
 	Storage MyData;
 
-	size_type upperBound(const key_type &k) const // TODO: Benchmark against std::upperbound()!
+	size_type binSearch(const key_type &k) const // TODO: Benchmark against std::upper_bound/others()!
 	{
 		size_type size = MyData.size();
 		size_type low = 0;
@@ -128,7 +128,7 @@ public:
 		return *this;
 	}
 
-	FlatTree& operator=(const FlatTree& other) // TODO: Some enable if stuff not allowing narrowing conversion types / etc?
+	FlatTree& operator=(const FlatTree& other) 
 	{
 		MyData = other.MyData;
 		return *this;
@@ -161,14 +161,14 @@ public:
 
 	iterator upper_bound(const key_type& k)
 	{
-		const size_type idx = upperBound(k);
+		const size_type idx = binSearch(k);
 
 		return iterator{ &MyData, &MyData[idx + 1] };
 	}
 
 	iterator lower_bound(const key_type& k)
 	{
-		const size_type idx = upperBound(k);
+		const size_type idx = binSearch(k);
 
 		return iterator{ &MyData, &MyData[idx] };
 	}
@@ -184,7 +184,7 @@ public:
 		// While we find it a place to sit
 		Node n = Node{ std::forward<Args>(args)... };
 
-		const size_type idx = upperBound(get_key()(n));
+		const size_type idx = binSearch(get_key()(n));
 
 		if (get_key()(MyData[idx]) == get_key()(n) && idx < MyData.size()) // TODO: Add template parameter to allow Multiples
 			return PairIb{ iterator{ &MyData, &MyData[idx] }, false };
@@ -213,7 +213,7 @@ public:
 	// O(Log N) complexity
 	iterator find(const key_type &k)
 	{
-		const size_type idx = upperBound(k);
+		const size_type idx = binSearch(k);
 
 		if (get_key()(MyData[idx]) == k)
 			return iterator{ &MyData, &MyData[idx] };

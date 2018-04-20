@@ -39,21 +39,21 @@ template<class Key,
 // TODO: Write copy and move constructors that are compatible
 // between base template classes
 template<class Key,
-	template<class> class MyBase = RedBlackTree,
+	template<class> class Base = RedBlackTree,
 	class Compare = std::less<Key>,
 	class Allocator = std::allocator<Key>>
-	class Set : public MyBase<SetTraits<Key, Compare, Allocator>>
+	class Set : public Base<SetTraits<Key, Compare, Allocator>>
 {
 public:
 
 	template<class, template<class> class, class, class>
 	friend class Set;
 
-	using UnderlyingT = MyBase<SetTraits<Key, Compare, Allocator>>;
+	using MyBase = Base<SetTraits<Key, Compare, Allocator>>;
 
 	Set& operator=(const Set &other)
-	{	// Use the underlying class's = overload
-		UnderlyingT::operator=(other);
+	{	// Use the underlying class's operator= overload
+		MyBase::operator=(other);
 		return *this;
 	}
 

@@ -43,10 +43,22 @@ template<class Key, class Type,
 // TODO: Write copy and move constructors that are compatible
 // between base template classes
 template<class Key, class Type,
-	template<class> class MyBase = RedBlackTree,
+	template<class> class Base = RedBlackTree,
 	class Compare = std::less<Key>,
 	class Allocator = std::allocator<std::pair<const Key, Type>>> 
-	class Map : public MyBase<MapTraits<Key, Type, Compare, Allocator>>
+	class Map : public Base<MapTraits<Key, Type, Compare, Allocator>>
 {
+public:
+
+	template<class, class, template<class> class, class, class>
+	friend class Map;
+
+	using MyBase = Base<MapTraits<Key, Type, Compare, Allocator>>;
+
+	Map& operator=(const Map &other)
+	{	// Use the underlying class's operator= overload
+		MyBase::operator=(other);
+		return *this;
+	}
 
 };

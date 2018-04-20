@@ -295,7 +295,7 @@ private:
 				dir = compare(child->data, n->data);
 
 				if (child->data == n->data) // Don't overwrite here TODO: Add in bool template param for taking params of same value
-				{						// TODO: Get rid of operator == neccesity?
+				{						
 					freeNode(n);
 					return Iterator(Head, this);
 				}
@@ -307,40 +307,6 @@ private:
 			}
 
 			bottomUpInsertion(child, n, dir);
-
-
-			/*
-			while (child)
-			{
-				dir = compare(child->data, n->data);
-
-				prev = child;
-				child = child->subtree[dir];
-			}
-
-			
-			Iterator where(prev, this);
-
-			bool done = false;
-			if (dir)
-				;
-			else if (where == begin())
-			{
-				bottomUpInsertion(prev, n, LEFT);
-				done = true;
-			}
-			else
-				--where;
-
-			if (!done && compare(where.node->data, n->data))
-				bottomUpInsertion(prev, n, dir);
-
-			else if(!done)
-			{
-				freeNode(n);
-				return where;
-			}
-			*/
 		}
 
 		root->color = BLACK;
@@ -365,7 +331,7 @@ private:
 		// We need to fix tree for children with red parents
 		for (NodePtr c = newNode; c->parent->color == RED;)
 		{
-			const int dir = (c->parent == c->parent->parent->subtree[RIGHT]); // Change to int once done debugging
+			const int dir = (c->parent == c->parent->parent->subtree[RIGHT]); 
 																			  // If sister node is red attempt a re-color
 			NodePtr uncle = c->parent->parent->subtree[!dir];
 
