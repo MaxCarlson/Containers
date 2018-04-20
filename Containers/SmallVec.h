@@ -187,7 +187,7 @@ private:
 
 public:
 
-	// In the case aligned size is <= 1, don't use aligned memory
+	// In the case aligned size is < 1, don't use aligned memory
 	SmallVec() : useAligned(alignedSize > 0), 
 			     copyFromAligned(false) 
 	{
@@ -198,10 +198,12 @@ public:
 		}
 	}
 
+	NodePtr findEnd() const noexcept { return MyLast == MyBegin ? MyBegin : MyLast + 1; }
+
 	iterator begin() noexcept { return iterator{ this, MyBegin }; }
-	iterator end() noexcept { return iterator{ this, MyLast + 1 }; }
+	iterator end() noexcept { return iterator{ this, findEnd()}; }
 	const_iterator begin() const noexcept { return const_iterator{ this, MyBegin }; }
-	const_iterator end() const noexcept { return const_iterator{ this, MyLast + 1 }; }
+	const_iterator end() const noexcept { return const_iterator{ this, findEnd() }; }
 	const_iterator cbegin() const noexcept { return begin(); }
 	const_iterator cend() const noexcept { return end(); }
 

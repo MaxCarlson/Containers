@@ -234,12 +234,12 @@ void printOutSmallVec(SmallVec<int, 1> &v)
 
 void testFlat()
 {
-	//static constexpr int num = 10000;
-	static constexpr int num = 100000000;
+	static constexpr int num = 10000;
+	//static constexpr int num = 10000000;
 
 	using Key = int;
 
-	Set<size_t, FlatTree> sets;
+	Set<int16_t, FlatTree> sets;
 	Set<Key, FlatTree> set;
 	Map<Key, Key, FlatTree> map;
 
@@ -254,7 +254,7 @@ void testFlat()
 		set.emplace_hint(set.end(), i);
 	}
 
-	sets = set;
+	set = sets;
 
 	timer<int>(false);
 
@@ -289,7 +289,7 @@ int main()
 	
 	//testMap();
 	//testHash();
-	testSmallVec();
+	//testSmallVec();
 	testFlat();
 	return 0;
 }

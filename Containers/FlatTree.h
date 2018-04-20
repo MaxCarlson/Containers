@@ -116,16 +116,22 @@ private:
 
 			low = key_compare()(get_key()(MyData[probe]), k) ? olow : low;
 		}
-
 		return low;
 	}
 
 public:
 
-	template<class T>
-	FlatTree operator=(const FlatTree<T>& other) // TODO: Some enable if stuff not allowing narrowing conversion types / etc?
+	template<class T, typename = std::enable_if_t<std::is_convertible_v<Node, typename FlatTree<T>::Node>>>
+	FlatTree& operator=(const FlatTree<T>& other)
 	{
 		MyData = other.MyData;
+		return *this;
+	}
+
+	FlatTree& operator=(const FlatTree& other) // TODO: Some enable if stuff not allowing narrowing conversion types / etc?
+	{
+		MyData = other.MyData;
+		return *this;
 	}
 
 	size_type size() const noexcept

@@ -139,33 +139,55 @@ namespace TestFlatTreeN
 				auto sit = set.upper_bound(r);
 				auto mit = map.upper_bound(r);
 				auto it = test.upper_bound(r);
-				Assert::AreEqual(*it, *sit);
-				Assert::AreEqual(*it, mit->first);
+				if (it != test.end())
+				{
+					Assert::AreEqual(*it, *sit);
+					Assert::AreEqual(*it, mit->first);
+				}
 
 				sit = set.lower_bound(r);
 				mit = map.lower_bound(r);
 				it = test.lower_bound(r);
-				Assert::AreEqual(*it, *sit);
-				Assert::AreEqual(*it, mit->first);
+				if (it != test.end())
+				{
+					Assert::AreEqual(*it, *sit);
+					Assert::AreEqual(*it, mit->first);
+				}
 			}
 		}
-
+		
+		// Test FlatTrees assingment operator
+		// Set<FlatTree> and Map<FlatTree> operators are tested elsewhere
 		TEST_METHOD(FlatTree__AssignmentOp)
 		{
+			using setiT = FlatTree<SetTraits<int, std::less<int>, std::allocator<int>>>;
+			using setsT = FlatTree<SetTraits<size_t, std::less<size_t>, std::allocator<size_t>>>;
+			using mapiT = FlatTree<MapTraits<int, int, std::less<int>, std::allocator<int>>>;
+			using mapsT = FlatTree<MapTraits<size_t, size_t, std::less<size_t>, std::allocator<std::pair<size_t, size_t>>>>;
+
 			std::set<size_t> test;
-			Set<size_t, FlatTree> sets;
-			Set<int, FlatTree> seti;
-			Map<int, size_t, FlatTree> maps;
-			Map<int, int, FlatTree> mapi;
+			setsT sets;
+			setiT seti;
+			mapsT maps;
+			mapiT mapi;
 
 			for (int i = 0; i < num; ++i)
 			{
 				test.emplace(i);
-				sets.emplace(i);
-				maps.emplace(i, i); 
+				seti.emplace(i);
+				mapi.emplace(i, i); 
 			}
+			sets = seti;
+			maps = mapi;
 
-			seti = sets;
+			auto sit = sets.begin();
+			auto mit = maps.begin();
+			for (auto it = test.begin(); it != test.end(); ++it, ++sit, ++mit)
+			{
+				Assert::AreEqual(*it, *sit);
+				Assert::AreEqual(*it, mit->first);
+			}
 		}
+		
 	};
 }
