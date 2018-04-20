@@ -188,6 +188,5 @@ namespace TestFlatTreeN
 				Assert::AreEqual(*it, mit->first);
 			}
 		}
-		
 	};
 }

@@ -207,19 +207,20 @@ public:
 	const_iterator cbegin() const noexcept { return begin(); }
 	const_iterator cend() const noexcept { return end(); }
 
-	template<class T, int Sz, class Al>
-	SmallVec& operator=(const SmallVec<T, Sz, Al>& other)
+private:
+	template<class Other>
+	void copyOtherHere(const Other& other)
 	{
-		// This is here so we can copy vectors the require only one
-		// type conversion from the compiler
-		using OthersNodePtr = typename SmallVec<T, Sz, Al>::NodePtr;
+		using OtherNodePtr = typename Other::NodePtr;
 
 		for (NodePtr n = MyBegin; n <= MyLast; ++n)
 			AlTraits::destroy(alloc, n);
 
-		if (other.size() >= this->capacity()) 
+		//destroyRange(alloc, MyBegin, end().ptr);
+
+		if (other.size() >= this->capacity())
 		{
-			auto nodePair = allocate(other.capacity()); // Should we use size of capacity here?
+			auto nodePair = allocate(other.capacity()); 
 
 			if (!useAligned)
 				AlTraits::deallocate(alloc, MyBegin, MyCapacity);
@@ -235,9 +236,23 @@ public:
 		MyLast = MyBegin + static_cast<difference_type>(MySize - 1);
 
 		NodePtr mb = MyBegin;
-		for(OthersNodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
+		for (OtherNodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
 			AlTraits::construct(alloc, mb, *p);
 
+		//uncheckedMove(other.MyBegin, other.end().ptr, MyBegin);
+	}
+
+public:
+	SmallVec& operator=(const SmallVec& other)
+	{
+		copyOtherHere(other);
+		return *this;
+	}
+
+	template<class T, int Sz, class Al>
+	SmallVec& operator=(const SmallVec<T, Sz, Al>& other)
+	{
+		copyOtherHere(other);
 		return *this;
 	}
 

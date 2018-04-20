@@ -166,7 +166,11 @@ namespace TestSmallVec
 			Assert::AreEqual(vec15.capacity(), vec80.capacity());
 			Assert::AreEqual(vec301.capacity(), vec1300.capacity());
 
-			for (int i = 0; i < count; ++i)
+			vec1[0] += 1;
+
+			Assert::AreNotEqual(size_t(vec1[0]), vec7[0]);
+
+			for (int i = 1; i < count; ++i)
 			{
 				Assert::AreEqual(size_t(vec1[i]), vec7[i]);
 				Assert::AreEqual(size_t(vec15[i]), vec80[i]);

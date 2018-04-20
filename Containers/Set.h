@@ -49,7 +49,7 @@ public:
 	template<class, template<class> class, class, class>
 	friend class Set;
 
-	//using UnderlyingT = MyBase<SetTraits<Key, Compare, Allocator>>;
+	using UnderlyingT = MyBase<SetTraits<Key, Compare, Allocator>>;
 
 	Set& operator=(const Set &other)
 	{	// Use the underlying class's = overload
