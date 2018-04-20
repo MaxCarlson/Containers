@@ -42,7 +42,7 @@ public:
 		return std::pointer_traits<pointer>::pointer_to(**this);
 	}
 
-	VecIterator& operator++()
+	VecIterator& operator++() // TODO: Should we really check here?
 	{
 		if (ptr <= MyVec->MyLast)
 			++ptr;
@@ -57,9 +57,9 @@ public:
 		return tmp;
 	}
 
-	VecIterator& operator--()
+	VecIterator& operator--() 
 	{
-		if (ptr > MyVec->MyBegin)
+		if (ptr > MyVec->MyBegin) // TODO: Should we really check here?
 			--ptr;
 
 		return *this;
@@ -416,12 +416,12 @@ public:
 		return iterator{ this, pos.ptr };
 	}
 
-	iterator erase(iterator start, iterator end)
+	iterator erase(iterator start, iterator last)
 	{
-		if (start != end)
+		if (start != last)
 		{
-			const size_type size = end.ptr - start.ptr;
-			const NodePtr newLast = uncheckedMove(end.ptr, MyLast + 1, start.ptr);
+			const size_type size = last.ptr - start.ptr;
+			const NodePtr newLast = uncheckedMove(last.ptr, MyLast + 1, start.ptr);
 			destroyRange(alloc, newLast, MyLast);
 			MyLast = newLast;
 			MySize -= size;
@@ -470,13 +470,9 @@ public:
 		return MyBegin;
 	}
 
-	void clear() 
+	void clear() noexcept(std::is_nothrow_destructible_v<Type>)
 	{
-		NodePtr first = MyBegin;
-		NodePtr last = MyBegin + MySize;
-
-		for (first; first != last; ++first)
-			AlTraits::destroy(alloc, first);
+		destroyRange(alloc, MyBegin, MyLast);
 
 		MySize = 0;
 	}

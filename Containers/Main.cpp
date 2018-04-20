@@ -164,7 +164,9 @@ struct OBJ
 
 void testSmallVec()
 {
-	static constexpr int num = 250000000;
+	//static constexpr int num = 250000000;
+	static constexpr int num = 25000000;
+
 	using Key = int;
 
 	SmallVec<Key, 1> vec;
@@ -177,9 +179,11 @@ void testSmallVec()
 
 	timer<Key>(true);
 
+	std::vector<int> test;
 	for (int i = 0; i < num; ++i)
 	{
 		auto it = vec.emplace_back(i);
+		test.emplace_back(i);
 
 		//if(i % 100 == 0 && i != 0) 
 		//	vec.erase(vec.begin());
@@ -190,8 +194,31 @@ void testSmallVec()
 		//vec1000.emplace_back(i);
 	}
 
-	timer<Key>(false);
+	
+	for (int i = 0; i < num; ++i)
+	{
+		auto r = rand() % test.size();
+		auto tr = r + (rand() % 75);
+		auto r2 = tr < test.size() ? tr : r + 15;
 
+		if (r2 >= test.size())
+			continue;
+
+		auto it = vec.begin() + r;
+		auto ite = vec.begin() + r2;
+		auto tit = test.begin() + r;
+		auto tite = test.begin() + r2;
+
+		auto res = vec.erase(it, ite);
+		auto tres = test.erase(tit, tite);
+
+		if (*res != *tres)
+			std::cout << "ShouldBe: " << *tres << " Is: "<< *res;
+		if (test.size() != vec.size())
+			std::cout << "ShouldBe Size: " << test.size() << " VecSize: " << vec.size() << "\n";
+	}
+
+	timer<Key>(false);
 
 	//vec13 = vec;
 	int a = 5;
@@ -212,6 +239,7 @@ void testFlat()
 
 	using Key = int;
 
+	Set<size_t, FlatTree> sets;
 	Set<Key, FlatTree> set;
 	Map<Key, Key, FlatTree> map;
 
@@ -225,6 +253,8 @@ void testFlat()
 
 		set.emplace_hint(set.end(), i);
 	}
+
+	sets = set;
 
 	timer<int>(false);
 
@@ -260,6 +290,6 @@ int main()
 	//testMap();
 	//testHash();
 	testSmallVec();
-	//testFlat();
+	testFlat();
 	return 0;
 }

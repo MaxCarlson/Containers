@@ -6,10 +6,11 @@
 #include <random>
 #include <utility>
 #include <tuple>
+//#include <unordered_set>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace TestFlatTree
+namespace TestFlatTreeN
 {
 	TEST_CLASS(TestFlatTree)
 	{
@@ -49,6 +50,7 @@ namespace TestFlatTree
 
 		TEST_METHOD(FlatTree__Find)
 		{
+			std::set<int> tset;
 			Set<int, FlatTree> set;
 			Map<int, int, FlatTree> map;
 
@@ -56,15 +58,16 @@ namespace TestFlatTree
 			{
 				set.emplace(i);
 				map.emplace(i, i);
+				tset.emplace(i);
 			}
-
 			for (int i = 0; i < num; ++i)
 			{
+				auto it = tset.find(i);
 				auto sit = set.find(i);
 				auto mit = map.find(i);
 
-				Assert::AreEqual(true, sit != set.end(), L"Set Find Error");
-				Assert::AreEqual(true, mit != map.end(), L"Map Find Error");
+				Assert::AreEqual(*it, *sit, L"Set Find Error");
+				Assert::AreEqual(*it, mit->first, L"Map Find Error");
 			}
 		}
 
@@ -115,6 +118,54 @@ namespace TestFlatTree
 				Assert::AreEqual(*it, *sit);
 				Assert::AreEqual(*it, mit->first);
 			}
+		}
+
+		TEST_METHOD(FlatTree__UpperLowerBound)
+		{
+			Set<int, FlatTree> set;
+			Map<int, int, FlatTree> map;
+			std::set<int> test;
+
+			for (int i = 0; i < num; ++i)
+			{
+				set.emplace(i);
+				map.emplace(i, i);
+				test.emplace(i);
+			}
+			for (int i = 0; i < num; ++i)
+			{
+				int r = rand() % num;
+
+				auto sit = set.upper_bound(r);
+				auto mit = map.upper_bound(r);
+				auto it = test.upper_bound(r);
+				Assert::AreEqual(*it, *sit);
+				Assert::AreEqual(*it, mit->first);
+
+				sit = set.lower_bound(r);
+				mit = map.lower_bound(r);
+				it = test.lower_bound(r);
+				Assert::AreEqual(*it, *sit);
+				Assert::AreEqual(*it, mit->first);
+			}
+		}
+
+		TEST_METHOD(FlatTree__AssignmentOp)
+		{
+			std::set<size_t> test;
+			Set<size_t, FlatTree> sets;
+			Set<int, FlatTree> seti;
+			Map<int, size_t, FlatTree> maps;
+			Map<int, int, FlatTree> mapi;
+
+			for (int i = 0; i < num; ++i)
+			{
+				test.emplace(i);
+				sets.emplace(i);
+				maps.emplace(i, i); 
+			}
+
+			seti = sets;
 		}
 	};
 }

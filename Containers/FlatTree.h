@@ -53,6 +53,9 @@ class FlatTree
 {
 public:
 	using MyBase = FlatTree<Traits>;
+	
+	template<class>
+	friend class FlatTree;
 
 	using value_type = typename Traits::value_type;
 	using key_type   = typename Traits::key_type;
@@ -95,7 +98,6 @@ public:
 	using PairIb = std::pair<iterator, bool>;
 
 private:
-	NodeAl nodeAl;
 
 	Storage MyData;
 
@@ -106,10 +108,10 @@ private:
 
 		while (size > 0) 
 		{
-			size_type half = size / 2;
-			size_type ohalf = size - half;
-			size_type probe = low + half;
-			size_type olow = low + ohalf;
+			size_type half  = size /  2;
+			size_type ohalf = size -  half;
+			size_type probe = low  +  half;
+			size_type olow  = low  + ohalf;
 			size = half;
 
 			low = key_compare()(get_key()(MyData[probe]), k) ? olow : low;
@@ -120,9 +122,20 @@ private:
 
 public:
 
+	template<class T>
+	FlatTree operator=(const FlatTree<T>& other) // TODO: Some enable if stuff not allowing narrowing conversion types / etc?
+	{
+		MyData = other.MyData;
+	}
+
 	size_type size() const noexcept
 	{
 		return MyData.size();
+	}
+
+	bool empty() const noexcept
+	{
+		return MyData.empty();
 	}
 
 	size_type capacity() const noexcept
@@ -130,11 +143,34 @@ public:
 		return MyData.capacity();
 	}
 
+	void clear() noexcept(std::is_nothrow_destructible_v<Node>)
+	{
+		MyData.clear();
+	}
+
 	void reserve(size_type newCap)
 	{
 		MyData.reserve(newCap);
 	}
 
+	iterator upper_bound(const key_type& k)
+	{
+		const size_type idx = upperBound(k);
+
+		return iterator{ &MyData, &MyData[idx + 1] };
+	}
+
+	iterator lower_bound(const key_type& k)
+	{
+		const size_type idx = upperBound(k);
+
+		return iterator{ &MyData, &MyData[idx] };
+	}
+
+	// O(Log N) find time 
+	// O(N) insert time, N being the number of elements after inserted position.
+	// O(1) insert time if element is the greatest of the predicate type 
+	// (largest when using std::less for example)
 	template<class... Args>
 	PairIb emplace(Args&& ...args)
 	{
@@ -142,7 +178,7 @@ public:
 		// While we find it a place to sit
 		Node n = Node{ std::forward<Args>(args)... };
 
-		size_type idx = upperBound(get_key()(n));
+		const size_type idx = upperBound(get_key()(n));
 
 		if (get_key()(MyData[idx]) == get_key()(n) && idx < MyData.size()) // TODO: Add template parameter to allow Multiples
 			return PairIb{ iterator{ &MyData, &MyData[idx] }, false };
@@ -150,6 +186,10 @@ public:
 		return PairIb{ MyData.emplace(idx, std::move(n)), true }; 
 	}
 
+	// O(Log N) find time unless correct position is it - 1. 
+	// O(N) insert time, N being the number of elements after inserted position.
+	// O(1) insert time if element is the greatest of the predicate type 
+	// (largest when using std::less for example)
 	template<class... Args>
 	iterator emplace_hint(iterator it, Args&& ...args) // TODO: Use const_iterator here
 	{
@@ -164,6 +204,7 @@ public:
 		return emplace(std::move(n)).first;
 	}
 
+	// O(Log N) complexity
 	iterator find(const key_type &k)
 	{
 		const size_type idx = upperBound(k);

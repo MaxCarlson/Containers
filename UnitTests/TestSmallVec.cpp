@@ -235,8 +235,10 @@ namespace TestSmallVec
 				Assert::AreEqual(i, vec12[i]);
 		}
 
-		TEST_METHOD(SmallVector__EraseIt)
+		// Test random block iterator erasing
+		TEST_METHOD(SmallVector__EraseItMulti)
 		{
+			const int size = 8000;
 			std::vector<int> test;
 			SmallVec<int, 1> vec1;
 			SmallVec<int, 7> vec7;
@@ -245,11 +247,69 @@ namespace TestSmallVec
 			SmallVec<int, 301> vec301;
 			SmallVec<int, 1300> vec1300;
 
-			fillVectors(count / 3, test, vec1, vec7, vec15, vec80, vec301, vec1300);
+			fillVectors(size, test, vec1, vec7, vec15, vec80, vec301, vec1300);
 
-			const int num = count / 6;
+			for (int i = 0; i < size; ++i)
+			{
+				auto r = rand() % test.size();
+				auto rr = r + rand() % 135;
 
-			for (int i = 0; i < num; ++i)
+				if (rr < test.size())
+				{
+					auto it = test.begin() + r;
+					auto itL = test.begin() + rr;
+					auto v1 = vec1.begin() + r;
+					auto v1L = vec1.begin() + rr;
+					auto v7 = vec7.begin() + r;
+					auto v7L = vec7.begin() + rr;
+					auto v15 = vec15.begin() + r;
+					auto v15L = vec15.begin() + rr;
+					auto v80 = vec80.begin() + r;
+					auto v80L = vec80.begin() + rr;
+					auto v301 = vec301.begin() + r;
+					auto v301L = vec301.begin() + rr;
+					auto v1300 = vec1300.begin() + r;
+					auto v1300L = vec1300.begin() + rr;
+
+					it = test.erase(it, itL);
+					v1 = vec1.erase(v1, v1L);
+					v7 = vec7.erase(v7, v7L);
+					v15 = vec15.erase(v15, v15L);
+					v80 = vec80.erase(v80, v80L);
+					v301 = vec301.erase(v301, v301L);
+					v1300 = vec1300.erase(v1300, v1300L);
+
+					Assert::AreEqual(*it, *v1);
+					Assert::AreEqual(*it, *v7);
+					Assert::AreEqual(*it, *v15);
+					Assert::AreEqual(*it, *v80);
+					Assert::AreEqual(*it, *v301);
+					Assert::AreEqual(*it, *v1300);
+				}
+
+				Assert::AreEqual(test.size(), vec1.size());
+				Assert::AreEqual(test.size(), vec7.size());
+				Assert::AreEqual(test.size(), vec15.size());
+				Assert::AreEqual(test.size(), vec80.size());
+				Assert::AreEqual(test.size(), vec301.size());
+				Assert::AreEqual(test.size(), vec1300.size());
+			}
+		}
+
+		TEST_METHOD(SmallVector__ItAndErase)
+		{
+			const int size = 20000;
+			std::vector<int> test;
+			SmallVec<int, 1> vec1;
+			SmallVec<int, 7> vec7;
+			SmallVec<int, 15> vec15;
+			SmallVec<int, 80> vec80;
+			SmallVec<int, 301> vec301;
+			SmallVec<int, 1300> vec1300;
+
+			fillVectors(size, test, vec1, vec7, vec15, vec80, vec301, vec1300);
+
+			for (int i = 0; i < size; ++i)
 			{
 				auto r = rand() % test.size();
 				auto it = std::lower_bound(test.begin(), test.end(), r);
@@ -285,39 +345,6 @@ namespace TestSmallVec
 				v80i = vec80.erase(v80i);
 				v301i = vec301.erase(v301i);
 				v1300i = vec1300.erase(v1300i);
-
-				if (it == test.end())
-					continue;
-					
-				Assert::AreEqual(*it, *v1i);
-				Assert::AreEqual(*it, *v7i);
-				Assert::AreEqual(*it, *v15i);
-				Assert::AreEqual(*it, *v80i);
-				Assert::AreEqual(*it, *v301i);
-				Assert::AreEqual(*it, *v1300i);
-
-				r = rand() % test.size();
-				auto tr = r + rand() % 75;
-				auto r2 = tr < test.size() ? tr : r + rand() % 15;
-
-				// Range deletions
-				
-				if (r2 < test.size())
-				{
-					std::vector<int>::iterator itf = test.begin() + r;
-					std::vector<int>::iterator ite = test.begin() + r2;
-
-					SmallVec<int, 1>::iterator v1f = vec1.begin() + r;
-					SmallVec<int, 1>::iterator v1e = vec1.begin() + r2;
-
-					itf = test.erase(itf, ite);
-					v1f = vec1.erase(v1f, v1e);
-
-					if (itf == test.end())
-						continue;
-
-					Assert::AreEqual(*itf, *v1f);
-				}
 			}
 		}
 	};

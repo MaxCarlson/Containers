@@ -44,5 +44,12 @@ template<class Key,
 	class Allocator = std::allocator<Key>>
 	class Set : public MyBase<SetTraits<Key, Compare, Allocator>>
 {
+public:
+
+	template<class, template<class> class, class, class>
+	friend class Set;
+
+	//using UnderlyingT = MyBase<SetTraits<Key, Compare, Allocator>>;
+
 
 };
