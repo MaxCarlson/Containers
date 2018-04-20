@@ -213,10 +213,7 @@ private:
 	{
 		using OtherNodePtr = typename Other::NodePtr;
 
-		for (NodePtr n = MyBegin; n <= MyLast; ++n)
-			AlTraits::destroy(alloc, n);
-
-		//destroyRange(alloc, MyBegin, end().ptr);
+		destroyRange(alloc, MyBegin, end().ptr);
 
 		if (other.size() >= this->capacity())
 		{
@@ -235,11 +232,7 @@ private:
 		MySize = other.size();
 		MyLast = MyBegin + static_cast<difference_type>(MySize - 1);
 
-		NodePtr mb = MyBegin;
-		for (OtherNodePtr p = other.MyBegin; p <= other.MyLast; ++p, ++mb)
-			AlTraits::construct(alloc, mb, *p);
-
-		//uncheckedMove(other.MyBegin, other.end().ptr, MyBegin);
+		uncheckedMove(other.MyBegin, other.end().ptr, MyBegin);
 	}
 
 public:

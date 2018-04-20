@@ -39,8 +39,8 @@ struct OBJ
 
 void testSmallVec()
 {
-	//static constexpr int num = 250000000;
-	static constexpr int num = 2500000;
+	static constexpr int num = 250000000;
+	//static constexpr int num = 2500000;
 
 	using Key = int;
 
