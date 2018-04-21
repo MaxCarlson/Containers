@@ -44,22 +44,19 @@ void testSmallVec()
 
 	using Key = int;
 
-	SmallVec<Key, 1> vec;
-	SmallVec<Key, 1> tovec;
+	SmallVec<Key, 1000> vec;
+	//std::vector<int> test;
 
-
-	std::vector<int> test;
-	for (int i = 0; i < num; ++i)
-	{
-		auto it = vec.emplace_back(i);
-		test.emplace_back(i);
-	}
 
 	timer<Key>(true);
 
-	tovec = vec;
+	for (int i = 0; i < num; ++i)
+	{
+		auto it = vec.emplace_back(i);
 
-	tovec[0] += 1;
+		if (vec.size() >= 999)
+			vec.clear();
+	}
 
 	timer<Key>(false);
 

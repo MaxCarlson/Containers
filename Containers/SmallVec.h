@@ -484,6 +484,7 @@ public:
 	{
 		destroyRange(alloc, MyBegin, MyLast);
 
+		MyLast = MyBegin;
 		MySize = 0;
 	}
 };
