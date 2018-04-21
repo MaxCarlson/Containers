@@ -52,7 +52,7 @@ public:
 	using MyBase = Base<SetTraits<Key, Compare, Allocator>>;
 
 	Set& operator=(const Set &other)
-	{	// Use the underlying class's operator= overload
+	{	
 		MyBase::operator=(other);
 		return *this;
 	}
@@ -60,11 +60,11 @@ public:
 	// Overload for copying Sets with any ordering and values
 	// that can be converted into one another
 	template<class K, template<class> class Mb, class Comp, class Al, 
-		typename = std::enable_if_t<std::is_convertible_v<K, Key>>> // TODO: Issue with template compare functions
+		typename = std::enable_if_t<std::is_convertible_v<K, Key>>> 
 	Set& operator=(const Set<K, Mb, Comp, Al> &other)
 	{	
 		for (auto it = other.begin(); it != other.end(); ++it)
-			this->emplace(Key{ static_cast<Key>(*it.ptr) });
+			this->emplace(Key{ static_cast<Key>(*it.ptr) }); // TODO: Should Key{} be Key() for implicit conversions?
 
 		return *this;
 	}

@@ -39,7 +39,7 @@ struct OBJ
 
 void testSmallVec()
 {
-	static constexpr int num = 250000000;
+	static constexpr auto num = 2500000000;
 	//static constexpr int num = 2500000;
 
 	using Key = int;
@@ -47,10 +47,10 @@ void testSmallVec()
 	SmallVec<Key, 1000> vec;
 	//std::vector<int> test;
 
-
+	vec.reserve(1000);
 	timer<Key>(true);
 
-	for (int i = 0; i < num; ++i)
+	for (long i = 0; i < num; ++i)
 	{
 		auto it = vec.emplace_back(i);
 
@@ -95,7 +95,6 @@ void testFlat()
 }
 
 // Things to implement
-// Flat-Maps
 // B-Tree
 // AVL-Tree
 // Splay-Tree
@@ -111,16 +110,9 @@ void testFlat()
 // vector + uset/umap fast lookups fast traversal 
 // store and iterate through vector when it's small
 // allocate uset/map once larger for find ops
-// for erase either do a linear erase or store vec idx's in the map nodes
 
 int main()
 { 
-//	for(int i = 0; i < 100; ++i)
-//		increaseCapacity();
-
-	
-	//testMap();
-	//testHash();
 	testSmallVec();
 	//testFlat();
 	return 0;

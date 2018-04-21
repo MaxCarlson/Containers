@@ -416,6 +416,11 @@ public:
 		--MyLast; 
 	}
 
+	// Erase element pos and preserve containers ordering
+	// all iterators after pos are invalidated
+	// Returns an iterator to the element in pos's place
+	// O(N) complexity, N being the number of elemnts after pos
+	//
 	iterator erase(iterator pos) // TODO: use const_iterator
 	{
 		uncheckedMove(pos.ptr + 1, MyLast + 1, pos.ptr);
@@ -426,6 +431,11 @@ public:
 		return iterator{ this, pos.ptr };
 	}
 
+	// Erase elements (start, last]
+	// all iterators after start are invalidated
+	// Returns an iterator to the element in starts place
+	// O(N) complexity, N being the number of elemnts after last
+	//
 	iterator erase(iterator start, iterator last)
 	{
 		if (start != last)
@@ -438,6 +448,28 @@ public:
 		}
 
 		return iterator{ this, start.ptr };
+	}
+
+	// Erase element without preserving ordering
+	// Returns element that replaces pos
+	// O(1) complexity
+	iterator fast_erase(iterator pos)
+	{
+		std::swap(*pos.ptr, *MyLast);
+		destroyRange(alloc, MyLast, MyLast + 1);
+
+		--MySize;
+		--MyLast;
+		return pos.ptr;
+	}
+
+	// Erase element without preserving ordering
+	// Returns element that replaces start
+	// O(N) complexity, N being the number of elements between start and last
+	iterator fast_erase(iterator start, iterator last)
+	{
+		
+		uncheckedMove()
 	}
 
 	bool empty() const noexcept

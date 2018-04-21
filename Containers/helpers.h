@@ -12,19 +12,21 @@ template<class Ptr>
 using PtrType = typename std::remove_reference<decltype(*std::declval<Ptr>())>::type;
 
 // Move elements between (first, end]
-// to dest through dest + (end - first)
+// the first element being placed at dest,
+// the last at: dest + (end - first)
 template<class PtrIn, class PtrOut>
 inline PtrOut uncheckedMove(PtrIn first, PtrIn end, PtrOut dest) noexcept
 {
 	using Type1 = PtrType<PtrIn >;
 	using Type2 = PtrType<PtrOut>;
 
-	if constexpr(std::is_trivially_assignable_v<PtrOut&, PtrIn>
-		&& (sizeof(Type1) == sizeof(Type2)
+	// memmove optimization taken from MCVS std::
+	if constexpr(std::is_trivially_assignable_v<PtrOut&, PtrIn> 
+		&& (sizeof(Type1) == sizeof(Type2) 
 		&& std::is_integral_v<Type1>
 		&& std::is_integral_v<Type2>
 		&& std::is_same_v<Type1, bool> == std::is_same_v<Type2, bool>))
-	{
+	{	
 		const char * const firstCh = const_cast<const char *>(reinterpret_cast<const volatile char *>(first));
 		const char * const lastCh  = const_cast<const char *>(reinterpret_cast<const volatile char *>(end  ));
 		      char * const destCh  = const_cast<char       *>(reinterpret_cast<      volatile char *>(dest ));
@@ -32,7 +34,7 @@ inline PtrOut uncheckedMove(PtrIn first, PtrIn end, PtrOut dest) noexcept
 		const size_t numBytes = lastCh - firstCh;
 		std::memmove(destCh, firstCh, numBytes);
 
-		return reinterpret_cast<PtrOut>(destCh + numBytes);
+		return reinterpret_cast<PtrOut>(destCh + numBytes); 
 	}
 	else
 	{
@@ -44,6 +46,7 @@ inline PtrOut uncheckedMove(PtrIn first, PtrIn end, PtrOut dest) noexcept
 }
 
 // Call destructor for elements between pointers
+// unless there's no need to
 // [first, end)
 template<class Alloc, class Ptr>
 void destroyRange(Alloc al, Ptr first, Ptr end)
