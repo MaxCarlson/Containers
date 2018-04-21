@@ -54,8 +54,10 @@ void testSmallVec()
 	{
 		auto it = vec.emplace_back(i);
 
-		if (vec.size() >= 999)
-			vec.clear();
+		if (vec.size() >= 100)
+		{
+			vec.fast_erase(vec.begin(), vec.begin() + 5);
+		}
 	}
 
 	timer<Key>(false);

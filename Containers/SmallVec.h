@@ -451,25 +451,35 @@ public:
 	}
 
 	// Erase element without preserving ordering
-	// Returns element that replaces pos
+	// Returns iterator to element that replaces pos
 	// O(1) complexity
-	iterator fast_erase(iterator pos)
+	iterator fast_erase(iterator pos) noexcept(std::is_nothrow_swappable_v<Type> 
+										 && std::is_nothrow_destructible_v<Type>)
 	{
 		std::swap(*pos.ptr, *MyLast);
-		destroyRange(alloc, MyLast, MyLast + 1);
+		destroyRange(alloc, MyLast, MyLast + 1); // TODO: Tests!!!
 
 		--MySize;
 		--MyLast;
-		return pos.ptr;
+		return iterator{ this, pos.ptr };
 	}
 
-	// Erase element without preserving ordering
-	// Returns element that replaces start
+	// Erase elements between (start, last] without preserving ordering
+	// iterators after back() - (last - start - 1) are invalidated
+	// Returns iterator to element that replaces start
 	// O(N) complexity, N being the number of elements between start and last
-	iterator fast_erase(iterator start, iterator last)
+	iterator fast_erase(iterator start, iterator last) noexcept(std::is_nothrow_swappable_v<Type>
+														  && std::is_nothrow_destructible_v<Type>)
 	{
-		
-		uncheckedMove()
+		const difference_type range = (last - start);
+		const NodePtr snode = (MyLast - range) + 1;
+		uncheckedMove(snode, MyLast + 1, start.ptr); // TODO: Tests!!!
+		destroyRange(alloc, snode, MyLast + 1);
+
+		MyLast -= range;
+		MySize -= range;
+
+		return iterator{ this, start.ptr };
 	}
 
 	bool empty() const noexcept
