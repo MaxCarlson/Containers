@@ -15,7 +15,7 @@ using PtrType = typename std::remove_reference<decltype(*std::declval<Ptr>())>::
 // the first element being placed at dest,
 // the last at: dest + (end - first)
 template<class PtrIn, class PtrOut>
-inline PtrOut uncheckedMove(PtrIn first, PtrIn end, PtrOut dest) noexcept
+inline PtrOut uncheckedMove(PtrIn first, PtrIn end, PtrOut dest) //noexcept std::move_if_noexcept()?
 {
 	using Type1 = PtrType<PtrIn >;
 	using Type2 = PtrType<PtrOut>;
@@ -39,7 +39,7 @@ inline PtrOut uncheckedMove(PtrIn first, PtrIn end, PtrOut dest) noexcept
 	else
 	{
 		for (first; first != end; ++first, ++dest)
-			*dest = std::move_if_noexcept(*first);
+			*dest = std::move(*first);
 	}
 
 	return dest;

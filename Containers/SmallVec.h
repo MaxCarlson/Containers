@@ -323,6 +323,9 @@ private:
 
 public:
 
+	// Reserve memory of size newCap
+	// O(1) complexity if newCap <= capacity()
+	// At most (depending on allocator) O(N) complexity if newCap > capacity()
 	void reserve(size_type newCap)
 	{
 		if (newCap <= MyCapacity)
@@ -344,6 +347,9 @@ public:
 		MyEnd = last;
 	}
 
+	// Construct element in-place using index
+	// shifts all elements >= idx over one to the right
+	// O(N) complexity, N being number of elements after and at idx
 	template<class... Args>
 	iterator emplace(size_type idx, Args&& ...args)
 	{
@@ -351,6 +357,9 @@ public:
 		return emplace(it, std::forward<Args>(args)...);
 	}
 
+	// Construct element in-place at iterator
+	// shifts all elements >= it over one to the right
+	// O(N) complexity, N being number of elements after and at it
 	template<class... Args>
 	iterator emplace(const_iterator it, Args&& ...args)
 	{
@@ -380,6 +389,8 @@ public:
 		return iterator{ this, place };
 	}
 
+	// Construct element in place at back() + 1
+	// O(1) amortized complexity
 	template<class... Args>
 	reference emplace_back(Args&& ...args)
 	{
@@ -408,7 +419,7 @@ public:
 		emplace_back(std::move(t));
 	}
 
-	void pop_back() 
+	void pop_back() noexcept(std::is_nothrow_destructible_v<Type>)
 	{	// Don't call with an empty vector!
 		AlTraits::destroy(alloc, MyLast); // TODO: Make sure this is okay when toDelete is in aligned storage!
 		
@@ -421,7 +432,7 @@ public:
 	// Returns an iterator to the element in pos's place
 	// O(N) complexity, N being the number of elemnts after pos
 	//
-	iterator erase(iterator pos) // TODO: use const_iterator
+	iterator erase(iterator pos) noexcept(std::is_nothrow_destructible_v<Type>)
 	{
 		uncheckedMove(pos.ptr + 1, MyLast + 1, pos.ptr);
 		AlTraits::destroy(alloc, MyLast - 1); // TODO: Does this make sense?
@@ -436,7 +447,7 @@ public:
 	// Returns an iterator to the element in starts place
 	// O(N) complexity, N being the number of elemnts after last
 	//
-	iterator erase(iterator start, iterator last)
+	iterator erase(iterator start, iterator last) noexcept(std::is_nothrow_destructible_v<Type>)
 	{
 		if (start != last)
 		{
@@ -451,6 +462,7 @@ public:
 	}
 
 	// Erase element without preserving ordering
+	// Only iterators pos and iterators to back() are invalidated
 	// Returns iterator to element that replaces pos
 	// O(1) complexity
 	iterator fast_erase(iterator pos) noexcept(std::is_nothrow_swappable_v<Type> 
