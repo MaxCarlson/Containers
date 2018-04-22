@@ -351,5 +351,46 @@ namespace TestSmallVec
 				v1300i = vec1300.erase(v1300i);
 			}
 		}
+
+		TEST_METHOD(SmallVector__FastErase)
+		{
+			std::vector<int> test;
+			SmallVec<int, 1> vec1;
+			SmallVec<int, 6> vec7;
+
+			for (int i = 0; i < 20; ++i)
+			{
+				vec1.emplace_back(i);
+				vec7.emplace_back(i);
+			}
+
+			// 19 is moved into 0 position
+			// size is 19
+			vec1.fast_erase(vec1.begin());
+			vec7.fast_erase(vec7.begin());
+
+			Assert::AreEqual(19, vec1[0]);
+			Assert::AreEqual(19, vec7[0]);
+			Assert::AreEqual(19ULL, vec1.size());
+			Assert::AreEqual(19ULL, vec7.size());
+			Assert::AreEqual(18, vec1.back());
+			Assert::AreEqual(18, vec7.back());
+
+			vec1.fast_erase(vec1.end() - 1);
+			vec7.fast_erase(vec7.end() - 1);
+
+			Assert::AreEqual(18ULL, vec1.size());
+			Assert::AreEqual(18ULL, vec7.size());
+			Assert::AreEqual(17, vec1.back());
+			Assert::AreEqual(17, vec7.back());
+
+			vec1.fast_erase(vec1.begin() + 5);
+			vec7.fast_erase(vec7.begin() + 5);
+
+			Assert::AreEqual(17, vec1[5]);
+			Assert::AreEqual(17, vec7[5]);
+			Assert::AreEqual(16, vec1.back());
+			Assert::AreEqual(16, vec7.back());
+		}
 	};
 }
