@@ -354,7 +354,6 @@ namespace TestSmallVec
 
 		TEST_METHOD(SmallVector__FastErase)
 		{
-			std::vector<int> test;
 			SmallVec<int, 1> vec1;
 			SmallVec<int, 6> vec7;
 

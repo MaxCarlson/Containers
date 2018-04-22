@@ -68,27 +68,21 @@ void testSmallVec()
 
 void testFlat()
 {
-	static constexpr int num = 10000;
-	//static constexpr int num = 10000000;
+	//static constexpr int num = 10000;
+	static constexpr int num = 100000000;
 
 	using Key = int;
 
-	Set<int16_t, FlatTree> sets;
-	Set<Key, FlatTree> set;
-	Map<Key, Key, FlatTree> map;
+	//Set<Key, FlatTree> test;
+	//Set<Key, RedBlackTree> test;
+	UnorderedSet<Key, RobinhoodHash> test;
 
 	timer<int>(true);
 
 	for (int i = 0; i < num; ++i)
 	{
-		auto it = set.emplace(i);
-		//map.emplace(i, i);
-
-
-		set.emplace_hint(set.end(), i);
+		test.emplace(i);
 	}
-
-	set = sets;
 
 	timer<int>(false);
 
@@ -115,7 +109,7 @@ void testFlat()
 
 int main()
 { 
-	testSmallVec();
-	//testFlat();
+	//testSmallVec();
+	testFlat();
 	return 0;
 }
