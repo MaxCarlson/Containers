@@ -66,27 +66,38 @@ void testSmallVec()
 	int a = 5;
 }
 
+#include <boost\container\flat_set.hpp>
+
 void testFlat()
 {
 	//static constexpr int num = 10000;
-	static constexpr int num = 100000000;
+	static constexpr int num = 50000000;
 
 	using Key = int;
 
-	//Set<Key, FlatTree> test;
+	Set<Key, FlatTree> test;
 	//Set<Key, RedBlackTree> test;
-	UnorderedSet<Key, RobinhoodHash> test;
+	//std::set<int> test;
+	//boost::container::flat_set<int> test;
+
+	//UnorderedSet<Key, RobinhoodHash> test;
+
+	std::uniform_int_distribution<int> rng(-num, num);
 
 	timer<int>(true);
 
 	for (int i = 0; i < num; ++i)
 	{
-		test.emplace(i);
+		const int r = rng(defRand);
+		test.emplace(i); 
 	}
+
 
 	timer<int>(false);
 
 	int a = 5;
+	int b = a + 5;
+	std::cout << b;
 	//std::vector<int> ff; ff.clear();
 }
 

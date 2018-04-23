@@ -173,6 +173,7 @@ public:
 		return iterator{ &MyData, &MyData[idx] };
 	}
 
+
 	// O(Log N) find time 
 	// O(N) insert time, N being the number of elements after inserted position.
 	// O(1) insert time if element is the greatest of the predicate type 
@@ -180,9 +181,14 @@ public:
 	template<class... Args>
 	PairIb emplace(Args&& ...args)
 	{
+		NodeAl al;
+		typename std::aligned_storage<sizeof(Node), std::alignment_of<Node>::value>::type tAligned;
+		Node &n = *static_cast<NodePtr>(static_cast<void *>(&tAligned));
+		NodeAlTraits::construct(al, std::addressof(n), std::forward<Args>(args)...);
+
 		// Temporary construction of a node to possibly emplace
 		// While we find it a place to sit
-		Node n = Node{ std::forward<Args>(args)... };
+		//Node n = Node{ std::forward<Args>(args)... };
 
 		const size_type idx = binSearch(get_key()(n));
 
@@ -199,7 +205,10 @@ public:
 	template<class... Args>
 	iterator emplace_hint(iterator it, Args&& ...args) // TODO: Use const_iterator here
 	{
-		Node n = Node{ std::forward<Args>(args)... };
+		NodeAl al;
+		typename std::aligned_storage<sizeof(Node), std::alignment_of<Node>::value>::type tAligned;
+		Node &n = *static_cast<NodePtr>(static_cast<void *>(&tAligned));
+		NodeAlTraits::construct(al, std::addressof(n), std::forward<Args>(args)...);
 
 		if (it == end() && !key_compare()(get_key()(n), get_key()(MyData.back())))
 		{
@@ -219,5 +228,15 @@ public:
 			return iterator{ &MyData, &MyData[idx] };
 
 		return MyData.cend();
+	}
+
+	iterator erase(iterator it)
+	{
+		return MyData.erase(it);
+	}
+
+	iterator erase(iterator start, iterator last)
+	{
+		return MyData.erase(start, last);
 	}
 };

@@ -73,5 +73,5 @@ inline void timer(bool startNow)
 		return;
 	}
 
-	std::cout << duration_cast<duration<double, std::milli>>(high_resolution_clock::now() - start).count() << "\n";
+	std::cout << duration_cast<duration<double>>(high_resolution_clock::now() - start).count() << "\n";
 }
