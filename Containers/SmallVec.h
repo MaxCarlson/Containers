@@ -379,9 +379,11 @@ public:
 		else
 		{
 			NodePtr newLast = MyLast;
-			// TODO: Test std::move vs std::swap!
-			for (NodePtr oldLast = MyLast - 1; oldLast >= place; --oldLast, --newLast)
-				*newLast = std::move(*oldLast);
+			
+			uncheckedMove(place, MyLast + 1, place + 1);
+
+			//for (NodePtr oldLast = MyLast - 1; oldLast >= place; --oldLast, --newLast)
+			//	*newLast = std::move(*oldLast);
 		}
 
 		AlTraits::construct(alloc, place, std::forward<Args>(args)...);

@@ -357,11 +357,7 @@ namespace TestSmallVec
 			SmallVec<int, 1> vec1;
 			SmallVec<int, 6> vec7;
 
-			for (int i = 0; i < 20; ++i)
-			{
-				vec1.emplace_back(i);
-				vec7.emplace_back(i);
-			}
+			fillVectors(20, vec1, vec7);
 
 			// 19 is moved into 0 position
 			// size is 19
@@ -391,5 +387,23 @@ namespace TestSmallVec
 			Assert::AreEqual(16, vec1.back());
 			Assert::AreEqual(16, vec7.back());
 		}
+
+		/*
+		TEST_METHOD(SmallVector__Emplace)
+		{
+			SmallVec<int, 1> vec1;
+			SmallVec<int, 6> vec6;
+
+			fillVectors(20, vec1, vec6);
+
+			vec1.emplace(vec1.begin() + 10, 5);
+			vec7.emplace(vec7.begin() + 10, 5);
+			Assert::AreEqual(21ULL, vec1.size());
+			Assert::AreEqual(21ULL, vec7.size());
+			Assert::AreEqual(5, vec1[10]));
+			Assert::AreEqual(5, vec7[10]));
+
+		}
+		*/
 	};
 }
