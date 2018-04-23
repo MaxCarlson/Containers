@@ -192,7 +192,7 @@ public:
 			     copyFromAligned(false) 
 	{
 		if (useAligned)
-		{
+		{ 
 			MyBegin = MyLast = reinterpret_cast<NodePtr>(std::addressof(MyData[0]));
 			MyEnd = reinterpret_cast<NodePtr>(std::addressof(MyData[alignedSize]));
 		}
