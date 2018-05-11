@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <Type Name="std::vector&lt;bool,*&gt;" Priority="MediumLow">
+    <DisplayString>{{ size={_Mysize} }}</DisplayString>
+    <Expand>
+      <Item Name="[capacity]" ExcludeView="simple">(_Myvec._Myend - _Myvec._Myfirst) * _EEN_VBITS</Item>
+      <IndexListItems>
+        <Size>_Mysize</Size>
+        <ValueNode>(bool)((_Myvec._Myfirst[$i / _EEN_VBITS] &gt;&gt; ($i % _EEN_VBITS)) &amp; 1)</ValueNode>
+      </IndexListItems>
+    </Expand>
+  </Type>
+
+  <Type Name="SmallVec&lt;*&gt;">
+    <DisplayString>{{ size ={MySize} }}</DisplayString>
+    <Expand>
+      <Item Name="[size]" ExcludeView="simple">MySize</Item>
+      <Item Name="[capacity]" ExcludeView="simple">MyCapacity</Item>
+      <ArrayItems>
+        <Size>MySize</Size>
+        <ValuePointer>MyBegin</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  
+  
+</AutoVisualizer>

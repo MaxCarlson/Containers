@@ -120,7 +120,6 @@ void testFlat()
 
 int main()
 { 
-	//testSmallVec();
-	testFlat();
+	testSmallVec();
 	return 0;
 }

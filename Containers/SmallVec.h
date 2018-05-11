@@ -52,7 +52,7 @@ public:
 
 	VecIterator operator++(int)
 	{
-		HashIterator tmp = *this;
+		VecIterator tmp = *this;
 		++*this;
 		return tmp;
 	}
@@ -130,10 +130,13 @@ struct ConstVecIterator : public VecIterator<VectorType>
 	ConstVecIterator(const MyBase &b) : MyBase(b) {};
 	ConstVecIterator(const VectorType *MyVec, NodePtr ptr) : MyBase(MyVec, ptr) {}
 
+	/* // Is this needed?
 	reference operator*() const
 	{
 		return this->ptr;
 	}
+ 
+	*/
 
 	pointer operator->() const
 	{
@@ -198,7 +201,17 @@ public:
 		}
 	}
 
-	NodePtr findEnd() const noexcept { return MyLast == MyBegin ? MyBegin : MyLast + 1; }
+	~SmallVec()
+	{
+		// This makes using fast_erase on anything not trivially destructible
+		// a serious risk
+		destroyRange(alloc, MyBegin, MyLast);
+
+		if(!useAligned)
+			AlTraits::deallocate(alloc, MyBegin, MyCapacity);
+	}
+
+	NodePtr findEnd() const noexcept { return MySize ? MyLast + 1 : MyBegin; }
 
 	iterator begin() noexcept { return iterator{ this, MyBegin }; }
 	iterator end() noexcept { return iterator{ this, findEnd()}; }
@@ -470,6 +483,8 @@ public:
 	iterator fast_erase(iterator pos) noexcept(std::is_nothrow_swappable_v<Type> 
 										 && std::is_nothrow_destructible_v<Type>)
 	{
+		
+
 		std::swap(*pos.ptr, *MyLast);
 		destroyRange(alloc, MyLast, MyLast + 1); // TODO: Tests!!!
 
