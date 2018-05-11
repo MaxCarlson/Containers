@@ -10,7 +10,7 @@ Set<int, BinaryTree>
 
 Map<int, int>
 
-## Current (rough) data structures
+## Current data structures
 
 ### Ordered-Set/Map implementations
 
@@ -20,7 +20,17 @@ Binary Search Tree (not compliant with the template traits yet)
 
 ### Unordered-Set/Map implementations
 
-Open-Address hash table - partially done. (No map impl yet)
+Open-Address hash table.
+
+Robinhood-Hashing Open Address hash table (Unfinished).
+
+### Vector
+
+Small Vector. 
+
+- Based off of LLVM's [similar class](http://llvm.org/doxygen/classllvm_1_1SmallVector.html).
+
+- Has [Visual Studio Natvis file](https://docs.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects) for debugging.
 
 
 ### A work in progress.
