@@ -561,7 +561,8 @@ public:
 
 	size_type max_size() const noexcept
 	{
-		return (std::min(static_cast<size_type>((numeric_limits<difference_type>::max)), AlTraits::max_size(alloc)));
+		Allocator al;
+		return (std::min(static_cast<size_type>((numeric_limits<difference_type>::max)), AlTraits::max_size(al)));
 	}
 
 	size_type capacity() const noexcept
