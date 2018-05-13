@@ -424,5 +424,21 @@ namespace TestSmallVec
 			Assert::AreEqual((vec7.begin() + 11).ptr, vec7.end().ptr);
 		}
 		
+		TEST_METHOD(SmallVector__ShrinkToFitAligned)
+		{
+			SmallVec<int, 1> vec;
+
+			fillVectors(20, vec);
+
+			vec.erase(vec.begin() + 9, vec.end());
+
+			vec.shrink_to_fit();
+
+			Assert::AreEqual(9ULL, vec.size());
+			Assert::AreEqual(vec.size(), vec.capacity());
+			Assert::AreEqual(vec.back(), *(vec.end() - 1));
+			constexpr int a = sizeof(vec);
+		}
+
 	};
 }

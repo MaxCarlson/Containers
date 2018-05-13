@@ -174,12 +174,6 @@ public:
 	friend class FlatTree;
 
 private:
-	Allocator alloc;
-
-	AlignedStorage MyData[alignedSize];
-
-	unsigned int useAligned		 : 1;
-	unsigned int copyFromAligned : 1;
 
 	size_type MySize = 0;
 	size_type MyCapacity = alignedSize;
@@ -187,6 +181,10 @@ private:
 	NodePtr MyBegin = nullptr;
 	NodePtr MyLast = nullptr;
 	NodePtr MyEnd = nullptr;
+	AlignedStorage MyData[alignedSize];
+
+	unsigned int useAligned : 1;
+	unsigned int copyFromAligned : 1;
 
 public:
 
@@ -195,23 +193,19 @@ public:
 			     copyFromAligned(false) 
 	{
 		if (useAligned)
-		{ 
-			MyBegin = MyLast = reinterpret_cast<NodePtr>(std::addressof(MyData[0]));
-			MyEnd = reinterpret_cast<NodePtr>(std::addressof(MyData[alignedSize]));
-		}
+			useAlignedStorage(0ULL);	
 	}
 
 	~SmallVec()
 	{
 		// This makes using fast_erase on anything not trivially destructible
 		// a serious risk
-		destroyRange(alloc, MyBegin, MyLast);
+		Allocator al;
+		destroyRange(al, MyBegin, MyLast);
 
 		if(!useAligned)
-			AlTraits::deallocate(alloc, MyBegin, MyCapacity);
+			AlTraits::deallocate(al, MyBegin, MyCapacity);
 	}
-
-	NodePtr findEnd() const noexcept { return MySize ? MyLast + 1 : MyBegin; }
 
 	iterator begin() noexcept { return iterator{ this, MyBegin }; }
 	iterator end() noexcept { return iterator{ this, findEnd()}; }
@@ -221,6 +215,8 @@ public:
 	const_iterator cend() const noexcept { return end(); }
 
 private:
+	NodePtr findEnd() const noexcept { return MySize ? MyLast + 1 : MyBegin; }
+
 	template<class Other>
 	void copyOtherHere(const Other& other)
 	{
@@ -262,14 +258,6 @@ public:
 		return *this;
 	}
 
-	// TODO: 
-	// template<class T, class Al>
-	// SmallVec& operator=(const std::vector<T, Al> &other)
-
-	// TODO:
-	// template<class T, int Sz, class Al>
-	// void swapAll(SmallVec<T, Sz, Al>& other)
-
 	reference operator[](const int idx)
 	{
 		return *(MyBegin + static_cast<difference_type>(idx));
@@ -295,18 +283,28 @@ private:
 		NodePtr oldLast = MyLast + 1;		
 
 		uncheckedMove(oldFirst, oldLast, first);
-		destroyRange(alloc, oldFirst, oldLast);
+
+		Allocator al;
+		destroyRange(al, oldFirst, oldLast);
 
 		if (copyFromAligned)
 			copyFromAligned = false;
 		else
-			AlTraits::deallocate(alloc, MyBegin, MyCapacity);	
+			AlTraits::deallocate(al, MyBegin, MyCapacity);	
 	}
 
 	std::pair<NodePtr, NodePtr> allocate(const size_type sz)
 	{
-		NodePtr first = alloc.allocate(sz);
+		Allocator al;
+		NodePtr first = al.allocate(sz);
 		return { first, first + static_cast<difference_type>(sz) };
+	}
+
+	void useAlignedStorage(size_type lastIdx)
+	{
+		MyBegin = reinterpret_cast<NodePtr>(std::addressof(MyData[0]));
+		MyEnd   = reinterpret_cast<NodePtr>(std::addressof(MyData[alignedSize]));
+		MyLast  = MyBegin + static_cast<difference_type>(lastIdx);
 	}
 	
 	void grow() 
@@ -343,13 +341,28 @@ public:
 		if (useAligned || MySize >= MyCapacity)
 			return;
 
-		auto [first, end] = allocate(MySize);
+		if (MySize > alignedSize)
+		{
+			auto[first, end] = allocate(MySize);
 
-		copyTo(first);
+			copyTo(first);
+			MyBegin = first;
+			MyLast = end - 1;
+			MyEnd = end;
+		}
+		else
+		{
+			useAligned = true;
+
+			if (MySize > 0)
+			{
+				copyTo(reinterpret_cast<NodePtr>(&MyData[0]));
+			}
+
+			useAlignedStorage(MySize);
+		}
+
 		MyCapacity = MySize;
-		MyBegin = first;
-		MyLast = end - 1;
-		MyEnd = end;
 	}
 
 	// Reserve memory of size newCap
@@ -415,7 +428,8 @@ public:
 			//	*newLast = std::move(*oldLast);
 		}
 
-		AlTraits::construct(alloc, place, std::forward<Args>(args)...);
+		Allocator al;
+		AlTraits::construct(al, place, std::forward<Args>(args)...);
 
 		return iterator{ this, place };
 	}
@@ -435,7 +449,8 @@ public:
 		
 		++MySize;
 
-		AlTraits::construct(alloc, MyLast, std::forward<Args>(args)...);
+		Allocator al;
+		AlTraits::construct(al, MyLast, std::forward<Args>(args)...);
 
 		return back();
 	}
@@ -519,7 +534,9 @@ public:
 		const difference_type range = (last - start);
 		const NodePtr snode = (MyLast - range) + 1;
 		uncheckedMove(snode, MyLast + 1, start.ptr); 
-		destroyRange(alloc, snode, MyLast + 1);
+
+		Allocator al;
+		destroyRange(al, snode, MyLast + 1);
 
 		MyLast -= range;
 		MySize -= range;
