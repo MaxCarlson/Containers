@@ -29,7 +29,7 @@ inline PtrOut uncheckedMove(PtrIn first, PtrIn end, PtrOut dest) //noexcept std:
 	{	
 		const char * const firstCh = const_cast<const char *>(reinterpret_cast<const volatile char *>(first));
 		const char * const lastCh  = const_cast<const char *>(reinterpret_cast<const volatile char *>(end  ));
-		      char * const destCh  = const_cast<char       *>(reinterpret_cast<      volatile char *>(dest ));
+		      char * const destCh  = const_cast<      char *>(reinterpret_cast<      volatile char *>(dest ));
 
 		const size_t numBytes = lastCh - firstCh;
 		std::memmove(destCh, firstCh, numBytes);

@@ -505,7 +505,7 @@ public:
 			const NodePtr newLast = uncheckedMove(last.ptr, MyLast + 1, start.ptr);
 
 			Allocator al;
-			destroyRange(al, newLast, MyLast);
+			destroyRange(al, newLast, MyLast + 1);
 			MyLast = newLast;
 			MySize -= size;
 		}
@@ -593,7 +593,8 @@ public:
 	void clear() noexcept(std::is_nothrow_destructible_v<Type>)
 	{
 		Allocator al;
-		destroyRange(al, MyBegin, MyLast);
+		if(MySize > 0)
+			destroyRange(al, MyBegin, MyLast + 1);
 
 		MyLast = MyBegin;
 		MySize = 0;
