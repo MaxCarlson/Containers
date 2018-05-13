@@ -222,14 +222,15 @@ private:
 	{
 		using OtherNodePtr = typename Other::NodePtr;
 
-		destroyRange(alloc, MyBegin, end().ptr);
+		Allocator al;
+		destroyRange(al, MyBegin, end().ptr);
 
 		if (other.size() >= this->capacity())
 		{
 			auto nodePair = allocate(other.capacity()); 
 
 			if (!useAligned)
-				AlTraits::deallocate(alloc, MyBegin, MyCapacity);
+				AlTraits::deallocate(al, MyBegin, MyCapacity);
 			else
 				useAligned = false;
 
@@ -290,13 +291,13 @@ private:
 		if (copyFromAligned)
 			copyFromAligned = false;
 		else
-			AlTraits::deallocate(al, MyBegin, MyCapacity);	
+			AlTraits::deallocate(al, MyBegin, MyCapacity);
 	}
 
 	std::pair<NodePtr, NodePtr> allocate(const size_type sz)
 	{
 		Allocator al;
-		NodePtr first = al.allocate(sz);
+		NodePtr first = AlTraits::allocate(al, sz); 
 		return { first, first + static_cast<difference_type>(sz) };
 	}
 
@@ -467,7 +468,8 @@ public:
 
 	void pop_back() noexcept(std::is_nothrow_destructible_v<Type>)
 	{	// Don't call with an empty vector!
-		AlTraits::destroy(alloc, MyLast); // TODO: Make sure this is okay when toDelete is in aligned storage!
+		Allocator al;
+		AlTraits::destroy(al, MyLast); // TODO: Make sure this is okay when toDelete is in aligned storage!
 		
 		--MySize;
 		--MyLast; 
@@ -481,7 +483,9 @@ public:
 	iterator erase(iterator pos) noexcept(std::is_nothrow_destructible_v<Type>)
 	{
 		uncheckedMove(pos.ptr + 1, MyLast + 1, pos.ptr);
-		AlTraits::destroy(alloc, MyLast - 1); // TODO: Does this make sense?
+
+		Allocator al;
+		AlTraits::destroy(al, MyLast - 1);
 		--MyLast;
 		--MySize;
 
@@ -499,7 +503,9 @@ public:
 		{
 			const size_type size = last.ptr - start.ptr;
 			const NodePtr newLast = uncheckedMove(last.ptr, MyLast + 1, start.ptr);
-			destroyRange(alloc, newLast, MyLast);
+
+			Allocator al;
+			destroyRange(al, newLast, MyLast);
 			MyLast = newLast;
 			MySize -= size;
 		}
@@ -514,10 +520,9 @@ public:
 	iterator fast_erase(iterator pos) noexcept(std::is_nothrow_swappable_v<Type> 
 										 && std::is_nothrow_destructible_v<Type>)
 	{
-		
-
+		Allocator al;
 		std::swap(*pos.ptr, *MyLast);
-		destroyRange(alloc, MyLast, MyLast + 1); 
+		destroyRange(al, MyLast, MyLast + 1);
 
 		--MySize;
 		--MyLast;
@@ -586,7 +591,7 @@ public:
 
 	void clear() noexcept(std::is_nothrow_destructible_v<Type>)
 	{
-		destroyRange(alloc, MyBegin, MyLast);
+		destroyRange(al, MyBegin, MyLast);
 
 		MyLast = MyBegin;
 		MySize = 0;
