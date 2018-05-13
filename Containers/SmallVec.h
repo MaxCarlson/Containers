@@ -592,6 +592,7 @@ public:
 
 	void clear() noexcept(std::is_nothrow_destructible_v<Type>)
 	{
+		Allocator al;
 		destroyRange(al, MyBegin, MyLast);
 
 		MyLast = MyBegin;
