@@ -387,22 +387,42 @@ namespace TestSmallVec
 			Assert::AreEqual(16, vec7.back());
 		}
 
-		/*
-		TEST_METHOD(SmallVector__Emplace)
+		
+		TEST_METHOD(SmallVector__ShrinkToFit)
 		{
 			SmallVec<int, 1> vec1;
-			SmallVec<int, 6> vec6;
+			SmallVec<int, 6> vec7;
 
-			fillVectors(20, vec1, vec6);
+			fillVectors(20, vec1, vec7);
 
-			vec1.emplace(vec1.begin() + 10, 5);
-			vec7.emplace(vec7.begin() + 10, 5);
-			Assert::AreEqual(21ULL, vec1.size());
-			Assert::AreEqual(21ULL, vec7.size());
-			Assert::AreEqual(5, vec1[10]));
-			Assert::AreEqual(5, vec7[10]));
+			vec1.erase(vec1.begin(), vec1.begin() + 5);
+			vec7.erase(vec7.begin(), vec7.begin() + 5);
 
+			vec1.shrink_to_fit();
+			vec7.shrink_to_fit();
+
+			Assert::AreEqual(vec1.capacity(), 15Ull);
+			Assert::AreEqual(vec1.size(), vec1.capacity());
+			Assert::AreEqual((vec1.begin() + 15).ptr, vec1.end().ptr);
+
+			Assert::AreEqual(vec7.capacity(), 15Ull);
+			Assert::AreEqual(vec7.size(), vec7.capacity());
+			Assert::AreEqual((vec7.begin() + 15).ptr, vec7.end().ptr);
+
+			vec1.erase(vec1.begin() + 5, vec1.begin() + 9);
+			vec7.erase(vec7.begin() + 5, vec7.begin() + 9);
+
+			vec1.shrink_to_fit();
+			vec7.shrink_to_fit();
+
+			Assert::AreEqual(vec1.capacity(), 11Ull);
+			Assert::AreEqual(vec1.size(), vec1.capacity());
+			Assert::AreEqual((vec1.begin() + 11).ptr, vec1.end().ptr);
+
+			Assert::AreEqual(vec7.capacity(), 11Ull);
+			Assert::AreEqual(vec7.size(), vec7.capacity());
+			Assert::AreEqual((vec7.begin() + 11).ptr, vec7.end().ptr);
 		}
-		*/
+		
 	};
 }

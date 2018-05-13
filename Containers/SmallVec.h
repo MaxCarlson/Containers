@@ -336,6 +336,22 @@ private:
 
 public:
 
+
+	void shrink_to_fit() noexcept(std::is_nothrow_swappable_v<Type>
+		&& std::is_nothrow_destructible_v<Type>)
+	{
+		if (useAligned || MySize >= MyCapacity)
+			return;
+
+		auto [first, end] = allocate(MySize);
+
+		copyTo(first);
+		MyCapacity = MySize;
+		MyBegin = first;
+		MyLast = end - 1;
+		MyEnd = end;
+	}
+
 	// Reserve memory of size newCap
 	// O(1) complexity if newCap <= capacity()
 	// At most (depending on allocator) O(N) complexity if newCap > capacity()
@@ -486,15 +502,15 @@ public:
 		
 
 		std::swap(*pos.ptr, *MyLast);
-		destroyRange(alloc, MyLast, MyLast + 1); // TODO: Tests!!!
+		destroyRange(alloc, MyLast, MyLast + 1); 
 
 		--MySize;
 		--MyLast;
 		return iterator{ this, pos.ptr };
 	}
 
-	// Erase elements between (start, last] without preserving ordering
-	// iterators after back() - (last - start - 1) are invalidated
+	// Erase elements between (start, last] without preserving ordering.
+	// iterators after back() - (last - start - 1) are invalidated.
 	// Returns iterator to element that replaces start
 	// O(N) complexity, N being the number of elements between start and last
 	iterator fast_erase(iterator start, iterator last) noexcept(std::is_nothrow_swappable_v<Type>
@@ -502,7 +518,7 @@ public:
 	{
 		const difference_type range = (last - start);
 		const NodePtr snode = (MyLast - range) + 1;
-		uncheckedMove(snode, MyLast + 1, start.ptr); // TODO: Tests!!!
+		uncheckedMove(snode, MyLast + 1, start.ptr); 
 		destroyRange(alloc, snode, MyLast + 1);
 
 		MyLast -= range;
